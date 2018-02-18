@@ -1,0 +1,8 @@
+﻿<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Authors>aossss@gmail.com</Authors>
+    <Company>aossss@gmail.com</Company>
+    <Copyright>© aossss@gmail.com, 2018</Copyright>
+  </PropertyGroup>
+</Project>
