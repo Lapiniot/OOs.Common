@@ -21,7 +21,7 @@ namespace System.Threading
             params CancellationToken[] tokens)
         {
             return new DisposeContainer(
-                ConvertAll(tokens, t => (IDisposable) t.Register(() => completionSource.TrySetCanceled(t))));
+                ConvertAll(tokens, t => (IDisposable)t.Register(() => completionSource.TrySetCanceled(t))));
         }
 
         private class DisposeContainer : IDisposable

@@ -24,7 +24,7 @@ namespace System.CommandLine
 
         public bool this[string name]
         {
-            get { return (bool) AllArguments[name]; }
+            get { return (bool)AllArguments[name]; }
         }
 
         public static Arguments Parse(params string[] args)

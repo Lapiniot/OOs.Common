@@ -1,6 +1,6 @@
 {
     "FormattingOptions": {
-            "NewLine": "\n",
+            "NewLine": "\r\n",
             "UseTabs": false,
             "TabSize": 4,
             "IndentationSize": 4,

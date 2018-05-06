@@ -15,8 +15,8 @@ namespace System.Converters
                 var b = bytes[i];
                 var high = b >> 4;
                 var low = b & 0x0f;
-                buffer[i << 1] = (char) (high < 0x0a ? 0x30 + high : 0x57 + high);
-                buffer[(i << 1) + 1] = (char) (low < 0x0a ? 0x30 + low : 0x57 + low);
+                buffer[i << 1] = (char)(high < 0x0a ? 0x30 + high : 0x57 + high);
+                buffer[(i << 1) + 1] = (char)(low < 0x0a ? 0x30 + low : 0x57 + low);
             }
 
             return new string(buffer);
@@ -38,7 +38,7 @@ namespace System.Converters
                     l >= 'a' && l <= 'f' ? l - 'W' :
                     h >= 'A' && h <= 'F' ? h - '7' : throw new ArgumentException(ErrorMessage);
 
-                bytes[i] = (byte) ((high << 4) | low);
+                bytes[i] = (byte)((high << 4) | low);
             }
 
             return bytes;

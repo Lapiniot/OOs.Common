@@ -12,7 +12,7 @@ namespace System.Json
 
             CheckEnumType(type);
 
-            return (TEnum) Enum.Parse(type, json, true);
+            return (TEnum)Enum.Parse(type, json, true);
         }
 
         public static JsonValue ToJsonValue<TEnum>(this TEnum value) where TEnum : struct

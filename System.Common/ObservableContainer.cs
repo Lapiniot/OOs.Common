@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace System.Common
+namespace System
 {
     public class ObservableContainer<T> : IObservable<T>, IDisposable
     {
@@ -15,12 +15,12 @@ namespace System.Common
         public IDisposable Subscribe(IObserver<T> observer)
         {
             return observers?.GetOrAdd(observer, o => new Subscription(o, this)) ??
-            throw new InvalidOperationException("Container doesn't support subscription in current state.");
+                   throw new InvalidOperationException("Container doesn't support subscription in current state.");
         }
 
         private void Unsubscribe(IObserver<T> observer)
         {
-            observers?.TryRemove(observer, out var _);
+            observers?.TryRemove(observer, out _);
         }
 
         public void Notify(T value)
@@ -30,8 +30,8 @@ namespace System.Common
 
         private class Subscription : IDisposable
         {
-            private IObserver<T> observer;
             private ObservableContainer<T> container;
+            private IObserver<T> observer;
 
             public Subscription(IObserver<T> observer, ObservableContainer<T> container)
             {

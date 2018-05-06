@@ -4,12 +4,12 @@
     {
         public static short ChangeByteOrder(this short value)
         {
-            return (short) ((value << 8) | (value >> 8));
+            return (short)((value << 8) | (value >> 8));
         }
 
         public static ushort ChangeByteOrder(this ushort value)
         {
-            return (ushort) ((value << 8) | (value >> 8));
+            return (ushort)((value << 8) | (value >> 8));
         }
 
         public static int ChangeByteOrder(this int value)
@@ -40,7 +40,7 @@
 
         public static char ChangeByteOrder(this char value)
         {
-            return (char) ((value << 8) | (value >> 8));
+            return (char)((value << 8) | (value >> 8));
         }
 
         public static double ChangeByteOrder(this double value)
