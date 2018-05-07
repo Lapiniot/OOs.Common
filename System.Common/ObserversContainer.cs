@@ -3,11 +3,11 @@ using System.Threading;
 
 namespace System
 {
-    public class ObservableContainer<T> : IObservable<T>, IDisposable
+    public class ObserversContainer<T> : IObservable<T>, IDisposable
     {
         private ConcurrentDictionary<IObserver<T>, Subscription> observers;
 
-        public ObservableContainer()
+        public ObserversContainer()
         {
             observers = new ConcurrentDictionary<IObserver<T>, Subscription>();
         }
@@ -28,12 +28,22 @@ namespace System
             foreach(var pair in observers) pair.Key.OnNext(value);
         }
 
+        public void NotifyError(Exception error)
+        {
+            foreach(var pair in observers) pair.Key.OnError(error);
+        }
+
+        public void NotifyCompleted()
+        {
+            foreach(var pair in observers) pair.Key.OnCompleted();
+        }
+
         private class Subscription : IDisposable
         {
-            private ObservableContainer<T> container;
+            private ObserversContainer<T> container;
             private IObserver<T> observer;
 
-            public Subscription(IObserver<T> observer, ObservableContainer<T> container)
+            public Subscription(IObserver<T> observer, ObserversContainer<T> container)
             {
                 this.observer = observer;
                 this.container = container;
