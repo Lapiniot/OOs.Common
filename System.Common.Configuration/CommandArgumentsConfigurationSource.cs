@@ -6,10 +6,7 @@ namespace System.Configuration
     {
         private readonly string[] args;
 
-        public CommandArgumentsConfigurationSource(string[] args)
-        {
-            this.args = args;
-        }
+        public CommandArgumentsConfigurationSource(string[] args) => this.args = args;
 
         public IConfigurationProvider Build(IConfigurationBuilder builder)
         {

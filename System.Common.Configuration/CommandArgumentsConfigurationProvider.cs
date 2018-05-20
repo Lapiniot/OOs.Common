@@ -8,10 +8,7 @@ namespace System.Configuration
     {
         private readonly string[] args;
 
-        public CommandArgumentsConfigurationProvider(string[] args)
-        {
-            this.args = args;
-        }
+        public CommandArgumentsConfigurationProvider(string[] args) => this.args = args;
 
         public override bool TryGet(string key, out string value)
         {

@@ -4,10 +4,7 @@ namespace System.Collections.Generic
     {
         private readonly Func<T, T, bool> equals;
 
-        public EqualityComparerAdapter(Func<T, T, bool> equals)
-        {
-            this.equals = equals;
-        }
+        public EqualityComparerAdapter(Func<T, T, bool> equals) => this.equals = equals;
 
         public override bool Equals(T x, T y)
         {
