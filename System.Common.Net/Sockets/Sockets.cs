@@ -1,4 +1,5 @@
-﻿using System.Net.NetworkInformation;
+﻿using System.Linq;
+using System.Net.NetworkInformation;
 using static System.Net.IPAddress;
 using static System.Net.NetworkInformation.OperationalStatus;
 using static System.Net.Sockets.AddressFamily;
@@ -50,15 +51,17 @@ namespace System.Net.Sockets
 
                     foreach(var iface in NetworkInterface.GetAllNetworkInterfaces())
                     {
-                        if(iface.SupportsMulticast && iface.OperationalStatus == Up && iface.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                        {
-                            var properties = iface.GetIPProperties()?.GetIPv4Properties();
-                            
-                            if(properties != null)
-                            {
-                                udpSocket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
-                            }
-                        }
+                        if(!iface.SupportsMulticast || iface.OperationalStatus != Up || iface.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+
+                        var interfaceProperties = iface.GetIPProperties();
+
+                        if(interfaceProperties == null || !interfaceProperties.MulticastAddresses.Any()) continue;
+
+                        var properties = interfaceProperties.GetIPv4Properties();
+
+                        if(properties == null) continue;
+
+                        udpSocket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
                     }
 
                     udpSocket.SetSocketOption(IP, MulticastTimeToLive, 1);
