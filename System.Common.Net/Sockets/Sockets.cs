@@ -1,4 +1,5 @@
 ﻿using System.Net.NetworkInformation;
+using static System.Net.IPAddress;
 using static System.Net.NetworkInformation.OperationalStatus;
 using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.SocketOptionLevel;
@@ -47,15 +48,21 @@ namespace System.Net.Sockets
                 {
                     var udpSocket = new UdpSocket();
 
-                    foreach(var i in NetworkInterface.GetAllNetworkInterfaces())
+                    foreach(var iface in NetworkInterface.GetAllNetworkInterfaces())
                     {
-                        if(i.SupportsMulticast && i.OperationalStatus == Up && i.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                        if(iface.SupportsMulticast && iface.OperationalStatus == Up && iface.NetworkInterfaceType != NetworkInterfaceType.Loopback)
                         {
-                            var ipProperties = i.GetIPProperties();
-                            var iPv4Properties = ipProperties.GetIPv4Properties();
-                            udpSocket.SetSocketOption(IP, MulticastInterface, IPAddress.HostToNetworkOrder(iPv4Properties.Index));
+                            var properties = iface.GetIPProperties()?.GetIPv4Properties();
+                            
+                            if(properties != null)
+                            {
+                                udpSocket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
+                            }
                         }
                     }
+
+                    udpSocket.SetSocketOption(IP, MulticastTimeToLive, 1);
+                    udpSocket.SetSocketOption(IP, MulticastLoopback, 1);
 
                     return udpSocket;
                 }
@@ -66,7 +73,7 @@ namespace System.Net.Sockets
 
                     socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, true);
 
-                    socket.Bind(new IPEndPoint(IPAddress.Any, group.Port));
+                    socket.Bind(new IPEndPoint(Any, group.Port));
 
                     socket.SetSocketOption(IP, AddMembership, new MulticastOption(group.Address));
                     socket.SetSocketOption(IP, MulticastTimeToLive, 64);
