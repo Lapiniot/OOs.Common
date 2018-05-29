@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.MemoryMarshal;
@@ -11,7 +12,7 @@ namespace System.Net.Sockets
 
         public delegate T AsyncEndHandler<out T>(IAsyncResult asyncResult);
 
-        public static async Task<T> FromAsync<T>(Socket socket, byte[] bytes, int offset, int size, IPEndPoint remotEndPoint,
+        public static async Task<T> FromAsync<T>(Socket socket, byte[] bytes, int offset, int size, IPEndPoint remoteEndPoint,
             AsyncBeginHandler beginMethod, AsyncEndHandler<T> endMethod, CancellationToken cancellationToken)
         {
             var completionSource = new TaskCompletionSource<T>();
@@ -20,7 +21,7 @@ namespace System.Net.Sockets
             {
                 try
                 {
-                    var asyncState = new AsyncStateBag<T>(socket, remotEndPoint, completionSource, endMethod);
+                    var asyncState = new AsyncStateBag<T>(socket, remoteEndPoint, completionSource, endMethod);
 
                     beginMethod(bytes, offset, size, SocketFlags.None, asyncState.AsyncCallback, asyncState);
                 }
@@ -30,6 +31,49 @@ namespace System.Net.Sockets
                 }
 
                 return await completionSource.Task.ConfigureAwait(false);
+            }
+        }
+
+        private static async Task<T> SendFromAsync<T>(Socket socket, ReadOnlyMemory<byte> memory, IPEndPoint remoteEndPoint,
+            AsyncBeginHandler beginMethod, AsyncEndHandler<T> endMethod, CancellationToken cancellationToken)
+        {
+            if(TryGetArray(memory, out var segment))
+            {
+                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, beginMethod, endMethod, cancellationToken);
+            }
+
+            int length = memory.Length;
+            byte[] tempBuffer = ArrayPool<byte>.Shared.Rent(length);
+            try
+            {
+                memory.Span.CopyTo(tempBuffer);
+                return await FromAsync(socket, tempBuffer, 0, length, remoteEndPoint, beginMethod, endMethod, cancellationToken);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(tempBuffer);
+            }
+        }
+
+        private static async Task<T> ReceiveFromAsync<T>(Socket socket, Memory<byte> memory, IPEndPoint remoteEndPoint,
+            AsyncBeginHandler beginMethod, AsyncEndHandler<T> endMethod, CancellationToken cancellationToken)
+        {
+            if(TryGetArray(memory, out ArraySegment<byte> segment))
+            {
+                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, beginMethod, endMethod, cancellationToken);
+            }
+
+            int length = memory.Length;
+            byte[] tempBuffer = ArrayPool<byte>.Shared.Rent(length);
+            try
+            {
+                var result = await FromAsync(socket, tempBuffer, 0, length, remoteEndPoint, beginMethod, endMethod, cancellationToken);
+                tempBuffer.CopyTo(memory);
+                return result;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(tempBuffer);
             }
         }
 
@@ -68,6 +112,11 @@ namespace System.Net.Sockets
             return SendAsync(socket, bytes, 0, bytes.Length, cancellationToken);
         }
 
+        public static Task<int> SendAsync(this Socket socket, ReadOnlyMemory<byte> memory, CancellationToken cancellationToken)
+        {
+            return SendFromAsync(socket, memory, null, socket.BeginSend, socket.EndSend, cancellationToken);
+        }
+
         #endregion
 
         #region SendToAsync overloads
@@ -84,17 +133,7 @@ namespace System.Net.Sockets
 
         public static Task<int> SendToAsync(this Socket socket, ReadOnlyMemory<byte> memory, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
-            if(TryGetArray(memory, out var segment))
-            {
-                return FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, BeginSendTo, EndSendTo, cancellationToken);
-            }
-
-            using(var owner = MemoryPool<byte>.Shared.Rent(memory.Length))
-            {
-                memory.CopyTo(owner.Memory);
-                TryGetArray(owner.Memory, out segment);
-                return FromAsync(socket, segment.Array, 0, memory.Length, remoteEndPoint, BeginSendTo, EndSendTo, cancellationToken);
-            }
+            return SendFromAsync(socket, memory, remoteEndPoint, BeginSendTo, EndSendTo, cancellationToken);
         }
 
         private static IAsyncResult BeginSendTo(byte[] bytes, int offset, int size, SocketFlags flags, AsyncCallback callback, object state)
@@ -123,6 +162,11 @@ namespace System.Net.Sockets
             return ReceiveAsync(socket, bytes, 0, bytes.Length, cancellationToken);
         }
 
+        public static Task<int> ReceiveAsync(this Socket socket, Memory<byte> memory, CancellationToken cancellationToken)
+        {
+            return ReceiveFromAsync(socket, memory, null, socket.BeginReceive, socket.EndReceive, cancellationToken);
+        }
+
         #endregion
 
         #region ReceiveFromAsync overloads 
@@ -136,6 +180,12 @@ namespace System.Net.Sockets
         public static Task<(int Size, IPEndPoint RemoteEndPoint)> ReceiveFromAsync(this Socket socket, byte[] bytes, IPEndPoint endPoint, CancellationToken cancellationToken)
         {
             return ReceiveFromAsync(socket, bytes, 0, bytes.Length, endPoint, cancellationToken);
+        }
+
+        public static Task<(int Size, IPEndPoint RemoteEndPoint)> ReceiveFromAsync(this Socket socket, Memory<byte> memory,
+            IPEndPoint endPoint, CancellationToken cancellationToken)
+        {
+            return ReceiveFromAsync(socket, memory, endPoint, BeginReceiveFrom, EndReceiveFrom, cancellationToken);
         }
 
         private static IAsyncResult BeginReceiveFrom(byte[] bytes, int offset, int size, SocketFlags flags, AsyncCallback callback, object state)
