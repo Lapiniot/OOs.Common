@@ -1,7 +1,7 @@
 ﻿using System.Buffers;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.MemoryMarshal;
 
 namespace System.Net.Sockets
 {
@@ -82,20 +82,18 @@ namespace System.Net.Sockets
             return SendToAsync(socket, bytes, 0, bytes.Length, remoteEndPoint, cancellationToken);
         }
 
-        public static Task<int> SendToAsync(this Socket socket, Memory<byte> memory, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
+        public static Task<int> SendToAsync(this Socket socket, ReadOnlyMemory<byte> memory, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
-            if(MemoryMarshal.TryGetArray<byte>(memory, out var segment))
+            if(TryGetArray(memory, out var segment))
             {
                 return FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, BeginSendTo, EndSendTo, cancellationToken);
             }
-            else
+
+            using(var owner = MemoryPool<byte>.Shared.Rent(memory.Length))
             {
-                using(var owner = MemoryPool<byte>.Shared.Rent(memory.Length))
-                {
-                    memory.CopyTo(owner.Memory);
-                    MemoryMarshal.TryGetArray<byte>(owner.Memory, out segment);
-                    return FromAsync(socket, segment.Array, 0, memory.Length, remoteEndPoint, BeginSendTo, EndSendTo, cancellationToken);
-                }
+                memory.CopyTo(owner.Memory);
+                TryGetArray(owner.Memory, out segment);
+                return FromAsync(socket, segment.Array, 0, memory.Length, remoteEndPoint, BeginSendTo, EndSendTo, cancellationToken);
             }
         }
 
