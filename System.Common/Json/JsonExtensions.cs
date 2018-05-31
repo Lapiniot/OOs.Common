@@ -6,25 +6,14 @@ namespace System.Json
 {
     public static class JsonExtensions
     {
-        public static TEnum ToEnumValue<TEnum>(this JsonValue json) where TEnum : struct
+        public static TEnum ToEnumValue<TEnum>(this JsonValue json) where TEnum : struct, System.Enum
         {
-            var type = typeof(TEnum);
-
-            CheckEnumType(type);
-
-            return (TEnum)Enum.Parse(type, json, true);
+            return (TEnum)Enum.Parse(typeof(TEnum), json, true);
         }
 
-        public static JsonValue ToJsonValue<TEnum>(this TEnum value) where TEnum : struct
+        public static JsonValue ToJsonValue<TEnum>(this TEnum value) where TEnum : struct, System.Enum
         {
-            CheckEnumType(typeof(TEnum));
-
             return value.ToString().ToLower();
-        }
-
-        private static void CheckEnumType(Type type)
-        {
-            if(!type.IsEnum) throw new ArgumentException($"{type.Name} must be valid enume type");
         }
 
         public static byte[] Serialize(this JsonValue json, Encoding encoding = null)
