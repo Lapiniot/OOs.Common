@@ -6,12 +6,12 @@ namespace System.Json
 {
     public static class JsonExtensions
     {
-        public static TEnum ToEnumValue<TEnum>(this JsonValue json) where TEnum : struct, System.Enum
+        public static TEnum ToEnumValue<TEnum>(this JsonValue json) where TEnum : struct, Enum
         {
             return (TEnum)Enum.Parse(typeof(TEnum), json, true);
         }
 
-        public static JsonValue ToJsonValue<TEnum>(this TEnum value) where TEnum : struct, System.Enum
+        public static JsonValue ToJsonValue<TEnum>(this TEnum value) where TEnum : struct, Enum
         {
             return value.ToString().ToLower();
         }

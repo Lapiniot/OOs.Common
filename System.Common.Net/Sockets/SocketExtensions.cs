@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.MemoryMarshal;
@@ -39,15 +38,15 @@ namespace System.Net.Sockets
         {
             if(TryGetArray(memory, out var segment))
             {
-                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, beginMethod, endMethod, cancellationToken);
+                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, beginMethod, endMethod, cancellationToken).ConfigureAwait(false);
             }
 
-            int length = memory.Length;
-            byte[] tempBuffer = ArrayPool<byte>.Shared.Rent(length);
+            var length = memory.Length;
+            var tempBuffer = ArrayPool<byte>.Shared.Rent(length);
             try
             {
                 memory.Span.CopyTo(tempBuffer);
-                return await FromAsync(socket, tempBuffer, 0, length, remoteEndPoint, beginMethod, endMethod, cancellationToken);
+                return await FromAsync(socket, tempBuffer, 0, length, remoteEndPoint, beginMethod, endMethod, cancellationToken).ConfigureAwait(false);
             }
             finally
             {
@@ -60,14 +59,14 @@ namespace System.Net.Sockets
         {
             if(TryGetArray(memory, out ArraySegment<byte> segment))
             {
-                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, beginMethod, endMethod, cancellationToken);
+                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, beginMethod, endMethod, cancellationToken).ConfigureAwait(false);
             }
 
-            int length = memory.Length;
-            byte[] tempBuffer = ArrayPool<byte>.Shared.Rent(length);
+            var length = memory.Length;
+            var tempBuffer = ArrayPool<byte>.Shared.Rent(length);
             try
             {
-                var result = await FromAsync(socket, tempBuffer, 0, length, remoteEndPoint, beginMethod, endMethod, cancellationToken);
+                var result = await FromAsync(socket, tempBuffer, 0, length, remoteEndPoint, beginMethod, endMethod, cancellationToken).ConfigureAwait(false);
                 tempBuffer.CopyTo(memory);
                 return result;
             }
