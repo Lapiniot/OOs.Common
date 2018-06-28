@@ -7,7 +7,10 @@ namespace System
     {
         private ConcurrentDictionary<IObserver<T>, Subscription> observers;
 
-        public ObserversContainer() => observers = new ConcurrentDictionary<IObserver<T>, Subscription>();
+        public ObserversContainer()
+        {
+            observers = new ConcurrentDictionary<IObserver<T>, Subscription>();
+        }
 
         public IDisposable Subscribe(IObserver<T> observer)
         {

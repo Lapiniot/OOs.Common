@@ -78,8 +78,10 @@ namespace System.Net.Sockets
 
         private class AsyncStateBag<T>
         {
-            public AsyncStateBag(Socket socket, IPEndPoint endPoint, TaskCompletionSource<T> completionSource, AsyncEndHandler<T> endMethod) =>
+            public AsyncStateBag(Socket socket, IPEndPoint endPoint, TaskCompletionSource<T> completionSource, AsyncEndHandler<T> endMethod)
+            {
                 (Socket, EndPoint, CompletionSource, EndMethod) = (socket, endPoint, completionSource, endMethod);
+            }
 
             private AsyncEndHandler<T> EndMethod { get; }
             private TaskCompletionSource<T> CompletionSource { get; }

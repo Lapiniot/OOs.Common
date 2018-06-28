@@ -45,7 +45,10 @@ namespace System.Threading
         {
             private readonly IDisposable[] targets;
 
-            internal DisposeContainer(params IDisposable[] targets) => this.targets = targets;
+            internal DisposeContainer(params IDisposable[] targets)
+            {
+                this.targets = targets;
+            }
 
             public void Dispose()
             {
