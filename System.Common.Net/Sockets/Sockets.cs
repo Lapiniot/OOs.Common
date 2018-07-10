@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Net.NetworkInformation;
 using static System.Net.IPAddress;
+using static System.Net.NetworkInformation.NetworkInterfaceType;
 using static System.Net.NetworkInformation.OperationalStatus;
 using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.SocketOptionLevel;
@@ -51,7 +52,14 @@ namespace System.Net.Sockets
 
                     foreach(var iface in NetworkInterface.GetAllNetworkInterfaces())
                     {
-                        if(!iface.SupportsMulticast || iface.OperationalStatus != Up || iface.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+                        if(!iface.SupportsMulticast || iface.OperationalStatus != Up ||
+                           iface.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
+                           iface.NetworkInterfaceType == Ppp ||
+                           iface.NetworkInterfaceType == GenericModem ||
+                           iface.NetworkInterfaceType == Tunnel)
+                        {
+                            continue;
+                        }
 
                         var interfaceProperties = iface.GetIPProperties();
 
