@@ -76,7 +76,7 @@ namespace System.Net.Sockets
             }
         }
 
-        private class AsyncStateBag<T>
+        private sealed class AsyncStateBag<T>
         {
             public AsyncStateBag(Socket socket, IPEndPoint endPoint, TaskCompletionSource<T> completionSource, AsyncEndHandler<T> endMethod)
             {

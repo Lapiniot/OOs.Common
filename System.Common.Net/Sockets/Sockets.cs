@@ -21,7 +21,7 @@ namespace System.Net.Sockets
             public static readonly IPEndPoint Any = new IPEndPoint(IPAddress.Any, 0);
         }
 
-        private class UdpSocket : Socket
+        private sealed class UdpSocket : Socket
         {
             public UdpSocket(AddressFamily addressFamily = InterNetwork) : base(addressFamily, Dgram, ProtocolType.Udp)
             {
@@ -50,18 +50,18 @@ namespace System.Net.Sockets
                 {
                     var udpSocket = new UdpSocket();
 
-                    foreach(var iface in NetworkInterface.GetAllNetworkInterfaces())
+                    foreach(var i in NetworkInterface.GetAllNetworkInterfaces())
                     {
-                        if(!iface.SupportsMulticast || iface.OperationalStatus != Up ||
-                           iface.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
-                           iface.NetworkInterfaceType == Ppp ||
-                           iface.NetworkInterfaceType == GenericModem ||
-                           iface.NetworkInterfaceType == Tunnel)
+                        if(!i.SupportsMulticast || i.OperationalStatus != Up ||
+                           i.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
+                           i.NetworkInterfaceType == Ppp ||
+                           i.NetworkInterfaceType == GenericModem ||
+                           i.NetworkInterfaceType == Tunnel)
                         {
                             continue;
                         }
 
-                        var interfaceProperties = iface.GetIPProperties();
+                        var interfaceProperties = i.GetIPProperties();
 
                         if(interfaceProperties == null || !interfaceProperties.MulticastAddresses.Any()) continue;
 

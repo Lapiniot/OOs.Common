@@ -11,9 +11,9 @@ namespace System.CommandLine
             Type = type ?? throw new ArgumentException($"{nameof(type)} cannot be null");
         }
 
-        public ArgumentAttribute(string name, Type type, string synonim) : this(name, type)
+        public ArgumentAttribute(string name, Type type, string synonym) : this(name, type)
         {
-            Synonim = synonim;
+            Synonym = synonym;
         }
 
         public string Name { get; set; }
@@ -24,7 +24,7 @@ namespace System.CommandLine
 
         public bool Optional { get; set; }
 
-        public string Synonim { get; set; }
+        public string Synonym { get; set; }
 
         public string Description { get; set; }
     }

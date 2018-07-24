@@ -79,7 +79,7 @@ namespace System.CommandLine
 
                 nmap.Add(item.Name, item);
 
-                if(item.Synonim != null) smap.Add(item.Synonim, item);
+                if(item.Synonym != null) smap.Add(item.Synonym, item);
             }
 
             command = commands.SingleOrDefault(c => c.Default)?.Name;
@@ -103,7 +103,7 @@ namespace System.CommandLine
 
                 if(arg.StartsWith("--"))
                 {
-                    AddBySynonim(arg.Substring(2), smap, arguments);
+                    AddBySynonym(arg.Substring(2), smap, arguments);
                 }
                 else if(arg[0] == '-' || arg[0] == '/')
                 {
@@ -224,7 +224,7 @@ namespace System.CommandLine
             return true;
         }
 
-        private static void AddBySynonim(string arg,
+        private static void AddBySynonym(string arg,
             IDictionary<string, ArgumentAttribute> smap,
             Dictionary<string, object> arguments)
         {

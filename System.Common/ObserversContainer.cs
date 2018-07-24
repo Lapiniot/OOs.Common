@@ -38,7 +38,7 @@ namespace System
             foreach(var pair in observers) pair.Key.OnCompleted();
         }
 
-        private class Subscription : IDisposable
+        private sealed class Subscription : IDisposable
         {
             private ObserversContainer<T> container;
             private IObserver<T> observer;

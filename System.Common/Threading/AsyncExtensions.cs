@@ -41,7 +41,7 @@ namespace System.Threading
             return new DisposeContainer(ConvertAll(tokens, t => (IDisposable)t.Register(() => completionSource.TrySetCanceled(t))));
         }
 
-        private class DisposeContainer : IDisposable
+        private sealed class DisposeContainer : IDisposable
         {
             private readonly IDisposable[] targets;
 
