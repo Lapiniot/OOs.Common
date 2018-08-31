@@ -28,6 +28,8 @@ namespace System
                         await OnConnectAsync(options, cancellationToken).ConfigureAwait(false);
 
                         connected = true;
+
+                        await OnConnectedAsync(options, cancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -50,18 +52,19 @@ namespace System
                     if(connected)
                     {
                         await OnCloseAsync().ConfigureAwait(false);
-
-                        connected = false;
                     }
                 }
                 finally
                 {
+                    connected = false;
                     semaphore.Release();
                 }
             }
         }
 
         protected abstract Task OnConnectAsync(TOptions options, CancellationToken cancellationToken);
+
+        protected abstract Task OnConnectedAsync(TOptions options, CancellationToken cancellationToken);
 
         protected abstract Task OnCloseAsync();
 
