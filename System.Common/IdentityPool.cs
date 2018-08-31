@@ -7,31 +7,42 @@ namespace System
     public abstract class IdentityPool<T> : IIdentityPool<T>
     {
         private readonly HashSet<T> hashSet = new HashSet<T>();
-        private SpinLock spinLock = new SpinLock();
+        private SpinLock rentLock = new SpinLock();
+        private SpinLock updateLock = new SpinLock();
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract void Advance(ref T value);
+
+        protected abstract T GetStartValue();
 
         #region Implementation of IIdentityPool<ushort>
 
         public T Rent()
         {
-            T i = default;
+            var i = GetStartValue();
             var lockTaken = false;
             try
             {
-                spinLock.Enter(ref lockTaken);
+                rentLock.Enter(ref lockTaken);
 
                 while(hashSet.Contains(i))
                 {
                     Advance(ref i);
                 }
 
-                hashSet.Add(i);
+                var updateLockTaken = false;
+                try
+                {
+                    updateLock.Enter(ref updateLockTaken);
+                    hashSet.Add(i);
+                }
+                finally
+                {
+                    if(updateLockTaken) updateLock.Exit(false);
+                }
             }
             finally
             {
-                if(lockTaken) spinLock.Exit(false);
+                if(lockTaken) rentLock.Exit(false);
             }
 
             return i;
@@ -42,12 +53,12 @@ namespace System
             var lockTaken = false;
             try
             {
-                spinLock.Enter(ref lockTaken);
+                updateLock.Enter(ref lockTaken);
                 hashSet.Remove(identity);
             }
             finally
             {
-                if(lockTaken) spinLock.Exit(false);
+                if(lockTaken) updateLock.Exit(false);
             }
         }
 
@@ -56,11 +67,34 @@ namespace System
 
     public class UInt16IdentityPool : IdentityPool<ushort>
     {
+        private readonly ushort endValue;
+        private readonly ushort startValue;
+
         #region Overrides of IdentityPool<ushort>
 
+        public UInt16IdentityPool(ushort startValue = ushort.MinValue, ushort endValue = ushort.MaxValue)
+        {
+            this.startValue = startValue;
+            this.endValue = endValue;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Advance(ref ushort value)
         {
-            value++;
+            if(value == endValue)
+            {
+                value = startValue;
+            }
+            else
+            {
+                value++;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override ushort GetStartValue()
+        {
+            return startValue;
         }
 
         #endregion
