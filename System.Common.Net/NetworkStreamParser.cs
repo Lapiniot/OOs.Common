@@ -20,10 +20,11 @@ namespace System.Net
 
         public IPEndPoint Endpoint { get; }
 
-        protected override async Task OnConnectAsync(TOptions options, CancellationToken cancellationToken)
+        protected override Task OnConnectAsync(TOptions options, CancellationToken cancellationToken)
         {
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            await Socket.ConnectAsync(Endpoint).ConfigureAwait(false);
+
+            return Socket.ConnectAsync(Endpoint);
         }
 
         protected override async Task OnCloseAsync()
@@ -44,13 +45,13 @@ namespace System.Net
             processorCts = new CancellationTokenSource();
             var token = processorCts.Token;
             processor = Task.WhenAll(
-                Task.Run(() => StartNetworkReader(pipe.Writer, token), token),
-                Task.Run(() => StartParser(pipe.Reader, token), token));
+                Task.Run(() => StartNetworkReaderAsync(pipe.Writer, token), token),
+                Task.Run(() => StartParserAsync(pipe.Reader, token), token));
 
             return Task.CompletedTask;
         }
 
-        private async Task StartNetworkReader(PipeWriter writer, CancellationToken token)
+        private async Task StartNetworkReaderAsync(PipeWriter writer, CancellationToken token)
         {
             try
             {
@@ -78,7 +79,7 @@ namespace System.Net
             }
         }
 
-        private async Task StartParser(PipeReader reader, CancellationToken token)
+        private async Task StartParserAsync(PipeReader reader, CancellationToken token)
         {
             try
             {
@@ -92,7 +93,14 @@ namespace System.Net
 
                     ParseBuffer(buffer, out var consumed);
 
-                    reader.AdvanceTo(buffer.GetPosition(consumed));
+                    if(consumed > 0)
+                    {
+                        reader.AdvanceTo(buffer.GetPosition(consumed));
+                    }
+                    else
+                    {
+                        reader.AdvanceTo(buffer.Start, buffer.End);
+                    }
 
                     if(result.IsCompleted) break;
                 }
