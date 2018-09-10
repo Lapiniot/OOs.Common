@@ -25,17 +25,47 @@ namespace System
 
         public void Notify(T value)
         {
-            foreach(var pair in observers) pair.Key.OnNext(value);
+            foreach(var pair in observers)
+            {
+                try
+                {
+                    pair.Key.OnNext(value);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
         }
 
         public void NotifyError(Exception error)
         {
-            foreach(var pair in observers) pair.Key.OnError(error);
+            foreach(var pair in observers)
+            {
+                try
+                {
+                    pair.Key.OnError(error);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
         }
 
         public void NotifyCompleted()
         {
-            foreach(var pair in observers) pair.Key.OnCompleted();
+            foreach(var pair in observers)
+            {
+                try
+                {
+                    pair.Key.OnCompleted();
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
         }
 
         private sealed class Subscription : IDisposable
