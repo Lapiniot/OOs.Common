@@ -61,7 +61,11 @@ namespace System.Net
 
                     var received = await Socket.ReceiveAsync(buffer, SocketFlags.None, token).ConfigureAwait(false);
 
-                    if(received == 0) break;
+                    if(received == 0)
+                    {
+                        OnServerSocketDisconnected();
+                        break;
+                    }
 
                     writer.Advance(received);
 
@@ -78,6 +82,8 @@ namespace System.Net
                 writer.Complete();
             }
         }
+
+        protected abstract void OnServerSocketDisconnected();
 
         private async Task StartParserAsync(PipeReader reader, CancellationToken token)
         {
