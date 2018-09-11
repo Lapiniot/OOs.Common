@@ -45,8 +45,8 @@ namespace System.Net
             processorCts = new CancellationTokenSource();
             var token = processorCts.Token;
             processor = Task.WhenAll(
-                Task.Run(() => StartNetworkReaderAsync(pipe.Writer, token), token),
-                Task.Run(() => StartParserAsync(pipe.Reader, token), token));
+                StartNetworkReaderAsync(pipe.Writer, token),
+                StartParserAsync(pipe.Reader, token));
 
             return Task.CompletedTask;
         }
