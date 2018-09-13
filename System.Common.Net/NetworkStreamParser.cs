@@ -11,7 +11,7 @@ namespace System.Net
         private Pipe pipe;
         private Task processor;
         private CancellationTokenSource processorCts;
-        protected Socket Socket;
+        private Socket socket;
 
         protected NetworkStreamParser(IPEndPoint endpoint)
         {
@@ -22,9 +22,9 @@ namespace System.Net
 
         protected override Task OnConnectAsync(TOptions options, CancellationToken cancellationToken)
         {
-            Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            return Socket.ConnectAsync(Endpoint);
+            return socket.ConnectAsync(Endpoint);
         }
 
         protected override async Task OnCloseAsync()
@@ -32,16 +32,16 @@ namespace System.Net
             processorCts.Cancel();
             await processor.ConfigureAwait(false);
 
-            Socket.Disconnect(false);
-            Socket.Shutdown(SocketShutdown.Both);
-            Socket.Close();
+            socket.Disconnect(false);
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
         }
 
         protected abstract void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed);
 
         protected override Task OnConnectedAsync(TOptions options, CancellationToken cancellationToken)
         {
-            pipe = new Pipe(new PipeOptions(useSynchronizationContext:false));
+            pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
             processorCts = new CancellationTokenSource();
             var token = processorCts.Token;
             processor = Task.WhenAll(
@@ -59,7 +59,7 @@ namespace System.Net
                 {
                     var buffer = writer.GetMemory();
 
-                    var received = await Socket.ReceiveAsync(buffer, SocketFlags.None, token).ConfigureAwait(false);
+                    var received = await ReceiveAsync(buffer, token).ConfigureAwait(false);
 
                     if(received == 0)
                     {
@@ -81,6 +81,16 @@ namespace System.Net
             {
                 writer.Complete();
             }
+        }
+
+        protected Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            return socket.ReceiveAsync(buffer, cancellationToken);
+        }
+
+        protected Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            return socket.SendAsync(buffer, cancellationToken);
         }
 
         protected abstract void OnServerSocketDisconnected();
