@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.Common.Net
+namespace System.Net
 {
     public interface INetworkTransport
     {
