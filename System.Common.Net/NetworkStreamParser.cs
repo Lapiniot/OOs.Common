@@ -41,7 +41,7 @@ namespace System.Net
 
         protected override Task OnConnectedAsync(TOptions options, CancellationToken cancellationToken)
         {
-            pipe = new Pipe(new PipeOptions(minimumSegmentSize: 512));
+            pipe = new Pipe(new PipeOptions(useSynchronizationContext:false));
             processorCts = new CancellationTokenSource();
             var token = processorCts.Token;
             processor = Task.WhenAll(
