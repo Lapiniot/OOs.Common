@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System
 {
-    public abstract class AsyncConnectedObject<TOptions> : IDisposable
+    public abstract class AsyncConnectedObject<TOptions> : IAsyncConnectedObject<TOptions>
     {
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
