@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.IO.Pipelines;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,33 +7,45 @@ namespace System.Net
 {
     public abstract class NetworkStreamParser<TOptions> : AsyncConnectedObject<TOptions>
     {
+        private readonly NetworkTransport transport;
         private Pipe pipe;
         private Task processor;
         private CancellationTokenSource processorCts;
-        private Socket socket;
 
-        protected NetworkStreamParser(IPEndPoint endpoint)
+        protected NetworkStreamParser(NetworkTransport transport)
         {
-            Endpoint = endpoint;
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
-
-        public IPEndPoint Endpoint { get; }
 
         protected override Task OnConnectAsync(TOptions options, CancellationToken cancellationToken)
         {
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-            return socket.ConnectAsync(Endpoint);
+            return transport.ConnectAsync(null, cancellationToken);
         }
 
         protected override async Task OnCloseAsync()
         {
-            processorCts.Cancel();
-            await processor.ConfigureAwait(false);
+            using(processorCts)
+            {
+                processorCts.Cancel();
 
-            socket.Disconnect(false);
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Close();
+                try
+                {
+                    await processor.ConfigureAwait(false);
+                }
+                catch
+                {
+                    // ignored
+                }
+
+                try
+                {
+                    await transport.CloseAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
         }
 
         protected abstract void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed);
@@ -42,14 +53,27 @@ namespace System.Net
         protected override Task OnConnectedAsync(TOptions options, CancellationToken cancellationToken)
         {
             pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
+
             processorCts = new CancellationTokenSource();
+
             var token = processorCts.Token;
-            processor = Task.WhenAll(
-                StartNetworkReaderAsync(pipe.Writer, token),
-                StartParserAsync(pipe.Reader, token));
+
+            processor = Task.WhenAll(StartNetworkReaderAsync(pipe.Writer, token), StartParserAsync(pipe.Reader, token));
 
             return Task.CompletedTask;
         }
+
+        protected Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            return transport.ReceiveAsync(buffer, cancellationToken);
+        }
+
+        protected Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            return transport.SendAsync(buffer, cancellationToken);
+        }
+
+        protected abstract void OnEndOfStream();
 
         private async Task StartNetworkReaderAsync(PipeWriter writer, CancellationToken token)
         {
@@ -63,7 +87,7 @@ namespace System.Net
 
                     if(received == 0)
                     {
-                        OnServerSocketDisconnected();
+                        OnEndOfStream();
                         break;
                     }
 
@@ -82,18 +106,6 @@ namespace System.Net
                 writer.Complete();
             }
         }
-
-        protected Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return socket.ReceiveAsync(buffer, cancellationToken);
-        }
-
-        protected Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return socket.SendAsync(buffer, cancellationToken);
-        }
-
-        protected abstract void OnServerSocketDisconnected();
 
         private async Task StartParserAsync(PipeReader reader, CancellationToken token)
         {

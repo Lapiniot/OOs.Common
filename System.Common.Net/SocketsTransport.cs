@@ -1,33 +1,59 @@
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Sockets.AddressFamily;
+using static System.Net.Sockets.ProtocolType;
+using static System.Net.Sockets.SocketType;
 
 namespace System.Net
 {
     public class SocketsTransport : NetworkTransport
     {
+        private Socket socket;
+
+        public SocketsTransport(IPEndPoint ipEndPoint)
+        {
+            RemoteEndPoint = ipEndPoint ?? throw new ArgumentNullException(nameof(ipEndPoint));
+        }
+
+        public IPEndPoint RemoteEndPoint { get; }
+
         public override Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return socket.ReceiveAsync(buffer, cancellationToken);
         }
 
         public override Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return socket.SendAsync(buffer, cancellationToken);
         }
 
-        protected override Task OnCloseAsync()
+        protected override async Task OnCloseAsync()
         {
-            throw new NotImplementedException();
+            socket.Shutdown(SocketShutdown.Both);
+
+            IAsyncResult BeginDisconnect(AsyncCallback ar, object state)
+            {
+                return socket.BeginDisconnect(false, ar, state);
+            }
+
+            await Task.Factory.FromAsync(BeginDisconnect, socket.EndDisconnect, null).ConfigureAwait(false);
+
+            socket.Close();
+
+            socket = null;
         }
 
         protected override Task OnConnectAsync(object options, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            socket = new Socket(InterNetwork, Stream, Tcp);
+
+            return socket.ConnectAsync(RemoteEndPoint);
         }
 
         protected override Task OnConnectedAsync(object options, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }
