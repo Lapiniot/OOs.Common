@@ -24,23 +24,24 @@ namespace System.Collections.Generic
         public async Task<(bool success, T result)> DequeueAsync(CancellationToken cancellationToken = default)
         {
             await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            return (queue.TryDequeue(out T result), result);
+            return (queue.TryDequeue(out var result), result);
         }
 
         public async Task<(bool success, T result)> DequeueAsync(TimeSpan timeout, CancellationToken cancellationToken = default)
         {
             await semaphore.WaitAsync(timeout, cancellationToken).ConfigureAwait(false);
-            return (queue.TryDequeue(out T result), result);
+            return (queue.TryDequeue(out var result), result);
         }
 
         public async Task<(bool success, T result)> DequeueAsync(int millisecondsTimeout, CancellationToken cancellationToken = default)
         {
             await semaphore.WaitAsync(millisecondsTimeout, cancellationToken).ConfigureAwait(false);
-            return (queue.TryDequeue(out T result), result);
+            return (queue.TryDequeue(out var result), result);
         }
 
         #region IDisposable Support
-        private bool disposed = false;
+
+        private bool disposed;
 
         public void Dispose()
         {
