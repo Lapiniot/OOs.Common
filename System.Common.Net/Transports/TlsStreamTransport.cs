@@ -20,12 +20,12 @@ namespace System.Net.Transports
             throw new NotImplementedException();
         }
 
-        protected override Task OnConnectAsync(object options, CancellationToken cancellationToken)
+        protected override Task OnConnectAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        protected override Task OnConnectedAsync(object options, CancellationToken cancellationToken)
+        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

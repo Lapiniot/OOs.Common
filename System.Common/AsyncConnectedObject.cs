@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System
 {
-    public abstract class AsyncConnectedObject<TOptions> : IAsyncConnectedObject<TOptions>
+    public abstract class AsyncConnectedObject : IAsyncConnectedObject
     {
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
@@ -13,7 +13,7 @@ namespace System
             get { return connected; }
         }
 
-        public async Task ConnectAsync(TOptions options, CancellationToken cancellationToken = default)
+        public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             CheckDisposed();
 
@@ -25,11 +25,11 @@ namespace System
                 {
                     if(!connected)
                     {
-                        await OnConnectAsync(options, cancellationToken).ConfigureAwait(false);
+                        await OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
                         connected = true;
 
-                        await OnConnectedAsync(options, cancellationToken).ConfigureAwait(false);
+                        await OnConnectedAsync(cancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -62,9 +62,9 @@ namespace System
             }
         }
 
-        protected abstract Task OnConnectAsync(TOptions options, CancellationToken cancellationToken);
+        protected abstract Task OnConnectAsync(CancellationToken cancellationToken);
 
-        protected abstract Task OnConnectedAsync(TOptions options, CancellationToken cancellationToken);
+        protected abstract Task OnConnectedAsync(CancellationToken cancellationToken);
 
         protected abstract Task OnCloseAsync();
 

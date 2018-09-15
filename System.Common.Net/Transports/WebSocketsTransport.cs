@@ -8,13 +8,18 @@ namespace System.Net.Transports
 {
     public class WebSocketsTransport : NetworkTransport
     {
-        private readonly Uri remoteUri;
         private ClientWebSocket webSocket;
 
-        public WebSocketsTransport(Uri remoteUri)
+        public WebSocketsTransport(Uri remoteUri, params string[] subProtocols)
         {
-            this.remoteUri = remoteUri;
+            RemoteUri = remoteUri ?? throw new ArgumentNullException(nameof(remoteUri));
+            SubProtocols = subProtocols ?? throw new ArgumentNullException(nameof(subProtocols));
+            if(SubProtocols.Length == 0) throw new ArgumentException("At least one sub-protocol name must be provided");
         }
+
+        public Uri RemoteUri { get; }
+
+        public string[] SubProtocols { get; }
 
         public override async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
@@ -52,16 +57,18 @@ namespace System.Net.Transports
             }
         }
 
-        protected override Task OnConnectAsync(object options, CancellationToken cancellationToken)
+        protected override Task OnConnectAsync(CancellationToken cancellationToken)
         {
             try
             {
                 webSocket = new ClientWebSocket();
 
-                webSocket.Options.AddSubProtocol("mqttv3.1");
-                webSocket.Options.AddSubProtocol("mqttv");
+                foreach(var subProtocol in SubProtocols)
+                {
+                    webSocket.Options.AddSubProtocol(subProtocol);
+                }
 
-                return webSocket.ConnectAsync(remoteUri, cancellationToken);
+                return webSocket.ConnectAsync(RemoteUri, cancellationToken);
             }
             catch(Exception exception)
             {
@@ -70,7 +77,7 @@ namespace System.Net.Transports
             }
         }
 
-        protected override Task OnConnectedAsync(object options, CancellationToken cancellationToken)
+        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

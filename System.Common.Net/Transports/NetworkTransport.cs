@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Transports
 {
-    public abstract class NetworkTransport : AsyncConnectedObject<object>, INetworkTransport
+    public abstract class NetworkTransport : AsyncConnectedObject, INetworkTransport
     {
         public abstract Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 

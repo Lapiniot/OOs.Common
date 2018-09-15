@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace System.Net
 {
-    public abstract class NetworkStreamParser<TOptions> : AsyncConnectedObject<TOptions>
+    public abstract class NetworkStreamParser : AsyncConnectedObject
     {
         private readonly NetworkTransport transport;
         private Pipe pipe;
@@ -18,9 +18,9 @@ namespace System.Net
             this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
-        protected override Task OnConnectAsync(TOptions options, CancellationToken cancellationToken)
+        protected override Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            return transport.ConnectAsync(null, cancellationToken);
+            return transport.ConnectAsync(cancellationToken);
         }
 
         protected override async Task OnCloseAsync()
@@ -51,7 +51,7 @@ namespace System.Net
 
         protected abstract void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed);
 
-        protected override Task OnConnectedAsync(TOptions options, CancellationToken cancellationToken)
+        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
         {
             pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
 

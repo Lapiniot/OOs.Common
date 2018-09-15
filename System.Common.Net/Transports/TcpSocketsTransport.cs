@@ -44,14 +44,14 @@ namespace System.Net.Transports
             socket = null;
         }
 
-        protected override Task OnConnectAsync(object options, CancellationToken cancellationToken)
+        protected override Task OnConnectAsync(CancellationToken cancellationToken)
         {
             socket = new Socket(InterNetwork, Stream, Tcp);
 
             return socket.ConnectAsync(RemoteEndPoint);
         }
 
-        protected override Task OnConnectedAsync(object options, CancellationToken cancellationToken)
+        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
