@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.Net
+namespace System.Net.Transports
 {
     public abstract class NetworkTransport : AsyncConnectedObject<object>, INetworkTransport
     {

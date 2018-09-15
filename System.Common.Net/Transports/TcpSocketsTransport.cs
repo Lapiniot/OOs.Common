@@ -5,13 +5,13 @@ using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.ProtocolType;
 using static System.Net.Sockets.SocketType;
 
-namespace System.Net
+namespace System.Net.Transports
 {
-    public class SocketsTransport : NetworkTransport
+    public class TcpSocketsTransport : NetworkTransport
     {
         private Socket socket;
 
-        public SocketsTransport(IPEndPoint ipEndPoint)
+        public TcpSocketsTransport(IPEndPoint ipEndPoint)
         {
             RemoteEndPoint = ipEndPoint ?? throw new ArgumentNullException(nameof(ipEndPoint));
         }

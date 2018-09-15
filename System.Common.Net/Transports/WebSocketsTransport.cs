@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using static System.Net.WebSockets.WebSocketCloseStatus;
 using static System.Net.WebSockets.WebSocketState;
 
-namespace System.Net
+namespace System.Net.Transports
 {
     public class WebSocketsTransport : NetworkTransport
     {
