@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace System.Collections.Generic
 {
-    public sealed class BlockingQueue<T> : IDisposable
+    public sealed class AsyncBlockingQueue<T> : IDisposable
     {
         private readonly ConcurrentQueue<T> queue;
         private readonly SemaphoreSlim semaphore;
 
-        public BlockingQueue()
+        public AsyncBlockingQueue()
         {
             queue = new ConcurrentQueue<T>();
             semaphore = new SemaphoreSlim(0);
