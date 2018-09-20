@@ -52,37 +52,58 @@ namespace System.Collections.Generic
 
         public TV AddOrUpdate(TK key, TV addValue, Func<TK, TV, TV> updateValueFactory)
         {
-            return map.TryGetValue(key, out var node)
-                ? node.Value = updateValueFactory(key, node.Value)
-                : AddNodeInternal(key, addValue).Value;
+            using(lockSlim.WithWriteLock())
+            {
+                return map.TryGetValue(key, out var node)
+                    ? node.Value = updateValueFactory(key, node.Value)
+                    : AddNodeInternal(key, addValue).Value;
+            }
         }
 
         public TV GetOrAdd(TK key, TV value)
         {
-            return map.TryGetValue(key, out var node)
-                ? node.Value
-                : AddNodeInternal(key, value).Value;
+            using(lockSlim.WithUpgradeableReadLock())
+            {
+                if(map.TryGetValue(key, out var node))
+                {
+                    return node.Value;
+                }
+
+                using(lockSlim.WithWriteLock())
+                {
+                    return AddNodeInternal(key, value).Value;
+                }
+            }
         }
 
         public bool TryAdd(TK key, TV value)
         {
-            if(map.ContainsKey(key)) return false;
+            using(lockSlim.WithUpgradeableReadLock())
+            {
+                if(map.ContainsKey(key)) return false;
 
-            AddNodeInternal(key, value);
+                using(lockSlim.WithWriteLock())
+                {
+                    AddNodeInternal(key, value);
+                }
+            }
 
             return true;
         }
 
         public bool TryGet(TK key, out TV value)
         {
-            if(!map.TryGetValue(key, out var node))
+            using(lockSlim.WithReadLock())
             {
-                value = default;
-                return false;
-            }
+                if(!map.TryGetValue(key, out var node))
+                {
+                    value = default;
+                    return false;
+                }
 
-            value = node.Value;
-            return true;
+                value = node.Value;
+                return true;
+            }
         }
 
         public bool Dequeue(out TV value)
@@ -93,33 +114,45 @@ namespace System.Collections.Generic
                 return false;
             }
 
-            var h = head;
-            head = h.Next;
-            head.Prev = null;
-            value = h.Value;
-            return map.Remove(h.Key);
+            using(lockSlim.WithWriteLock())
+            {
+                var h = head;
+                head = h.Next;
+                head.Prev = null;
+                value = h.Value;
+                return map.Remove(h.Key);
+            }
         }
 
         public bool TryRemove(TK key, out TV value)
         {
-            if(map.TryGetValue(key, out var node) && map.Remove(key))
+            using(lockSlim.WithUpgradeableReadLock())
             {
-                if(node.Next != null) node.Next.Prev = node.Prev;
+                if(map.TryGetValue(key, out var node))
+                {
+                    using(lockSlim.WithWriteLock())
+                    {
+                        if(map.Remove(key))
+                        {
+                            if(node.Next != null) node.Next.Prev = node.Prev;
 
-                if(node.Prev != null) node.Prev.Next = node.Next;
+                            if(node.Prev != null) node.Prev.Next = node.Next;
 
-                if(head == node) head = node.Next;
+                            if(head == node) head = node.Next;
 
-                if(tail == node) tail = node.Prev;
+                            if(tail == node) tail = node.Prev;
 
-                value = node.Value;
+                            value = node.Value;
 
-                return true;
+                            return true;
+                        }
+                    }
+                }
+
+                value = default;
+
+                return false;
             }
-
-            value = default;
-
-            return false;
         }
 
         private Node AddNodeInternal(TK key, TV value)
