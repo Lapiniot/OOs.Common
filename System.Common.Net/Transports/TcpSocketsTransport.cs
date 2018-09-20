@@ -16,6 +16,17 @@ namespace System.Net.Transports
             RemoteEndPoint = ipEndPoint ?? throw new ArgumentNullException(nameof(ipEndPoint));
         }
 
+        public TcpSocketsTransport(string host, int port)
+        {
+            if(host == null) throw new ArgumentNullException(nameof(host));
+            if(host == "") throw new ArgumentException("Value cannot be empty.", nameof(host));
+
+            var addresses = Dns.GetHostAddresses(host);
+            if(addresses == null || addresses.Length == 0) throw new ArgumentException("Host name cannot be resolved.");
+
+            RemoteEndPoint = new IPEndPoint(addresses[0], port);
+        }
+
         public IPEndPoint RemoteEndPoint { get; }
 
         public override Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
