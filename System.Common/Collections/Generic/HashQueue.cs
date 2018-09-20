@@ -1,17 +1,28 @@
-﻿using System.Runtime.CompilerServices;
-using System.Threading;
+﻿using System.Threading;
 using static System.Threading.LockRecursionPolicy;
-
-[assembly: InternalsVisibleTo("System.Common.Tests")]
 
 namespace System.Collections.Generic
 {
     public sealed class HashQueue<TK, TV> : IDisposable
     {
-        private readonly ReaderWriterLockSlim lockSlim = new ReaderWriterLockSlim(NoRecursion);
-        private readonly Dictionary<TK, Node> map = new Dictionary<TK, Node>();
+        private readonly ReaderWriterLockSlim lockSlim;
+        private readonly Dictionary<TK, Node> map;
         private Node head;
         private Node tail;
+
+        public HashQueue(params (TK key, TV value)[] items) : this()
+        {
+            foreach(var item in items)
+            {
+                AddNodeInternal(item.key, item.value);
+            }
+        }
+
+        public HashQueue()
+        {
+            map = new Dictionary<TK, Node>();
+            lockSlim = new ReaderWriterLockSlim(NoRecursion);
+        }
 
         internal Node Head
         {
@@ -42,7 +53,7 @@ namespace System.Collections.Generic
         public TV AddOrUpdate(TK key, TV addValue, Func<TK, TV, TV> updateValueFactory)
         {
             return map.TryGetValue(key, out var node)
-                ? (node.Value = updateValueFactory(key, node.Value))
+                ? node.Value = updateValueFactory(key, node.Value)
                 : AddNodeInternal(key, addValue).Value;
         }
 
@@ -62,7 +73,7 @@ namespace System.Collections.Generic
             return true;
         }
 
-        public bool TryGetValue(TK key, out TV value)
+        public bool TryGet(TK key, out TV value)
         {
             if(!map.TryGetValue(key, out var node))
             {

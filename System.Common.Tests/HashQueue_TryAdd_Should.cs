@@ -201,11 +201,10 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void Throw_ArgumentNullException_GivenKey_Null()
         {
             var hq = new HashQueue<string, string>();
-            hq.TryAdd(null, "test value");
+            Assert.ThrowsException<ArgumentNullException>(() => hq.TryAdd(null, "test value"));
         }
     }
 }
