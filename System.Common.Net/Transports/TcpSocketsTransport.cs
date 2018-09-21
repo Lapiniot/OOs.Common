@@ -1,9 +1,12 @@
 using System.Net.Sockets;
+using System.Net.Transports.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.ProtocolType;
+using static System.Net.Sockets.SocketShutdown;
 using static System.Net.Sockets.SocketType;
+using static System.Threading.Tasks.Task;
 
 namespace System.Net.Transports
 {
@@ -29,30 +32,45 @@ namespace System.Net.Transports
 
         public IPEndPoint RemoteEndPoint { get; }
 
-        public override Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return socket.ReceiveAsync(buffer, cancellationToken);
-        }
-
-        public override Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return socket.SendAsync(buffer, cancellationToken);
-        }
-
-        protected override async Task OnCloseAsync()
-        {
-            socket.Shutdown(SocketShutdown.Both);
-
-            IAsyncResult BeginDisconnect(AsyncCallback ar, object state)
+            CheckConnected();
+            try
             {
-                return socket.BeginDisconnect(false, ar, state);
+                return await socket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
             }
+            catch(SocketException se) when(se.SocketErrorCode == SocketError.ConnectionAborted)
+            {
+                await CloseAsync().ConfigureAwait(false);
 
-            await Task.Factory.FromAsync(BeginDisconnect, socket.EndDisconnect, null).ConfigureAwait(false);
+                throw new ConnectionAbortedException(se);
+            }
+        }
+
+        public override async Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            CheckConnected();
+            try
+            {
+                return await socket.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
+            }
+            catch(SocketException se) when(se.SocketErrorCode == SocketError.ConnectionAborted)
+            {
+                await CloseAsync().ConfigureAwait(false);
+
+                throw new ConnectionAbortedException(se);
+            }
+        }
+
+        protected override Task OnCloseAsync()
+        {
+            socket.Shutdown(Both);
 
             socket.Close();
 
             socket = null;
+
+            return CompletedTask;
         }
 
         protected override Task OnConnectAsync(CancellationToken cancellationToken)
@@ -64,7 +82,7 @@ namespace System.Net.Transports
 
         protected override Task OnConnectedAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            return CompletedTask;
         }
     }
 }
