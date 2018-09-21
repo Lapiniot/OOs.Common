@@ -76,6 +76,16 @@ namespace System.Net.Sockets
             }
         }
 
+        public static async Task DisconnectAsync(this Socket socket)
+        {
+            IAsyncResult BeginDisconnect(AsyncCallback ar, object state)
+            {
+                return ((Socket)state).BeginDisconnect(false, ar, state);
+            }
+
+            await Task.Factory.FromAsync(BeginDisconnect, socket.EndDisconnect, socket).ConfigureAwait(false);
+        }
+
         private sealed class AsyncStateBag<T>
         {
             public AsyncStateBag(Socket socket, IPEndPoint endPoint, TaskCompletionSource<T> completionSource, AsyncEndHandler<T> endMethod)
