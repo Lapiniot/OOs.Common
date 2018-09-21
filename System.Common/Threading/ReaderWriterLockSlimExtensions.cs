@@ -22,7 +22,7 @@
     {
         private readonly ReaderWriterLockSlim lockSlim;
 
-        public ReadLockScope(ReaderWriterLockSlim lockSlim)
+        internal ReadLockScope(ReaderWriterLockSlim lockSlim)
         {
             this.lockSlim = lockSlim;
             lockSlim.EnterReadLock();
@@ -38,7 +38,7 @@
     {
         private readonly ReaderWriterLockSlim lockSlim;
 
-        public UpgradeableReadLockScope(ReaderWriterLockSlim lockSlim)
+        internal UpgradeableReadLockScope(ReaderWriterLockSlim lockSlim)
         {
             this.lockSlim = lockSlim;
             lockSlim.EnterUpgradeableReadLock();
@@ -54,7 +54,7 @@
     {
         private readonly ReaderWriterLockSlim lockSlim;
 
-        public WriteLockScope(ReaderWriterLockSlim lockSlim)
+        internal WriteLockScope(ReaderWriterLockSlim lockSlim)
         {
             this.lockSlim = lockSlim;
             lockSlim.EnterWriteLock();
