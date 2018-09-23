@@ -6,6 +6,7 @@ using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.ProtocolType;
 using static System.Net.Sockets.SocketShutdown;
 using static System.Net.Sockets.SocketType;
+using static System.Net.Sockets.SocketError;
 using static System.Threading.Tasks.Task;
 
 namespace System.Net.Transports
@@ -39,7 +40,9 @@ namespace System.Net.Transports
             {
                 return await socket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
             }
-            catch(SocketException se) when(se.SocketErrorCode == SocketError.ConnectionAborted)
+            catch(SocketException se) when(
+                se.SocketErrorCode == ConnectionAborted ||
+                se.SocketErrorCode == ConnectionReset)
             {
                 await CloseAsync().ConfigureAwait(false);
 
@@ -54,7 +57,9 @@ namespace System.Net.Transports
             {
                 return await socket.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
             }
-            catch(SocketException se) when(se.SocketErrorCode == SocketError.ConnectionAborted)
+            catch(SocketException se) when(
+                se.SocketErrorCode == ConnectionAborted ||
+                se.SocketErrorCode == ConnectionReset)
             {
                 await CloseAsync().ConfigureAwait(false);
 
