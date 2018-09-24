@@ -15,7 +15,7 @@ namespace System.Net.Transports
             throw new NotImplementedException();
         }
 
-        protected override Task OnCloseAsync()
+        protected override Task OnDisconnectAsync()
         {
             throw new NotImplementedException();
         }

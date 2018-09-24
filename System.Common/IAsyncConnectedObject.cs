@@ -7,6 +7,6 @@ namespace System
     {
         bool Connected { get; }
         Task ConnectAsync(CancellationToken cancellationToken = default);
-        Task CloseAsync();
+        Task DisconnectAsync();
     }
 }

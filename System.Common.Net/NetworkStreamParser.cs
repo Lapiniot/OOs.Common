@@ -3,19 +3,22 @@ using System.IO.Pipelines;
 using System.Net.Transports;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Threading.Tasks.Task;
 
 namespace System.Net
 {
     public abstract class NetworkStreamParser : AsyncConnectedObject
     {
+        private readonly bool disposeTransport;
         private readonly NetworkTransport transport;
         private Pipe pipe;
         private Task processor;
         private CancellationTokenSource processorCts;
 
-        protected NetworkStreamParser(NetworkTransport transport)
+        protected NetworkStreamParser(NetworkTransport transport, bool disposeTransport)
         {
             this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            this.disposeTransport = disposeTransport;
         }
 
         protected override Task OnConnectAsync(CancellationToken cancellationToken)
@@ -23,7 +26,7 @@ namespace System.Net
             return transport.ConnectAsync(cancellationToken);
         }
 
-        protected override async Task OnCloseAsync()
+        protected override async Task OnDisconnectAsync()
         {
             using(processorCts)
             {
@@ -40,7 +43,7 @@ namespace System.Net
 
                 try
                 {
-                    await transport.CloseAsync().ConfigureAwait(false);
+                    await transport.DisconnectAsync().ConfigureAwait(false);
                 }
                 catch
                 {
@@ -59,9 +62,9 @@ namespace System.Net
 
             var token = processorCts.Token;
 
-            processor = Task.WhenAll(StartNetworkReaderAsync(pipe.Writer, token), StartParserAsync(pipe.Reader, token));
+            processor = WhenAll(StartNetworkReaderAsync(pipe.Writer, token), StartParserAsync(pipe.Reader, token));
 
-            return Task.CompletedTask;
+            return CompletedTask;
         }
 
         protected Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
@@ -101,6 +104,7 @@ namespace System.Net
             }
             catch(OperationCanceledException)
             {
+                // ignored
             }
             finally
             {
@@ -136,11 +140,26 @@ namespace System.Net
             }
             catch(OperationCanceledException)
             {
+                // ignored
             }
             finally
             {
                 reader.Complete();
             }
         }
+
+        #region Overrides of AsyncConnectedObject
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            if(disposing && disposeTransport)
+            {
+                transport.Dispose();
+            }
+        }
+
+        #endregion
     }
 }

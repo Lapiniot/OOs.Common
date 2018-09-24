@@ -1,7 +1,9 @@
+using System.Net.Transports.Exceptions;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.WebSockets.WebSocketCloseStatus;
+using static System.Net.WebSockets.WebSocketError;
 using static System.Net.WebSockets.WebSocketState;
 using static System.Threading.Tasks.Task;
 
@@ -24,6 +26,7 @@ namespace System.Net.Transports
 
         public override async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
+            CheckConnected();
             try
             {
                 var result = await webSocket.ReceiveAsync(buffer, cancellationToken);
@@ -37,35 +40,36 @@ namespace System.Net.Transports
 
                 return result.Count;
             }
-            catch(Exception exception)
+            catch(WebSocketException wse) when(wse.WebSocketErrorCode == ConnectionClosedPrematurely)
             {
-                Console.WriteLine(exception);
-                throw;
+                await DisconnectAsync().ConfigureAwait(false);
+                throw new ConnectionAbortedException(wse);
             }
         }
 
         public override async Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
+            CheckConnected();
             try
             {
                 await webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken);
 
                 return buffer.Length;
             }
-            catch(Exception exception)
+            catch(WebSocketException wse) when(wse.WebSocketErrorCode == ConnectionClosedPrematurely)
             {
-                Console.WriteLine(exception);
-                throw;
+                await DisconnectAsync().ConfigureAwait(false);
+                throw new ConnectionAbortedException(wse);
             }
         }
 
-        protected override async Task OnCloseAsync()
+        protected override async Task OnDisconnectAsync()
         {
             try
             {
                 if(webSocket.State == Open || webSocket.State == CloseReceived)
                 {
-                    await webSocket.CloseAsync(NormalClosure, "CLOSE", default).ConfigureAwait(false);
+                    await webSocket.CloseAsync(NormalClosure, string.Empty, default).ConfigureAwait(false);
                 }
             }
             catch

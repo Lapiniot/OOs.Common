@@ -44,7 +44,7 @@ namespace System.Net.Transports
                 se.SocketErrorCode == ConnectionAborted ||
                 se.SocketErrorCode == ConnectionReset)
             {
-                await CloseAsync().ConfigureAwait(false);
+                await DisconnectAsync().ConfigureAwait(false);
 
                 throw new ConnectionAbortedException(se);
             }
@@ -61,13 +61,13 @@ namespace System.Net.Transports
                 se.SocketErrorCode == ConnectionAborted ||
                 se.SocketErrorCode == ConnectionReset)
             {
-                await CloseAsync().ConfigureAwait(false);
+                await DisconnectAsync().ConfigureAwait(false);
 
                 throw new ConnectionAbortedException(se);
             }
         }
 
-        protected override Task OnCloseAsync()
+        protected override Task OnDisconnectAsync()
         {
             socket.Shutdown(Both);
 

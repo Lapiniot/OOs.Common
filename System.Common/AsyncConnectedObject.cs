@@ -39,7 +39,7 @@ namespace System
             }
         }
 
-        public async Task CloseAsync()
+        public async Task DisconnectAsync()
         {
             CheckDisposed();
 
@@ -51,7 +51,7 @@ namespace System
                 {
                     if(connected)
                     {
-                        await OnCloseAsync().ConfigureAwait(false);
+                        await OnDisconnectAsync().ConfigureAwait(false);
                     }
                 }
                 finally
@@ -66,11 +66,11 @@ namespace System
 
         protected abstract Task OnConnectedAsync(CancellationToken cancellationToken);
 
-        protected abstract Task OnCloseAsync();
+        protected abstract Task OnDisconnectAsync();
 
         protected void CheckConnected([CallerMemberName] string callerName = null)
         {
-            if(!connected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state. Call \'Connect()\' before.");
+            if(!connected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state.");
         }
 
         protected void CheckDisposed()
@@ -90,7 +90,7 @@ namespace System
             {
                 if(disposing)
                 {
-                    CloseAsync().ContinueWith(t => { semaphore.Dispose(); });
+                    DisconnectAsync().ContinueWith(t => { semaphore.Dispose(); });
                 }
 
                 disposed = true;
