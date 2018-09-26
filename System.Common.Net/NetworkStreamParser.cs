@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.Transports;
+using System.Net.Transports.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Threading.Tasks.Task;
@@ -67,17 +68,35 @@ namespace System.Net
             return CompletedTask;
         }
 
-        protected Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        protected async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return transport.ReceiveAsync(buffer, cancellationToken);
+            try
+            {
+                return await transport.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+            }
+            catch(ConnectionAbortedException)
+            {
+                OnConnectionAborted();
+                throw;
+            }
         }
 
-        protected Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        protected async Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return transport.SendAsync(buffer, cancellationToken);
+            try
+            {
+                return await transport.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
+            }
+            catch(ConnectionAbortedException)
+            {
+                OnConnectionAborted();
+                throw;
+            }
         }
 
         protected abstract void OnEndOfStream();
+
+        protected abstract void OnConnectionAborted();
 
         private async Task StartNetworkReaderAsync(PipeWriter writer, CancellationToken token)
         {
