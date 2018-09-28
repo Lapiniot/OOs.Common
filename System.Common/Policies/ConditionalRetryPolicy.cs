@@ -6,7 +6,7 @@
     {
         private readonly RetryConditionHandler[] conditions;
 
-        public ConditionalRetryPolicy(RetryConditionHandler[] conditions)
+        public ConditionalRetryPolicy(params RetryConditionHandler[] conditions)
         {
             this.conditions = conditions;
         }
