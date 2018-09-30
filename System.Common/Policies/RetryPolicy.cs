@@ -5,7 +5,15 @@ namespace System.Policies
 {
     public abstract class RetryPolicy : IRetryPolicy
     {
-        protected abstract bool ShouldRetry(int attempt, TimeSpan totalTime, ref TimeSpan delay);
+        private TimeSpan timeout = TimeSpan.FromMilliseconds(-1);
+
+        public TimeSpan Timeout
+        {
+            get => timeout;
+            set => timeout = value;
+        }
+
+        protected abstract bool ShouldRetry(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
 
         #region Implementation of IRetryPolicy
 
@@ -23,30 +31,39 @@ namespace System.Policies
             var attempt = 1;
             var delay = TimeSpan.Zero;
             var startedAt = DateTime.UtcNow;
-
-            while(true)
+            using(var timeoutTokenSource = new CancellationTokenSource(timeout))
+            using(var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, cancellationToken))
             {
-                try
+                var token = linkedTokenSource.Token;
+                while(true)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    return await asyncFunc(cancellationToken).ConfigureAwait(false);
-                }
-                catch(OperationCanceledException)
-                {
-                    throw;
-                }
-                catch
-                {
-                    if(!ShouldRetry(attempt, DateTime.UtcNow - startedAt, ref delay))
+                    try
+                    {
+                        token.ThrowIfCancellationRequested();
+                        await Task.Delay(delay, token).ConfigureAwait(false);
+                        token.ThrowIfCancellationRequested();
+                        return await asyncFunc(token)
+                            // This is a protection step for the operations that do not handle cancellation properly by themselves.
+                            // In case of external cancellation, WaitAsync transits to Cancelled state, throwing OperationCancelled exception, 
+                            // and terminates retry loop. Original async operation may still be in progress, but we give up in order
+                            // to stop retry loop as soon as possible 
+                            .WaitAsync(token)
+                            .ConfigureAwait(false);
+                    }
+                    catch(OperationCanceledException)
                     {
                         throw;
                     }
+                    catch(Exception e)
+                    {
+                        if(!ShouldRetry(e, attempt, DateTime.UtcNow - startedAt, ref delay))
+                        {
+                            throw;
+                        }
+                    }
+
+                    attempt++;
                 }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-
-                attempt++;
             }
         }
 

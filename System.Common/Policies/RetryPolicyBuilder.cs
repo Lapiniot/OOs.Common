@@ -6,6 +6,7 @@ namespace System.Policies
     public class RetryPolicyBuilder
     {
         private readonly List<RetryConditionHandler> conditions;
+        private TimeSpan timeout = TimeSpan.FromMilliseconds(-1);
 
         public RetryPolicyBuilder()
         {
@@ -18,7 +19,7 @@ namespace System.Policies
         /// <returns>New instance of the policy</returns>
         public IRetryPolicy Build()
         {
-            return new ConditionalRetryPolicy(conditions.ToArray());
+            return new ConditionalRetryPolicy(conditions.ToArray()) { Timeout = timeout };
         }
 
         /// <summary>
@@ -34,13 +35,13 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Appends max retry count limit condition to the current instance of the builder
+        /// Appends retry treshold condition to the current instance of the builder
         /// </summary>
         /// <param name="maxRetries">Max retry attempts count</param>
         /// <returns>Current instance of the builder</returns>
-        public RetryPolicyBuilder WithMaxRetries(int maxRetries)
+        public RetryPolicyBuilder WithTreshold(int maxRetries)
         {
-            return WithCondition((int attempt, TimeSpan time, ref TimeSpan delay) => attempt <= maxRetries);
+            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) => attempt <= maxRetries);
         }
 
         /// <summary>
@@ -50,7 +51,7 @@ namespace System.Policies
         /// <returns>Current instance of the builder</returns>
         public RetryPolicyBuilder WithDelay(TimeSpan retryDelay)
         {
-            return WithCondition((int attempt, TimeSpan time, ref TimeSpan delay) =>
+            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) =>
             {
                 delay = retryDelay;
                 return true;
@@ -74,7 +75,7 @@ namespace System.Policies
         /// <returns>Current instance of the builder</returns>
         public RetryPolicyBuilder WithExponentialDelay(double baseMilliseconds = 2000)
         {
-            return WithCondition((int attempt, TimeSpan time, ref TimeSpan delay) =>
+            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) =>
             {
                 delay = FromMilliseconds(Math.Pow(baseMilliseconds, attempt));
                 return true;
@@ -91,11 +92,22 @@ namespace System.Policies
         {
             var random = new Random();
 
-            return WithCondition((int attempt, TimeSpan time, ref TimeSpan delay) =>
+            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) =>
             {
                 delay = delay.Add(FromMilliseconds(random.Next(minMilliseconds, maxMilliseconds)));
                 return true;
             });
+        }
+
+        /// <summary>
+        /// Sets overall retry operations timeout
+        /// </summary>
+        /// <param name="timeout">Timeout</param>
+        /// <returns>Current instance of the builder</returns>
+        public RetryPolicyBuilder WithTimeout(TimeSpan timeout)
+        {
+            this.timeout = timeout;
+            return this;
         }
     }
 }
