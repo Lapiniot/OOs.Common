@@ -6,7 +6,7 @@ namespace System.Policies
     public class RetryPolicyBuilder
     {
         private readonly List<RetryConditionHandler> conditions;
-        private TimeSpan timeout = TimeSpan.FromMilliseconds(-1);
+        private TimeSpan timeout = FromMilliseconds(-1);
 
         public RetryPolicyBuilder()
         {
@@ -19,7 +19,7 @@ namespace System.Policies
         /// <returns>New instance of the policy</returns>
         public IRetryPolicy Build()
         {
-            return new ConditionalRetryPolicy(conditions.ToArray()) { Timeout = timeout };
+            return new ConditionalRetryPolicy(conditions.ToArray()) {Timeout = timeout};
         }
 
         /// <summary>
@@ -35,11 +35,11 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Appends retry treshold condition to the current instance of the builder
+        /// Appends retry threshold condition to the current instance of the builder
         /// </summary>
         /// <param name="maxRetries">Max retry attempts count</param>
         /// <returns>Current instance of the builder</returns>
-        public RetryPolicyBuilder WithTreshold(int maxRetries)
+        public RetryPolicyBuilder WithThreshold(int maxRetries)
         {
             return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) => attempt <= maxRetries);
         }
@@ -100,14 +100,24 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Sets overall retry operations timeout
+        /// Sets overall retry operations overallTimeout
         /// </summary>
-        /// <param name="timeout">Timeout</param>
+        /// <param name="overallTimeout">Timeout</param>
         /// <returns>Current instance of the builder</returns>
-        public RetryPolicyBuilder WithTimeout(TimeSpan timeout)
+        public RetryPolicyBuilder WithTimeout(TimeSpan overallTimeout)
         {
-            this.timeout = timeout;
+            timeout = overallTimeout;
             return this;
+        }
+
+        /// <summary>
+        /// Appends handler that checks whether operation exception is transient
+        /// </summary>
+        /// <typeparam name="T">Exception type</typeparam>
+        /// <returns>Current instance of the builder</returns>
+        public RetryPolicyBuilder WithTransient<T>() where T : Exception
+        {
+            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) => e is T);
         }
     }
 }
