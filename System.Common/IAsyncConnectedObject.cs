@@ -5,7 +5,7 @@ namespace System
 {
     public interface IAsyncConnectedObject : IDisposable
     {
-        bool Connected { get; }
+        bool IsConnected { get; }
         Task ConnectAsync(CancellationToken cancellationToken = default);
         Task DisconnectAsync();
     }

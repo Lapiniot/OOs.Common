@@ -8,26 +8,26 @@ namespace System
     {
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
-        public bool Connected
+        public bool IsConnected
         {
-            get { return connected; }
+            get { return isConnected; }
         }
 
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             CheckDisposed();
 
-            if(!connected)
+            if(!isConnected)
             {
                 await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
                 try
                 {
-                    if(!connected)
+                    if(!isConnected)
                     {
                         await OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
-                        connected = true;
+                        isConnected = true;
 
                         await OnConnectedAsync(cancellationToken).ConfigureAwait(false);
                     }
@@ -43,20 +43,20 @@ namespace System
         {
             CheckDisposed();
 
-            if(connected)
+            if(isConnected)
             {
                 await semaphore.WaitAsync().ConfigureAwait(false);
 
                 try
                 {
-                    if(connected)
+                    if(isConnected)
                     {
                         await OnDisconnectAsync().ConfigureAwait(false);
                     }
                 }
                 finally
                 {
-                    connected = false;
+                    isConnected = false;
                     semaphore.Release();
                 }
             }
@@ -70,7 +70,7 @@ namespace System
 
         protected void CheckConnected([CallerMemberName] string callerName = null)
         {
-            if(!connected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state.");
+            if(!isConnected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state.");
         }
 
         protected void CheckDisposed()
@@ -82,7 +82,7 @@ namespace System
 
         private bool disposed;
 
-        private bool connected;
+        private bool isConnected;
 
         protected virtual void Dispose(bool disposing)
         {
