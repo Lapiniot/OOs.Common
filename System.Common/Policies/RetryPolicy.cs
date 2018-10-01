@@ -29,8 +29,6 @@ namespace System.Policies
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
-                    cancellationToken.ThrowIfCancellationRequested();
                     return await asyncFunc(cancellationToken).ConfigureAwait(false);
                 }
                 catch(OperationCanceledException)
@@ -44,6 +42,9 @@ namespace System.Policies
                         throw;
                     }
                 }
+
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
 
                 attempt++;
             }
