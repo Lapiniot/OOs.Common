@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Net.Transports.Exceptions;
 using System.Net.WebSockets;
 using System.Threading;
@@ -78,7 +81,7 @@ namespace System.Net.Transports
             }
         }
 
-        protected override Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
             webSocket = new ClientWebSocket();
 
@@ -87,7 +90,18 @@ namespace System.Net.Transports
                 webSocket.Options.AddSubProtocol(subProtocol);
             }
 
-            return webSocket.ConnectAsync(RemoteUri, cancellationToken);
+            try
+            {
+                await webSocket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
+            }
+            catch(WebSocketException wse) when(
+                wse.InnerException is HttpRequestException hre &&
+                hre.InnerException is SocketException se &&
+                se.SocketErrorCode == SocketError.HostNotFound)
+            {
+                Trace.TraceError(wse.ToString());
+                throw new ServerUnavailableException(wse);
+            }
         }
 
         protected override Task OnConnectedAsync(CancellationToken cancellationToken)
