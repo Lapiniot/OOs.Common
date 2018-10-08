@@ -101,7 +101,10 @@ namespace System
 
                     if(cached != null)
                     {
-                        foreach(var pair in cached) pair.Key.OnCompleted();
+                        foreach(var pair in cached)
+                        {
+                            pair.Key.OnCompleted();
+                        }
 
                         cached.Clear();
                     }

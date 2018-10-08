@@ -3,9 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using static System.String;
-using static System.StringComparison;
 
-namespace System.CommandLine
+namespace System.Common.CommandLine
 {
     public class Arguments
     {
@@ -22,10 +21,7 @@ namespace System.CommandLine
 
         public IReadOnlyList<string> Extras { get; }
 
-        public bool this[string name]
-        {
-            get { return (bool)AllArguments[name]; }
-        }
+        public bool this[string name] => (bool)AllArguments[name];
 
         public static Arguments Parse(params string[] args)
         {
@@ -53,10 +49,10 @@ namespace System.CommandLine
 
             var comparer = new ComparerAdapter<string>(CompareByLength);
             var commandByNameComparer = new EqualityComparerAdapter<CommandAttribute>((c1, c2) =>
-                string.Equals(c1.Name, c2.Name, OrdinalIgnoreCase));
+                string.Equals(c1.Name, c2.Name, StringComparison.OrdinalIgnoreCase));
             var argumentByNameComparer =
                 new EqualityComparerAdapter<ArgumentAttribute>((c1, c2) =>
-                    string.Equals(c1.Name, c2.Name, OrdinalIgnoreCase));
+                    string.Equals(c1.Name, c2.Name, StringComparison.OrdinalIgnoreCase));
 
             var smap = new SortedDictionary<string, ArgumentAttribute>(comparer);
             var nmap = new SortedDictionary<string, ArgumentAttribute>(comparer);
@@ -92,7 +88,7 @@ namespace System.CommandLine
             {
                 var name = arg;
 
-                command = commands.FirstOrDefault(c => string.Equals(c.Name, name, OrdinalIgnoreCase))?.Name;
+                command = commands.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase))?.Name;
 
                 queue.Dequeue();
             }
@@ -219,7 +215,10 @@ namespace System.CommandLine
 
             if(arg != Empty) return false;
 
-            foreach(var k in keys) arguments[k] = true;
+            foreach(var k in keys)
+            {
+                arguments[k] = true;
+            }
 
             return true;
         }

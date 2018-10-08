@@ -5,7 +5,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1493FFC5-A023-4A7D-A8B4-4858EAEE81DD}"
 	ProjectSection(SolutionItems) = preProject
 		common.props = common.props
-		.vscode\launch.json = .vscode\launch.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Common", "System.Common\System.Common.csproj", "{00142055-5421-4A11-A9AB-90DF782B36F4}"

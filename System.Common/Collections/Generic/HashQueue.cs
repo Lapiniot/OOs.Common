@@ -26,20 +26,17 @@ namespace System.Collections.Generic
 
         internal Node Head
         {
-            get { return head; }
-            set { head = value; }
+            get => head;
+            set => head = value;
         }
 
         internal Node Tail
         {
-            get { return tail; }
-            set { tail = value; }
+            get => tail;
+            set => tail = value;
         }
 
-        internal Dictionary<TK, Node> Map
-        {
-            get { return map; }
-        }
+        internal Dictionary<TK, Node> Map => map;
 
         #region Implementation of IDisposable
 

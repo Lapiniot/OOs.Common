@@ -11,10 +11,7 @@ namespace System
         private bool connected;
         private bool disposed;
 
-        public bool Connected
-        {
-            get { return connected; }
-        }
+        public bool Connected => connected;
 
         public void Connect()
         {

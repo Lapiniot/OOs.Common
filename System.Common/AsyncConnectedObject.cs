@@ -8,10 +8,7 @@ namespace System
     {
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
-        public bool IsConnected
-        {
-            get { return isConnected; }
-        }
+        public bool IsConnected => isConnected;
 
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {

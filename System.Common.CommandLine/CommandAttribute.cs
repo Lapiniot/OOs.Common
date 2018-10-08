@@ -1,4 +1,4 @@
-﻿namespace System.CommandLine
+﻿namespace System.Common.CommandLine
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
     public class CommandAttribute : Attribute
