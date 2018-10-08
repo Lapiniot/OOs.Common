@@ -2,17 +2,21 @@ using System.Net.Sockets;
 using System.Net.Transports.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Dns;
 using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.ProtocolType;
 using static System.Net.Sockets.SocketShutdown;
 using static System.Net.Sockets.SocketType;
 using static System.Net.Sockets.SocketError;
+using static System.String;
 using static System.Threading.Tasks.Task;
 
 namespace System.Net.Transports
 {
     public class TcpSocketsTransport : NetworkTransport
     {
+        private readonly string hostNameOrAddress;
+        private readonly int port;
         private Socket socket;
 
         public TcpSocketsTransport(IPEndPoint ipEndPoint)
@@ -20,18 +24,15 @@ namespace System.Net.Transports
             RemoteEndPoint = ipEndPoint ?? throw new ArgumentNullException(nameof(ipEndPoint));
         }
 
-        public TcpSocketsTransport(string host, int port)
+        public TcpSocketsTransport(string hostNameOrAddress, int port)
         {
-            if(host == null) throw new ArgumentNullException(nameof(host));
-            if(host == "") throw new ArgumentException("Value cannot be empty.", nameof(host));
-
-            var addresses = Dns.GetHostAddresses(host);
-            if(addresses == null || addresses.Length == 0) throw new ArgumentException("Host name cannot be resolved.");
-
-            RemoteEndPoint = new IPEndPoint(addresses[0], port);
+            if(hostNameOrAddress == null) throw new ArgumentNullException(nameof(hostNameOrAddress));
+            if(hostNameOrAddress == "") throw new ArgumentException("Value cannot be empty.", nameof(hostNameOrAddress));
+            this.hostNameOrAddress = hostNameOrAddress;
+            this.port = port;
         }
 
-        public IPEndPoint RemoteEndPoint { get; }
+        public IPEndPoint RemoteEndPoint { get; private set; }
 
         public override async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
@@ -78,11 +79,28 @@ namespace System.Net.Transports
             return CompletedTask;
         }
 
-        protected override Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            socket = new Socket(InterNetwork, Stream, Tcp);
+            try
+            {
+                socket = new Socket(InterNetwork, Stream, Tcp);
 
-            return socket.ConnectAsync(RemoteEndPoint);
+                if(RemoteEndPoint == null && !IsNullOrEmpty(hostNameOrAddress))
+                {
+                    var addresses = await GetHostAddressesAsync(hostNameOrAddress).ConfigureAwait(false);
+                    RemoteEndPoint = new IPEndPoint(addresses[0], port);
+                }
+
+                await socket.ConnectAsync(RemoteEndPoint).ConfigureAwait(false);
+            }
+            catch(SocketException se) when(se.SocketErrorCode == HostNotFound)
+            {
+                throw new HostNotFoundException(se);
+            }
+            catch(SocketException se)
+            {
+                throw new ServerUnavailableException(se);
+            }
         }
 
         protected override Task OnConnectedAsync(CancellationToken cancellationToken)

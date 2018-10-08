@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Net.Transports.Exceptions;
@@ -99,7 +98,10 @@ namespace System.Net.Transports
                 hre.InnerException is SocketException se &&
                 se.SocketErrorCode == SocketError.HostNotFound)
             {
-                Trace.TraceError(wse.ToString());
+                throw new HostNotFoundException(wse);
+            }
+            catch(WebSocketException wse)
+            {
                 throw new ServerUnavailableException(wse);
             }
         }
