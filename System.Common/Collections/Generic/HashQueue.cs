@@ -3,7 +3,7 @@ using static System.Threading.LockRecursionPolicy;
 
 namespace System.Collections.Generic
 {
-    public sealed class HashQueue<TK, TV> : IDisposable
+    public sealed class HashQueue<TK, TV> : IDisposable, IEnumerable<(TK Key, TV Value)>
     {
         private readonly ReaderWriterLockSlim lockSlim;
         private readonly Dictionary<TK, Node> map;
@@ -47,6 +47,24 @@ namespace System.Collections.Generic
 
         #endregion
 
+        public IEnumerator<(TK Key, TV Value)> GetEnumerator()
+        {
+            using(lockSlim.WithReadLock())
+            {
+                var node = head;
+                while(node != null)
+                {
+                    yield return (node.Key, node.Value);
+                    node = node.Next;
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
         public TV AddOrUpdate(TK key, TV addValue, Func<TK, TV, TV> updateValueFactory)
         {
             using(lockSlim.WithWriteLock())
@@ -65,7 +83,7 @@ namespace System.Collections.Generic
                 {
                     return node.Value;
                 }
-
+                
                 using(lockSlim.WithWriteLock())
                 {
                     return AddNodeInternal(key, value).Value;
