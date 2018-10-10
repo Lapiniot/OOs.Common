@@ -16,7 +16,7 @@ namespace System.Net.Listeners
             this.maxConnections = maxConnections;
         }
 
-        protected override async Task<INetworkTransport> AcceptAsync(CancellationToken cancellationToken)
+        public override async Task<INetworkTransport> AcceptAsync(CancellationToken cancellationToken)
         {
             using(cancellationToken.Register(socket.Close))
             {
