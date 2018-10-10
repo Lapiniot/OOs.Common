@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.IO.Pipelines;
-using System.Net.Transports;
 using System.Net.Transports.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,21 +9,29 @@ namespace System.Net
 {
     public abstract class NetworkStreamParser : AsyncConnectedObject
     {
-        private readonly bool disposeTransport;
-        private readonly NetworkTransport transport;
+        private readonly INetworkTransport transport;
         private Pipe pipe;
         private Task processor;
         private CancellationTokenSource processorCts;
 
-        protected NetworkStreamParser(NetworkTransport transport, bool disposeTransport)
+        protected NetworkStreamParser(INetworkTransport transport)
         {
             this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
-            this.disposeTransport = disposeTransport;
         }
+
+        protected INetworkTransport Transport => transport;
 
         protected override Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            return transport.ConnectAsync(cancellationToken);
+            pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
+
+            processorCts = new CancellationTokenSource();
+
+            var token = processorCts.Token;
+
+            processor = WhenAll(StartNetworkReaderAsync(pipe.Writer, token), StartParserAsync(pipe.Reader, token));
+
+            return CompletedTask;
         }
 
         protected override async Task OnDisconnectAsync()
@@ -41,32 +48,10 @@ namespace System.Net
                 {
                     // ignored
                 }
-
-                try
-                {
-                    await transport.DisconnectAsync().ConfigureAwait(false);
-                }
-                catch
-                {
-                    // ignored
-                }
             }
         }
 
         protected abstract void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed);
-
-        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
-        {
-            pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
-
-            processorCts = new CancellationTokenSource();
-
-            var token = processorCts.Token;
-
-            processor = WhenAll(StartNetworkReaderAsync(pipe.Writer, token), StartParserAsync(pipe.Reader, token));
-
-            return CompletedTask;
-        }
 
         protected async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
@@ -166,19 +151,5 @@ namespace System.Net
                 reader.Complete();
             }
         }
-
-        #region Overrides of AsyncConnectedObject
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            if(disposing && disposeTransport)
-            {
-                transport.Dispose();
-            }
-        }
-
-        #endregion
     }
 }
