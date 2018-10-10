@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using static System.Net.WebSockets.WebSocketCloseStatus;
 using static System.Net.WebSockets.WebSocketError;
 using static System.Net.WebSockets.WebSocketState;
-using static System.Threading.Tasks.Task;
 
 namespace System.Net.Transports
 {
@@ -104,11 +103,6 @@ namespace System.Net.Transports
             {
                 throw new ServerUnavailableException(wse);
             }
-        }
-
-        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
-        {
-            return CompletedTask;
         }
     }
 }

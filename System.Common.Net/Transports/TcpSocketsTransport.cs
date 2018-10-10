@@ -102,10 +102,5 @@ namespace System.Net.Transports
                 throw new ServerUnavailableException(se);
             }
         }
-
-        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
-        {
-            return CompletedTask;
-        }
     }
 }

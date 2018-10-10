@@ -24,10 +24,5 @@ namespace System.Net.Transports
         {
             throw new NotImplementedException();
         }
-
-        protected override Task OnConnectedAsync(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

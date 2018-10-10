@@ -25,8 +25,6 @@ namespace System
                         await OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
                         isConnected = true;
-
-                        await OnConnectedAsync(cancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -60,8 +58,6 @@ namespace System
         }
 
         protected abstract Task OnConnectAsync(CancellationToken cancellationToken);
-
-        protected abstract Task OnConnectedAsync(CancellationToken cancellationToken);
 
         protected abstract Task OnDisconnectAsync();
 
