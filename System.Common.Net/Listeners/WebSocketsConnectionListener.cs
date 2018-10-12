@@ -87,6 +87,23 @@ namespace System.Net.Listeners
 
                 return result.Count;
             }
+
+            public void Dispose()
+            {
+                webSocket.Dispose();
+            }
+
+            public bool IsConnected => webSocket.State == WebSocketState.Open;
+
+            public Task ConnectAsync(CancellationToken cancellationToken = default)
+            {
+                throw new NotSupportedException();
+            }
+
+            public Task DisconnectAsync()
+            {
+                return webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnected", default);
+            }
         }
     }
 }

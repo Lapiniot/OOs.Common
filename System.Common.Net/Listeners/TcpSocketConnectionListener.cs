@@ -68,6 +68,25 @@ namespace System.Net.Listeners
             {
                 return socket.ReceiveAsync(buffer, cancellationToken);
             }
+
+            public void Dispose()
+            {
+                socket.Dispose();
+            }
+
+            public bool IsConnected => socket.Connected;
+
+            public Task ConnectAsync(CancellationToken cancellationToken = default)
+            {
+                throw new NotSupportedException();
+            }
+
+            public Task DisconnectAsync()
+            {
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+                return Task.CompletedTask;
+            }
         }
     }
 }
