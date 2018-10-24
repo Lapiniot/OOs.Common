@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System.Linq;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,22 +9,22 @@ namespace System.Net.Listeners
     {
         private readonly TimeSpan keepAliveInterval;
         private readonly int receiveBufferSize;
-        private readonly string subProtocol;
+        private readonly string[] subProtocols;
         private readonly Uri uri;
         private HttpListener listener;
 
-        public WebSocketsConnectionListener(Uri uri, string subProtocol, TimeSpan keepAliveInterval, int receiveBufferSize)
+        public WebSocketsConnectionListener(Uri uri, string[] subProtocols, TimeSpan keepAliveInterval, int receiveBufferSize)
         {
             this.uri = uri;
-            this.subProtocol = subProtocol;
+            this.subProtocols = subProtocols;
             this.keepAliveInterval = keepAliveInterval;
             this.receiveBufferSize = receiveBufferSize;
         }
 
-        public WebSocketsConnectionListener(Uri uri, string subProtocol) :
-            this(uri, subProtocol, TimeSpan.FromMinutes(2), 16384)
+        public WebSocketsConnectionListener(Uri uri, params string[] subProtocols) :
+            this(uri, subProtocols, TimeSpan.FromMinutes(2), 16384)
         {
-            this.subProtocol = subProtocol;
+            this.subProtocols = subProtocols;
             this.uri = uri;
         }
 
@@ -35,8 +36,12 @@ namespace System.Net.Listeners
 
                 if(context.Request.IsWebSocketRequest)
                 {
+                    var protocolHeader = context.Request.Headers["Sec-WebSocket-Protocol"];
+                    var subprotocol = subProtocols.Intersect(protocolHeader.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries)).FirstOrDefault();
+                    if(subprotocol == null) throw new ArgumentException("Not supported sub-protocol(s).");
+
                     var socketContext = await context
-                        .AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval)
+                        .AcceptWebSocketAsync(subprotocol, receiveBufferSize, keepAliveInterval)
                         .WaitAsync(cancellationToken)
                         .ConfigureAwait(false);
 
