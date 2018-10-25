@@ -1,57 +1,85 @@
 ﻿using System.Linq;
+using System.Net.Mqtt.Properties;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.String;
+using static System.StringSplitOptions;
 
 namespace System.Net.Listeners
 {
     public class WebSocketsConnectionListener : ConnectionListener
     {
+        private const int ReceiveBufferSize = 16384;
+        private const int KeepAliveSeconds = 120;
         private readonly TimeSpan keepAliveInterval;
         private readonly int receiveBufferSize;
+        private readonly bool shouldMatchSubProtocol;
         private readonly string[] subProtocols;
         private readonly Uri uri;
         private HttpListener listener;
 
-        public WebSocketsConnectionListener(Uri uri, string[] subProtocols, TimeSpan keepAliveInterval, int receiveBufferSize)
+        public WebSocketsConnectionListener(Uri uri, string[] subProtocols,
+            TimeSpan keepAliveInterval, int receiveBufferSize)
         {
-            this.uri = uri;
+            this.uri = uri ?? throw new ArgumentNullException(nameof(uri));
             this.subProtocols = subProtocols;
             this.keepAliveInterval = keepAliveInterval;
             this.receiveBufferSize = receiveBufferSize;
+            shouldMatchSubProtocol = subProtocols != null && subProtocols.Length > 0;
         }
 
         public WebSocketsConnectionListener(Uri uri, params string[] subProtocols) :
-            this(uri, subProtocols, TimeSpan.FromMinutes(2), 16384)
+            this(uri, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
         {
-            this.subProtocols = subProtocols;
-            this.uri = uri;
         }
 
         public override async Task<INetworkTransport> AcceptAsync(CancellationToken cancellationToken)
         {
-            while(!cancellationToken.IsCancellationRequested)
+            var context = await listener.GetContextAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            try
             {
-                var context = await listener.GetContextAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
-
-                if(context.Request.IsWebSocketRequest)
+                if(!context.Request.IsWebSocketRequest)
                 {
-                    var protocolHeader = context.Request.Headers["Sec-WebSocket-Protocol"];
-                    var subprotocol = subProtocols.Intersect(protocolHeader.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries)).FirstOrDefault();
-                    if(subprotocol == null) throw new ArgumentException("Not supported sub-protocol(s).");
-
-                    var socketContext = await context
-                        .AcceptWebSocketAsync(subprotocol, receiveBufferSize, keepAliveInterval)
-                        .WaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                    return new WebSocketsTransportWrapper(socketContext.WebSocket);
+                    throw new InvalidOperationException(Strings.WebSocketHandshakeExpected);
                 }
 
-                context.Response.Abort();
+                var subProtocol = MatchSubProtocol(context.Request);
+
+                var socketContext = await context
+                    .AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval)
+                    .WaitAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                return new WebSocketsTransportWrapper(socketContext.WebSocket);
+            }
+            catch
+            {
+                context.Response.Close();
+                throw;
+            }
+        }
+
+        private string MatchSubProtocol(HttpListenerRequest request)
+        {
+            var header = request.Headers["Sec-WebSocket-Protocol"];
+
+            if(!shouldMatchSubProtocol) return header;
+
+            if(IsNullOrEmpty(header))
+            {
+                throw new ArgumentException(Strings.NoWsSubProtocolMessage);
             }
 
-            throw new InvalidOperationException();
+            var headers = header.Split(new[] {' ', ','}, RemoveEmptyEntries);
+            var subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
+            if(subProtocol == null)
+            {
+                throw new ArgumentException(Strings.NotSupportedWsSubProtocolMessage);
+            }
+
+            return subProtocol;
         }
 
         protected override void OnStartListening()
