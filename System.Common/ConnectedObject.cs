@@ -8,8 +8,8 @@ namespace System
     public abstract class ConnectedObject : IDisposable
     {
         private readonly object syncRoot = new object();
-        private bool isConnected;
         private bool disposed;
+        private bool isConnected;
 
         public bool IsConnected => isConnected;
 
