@@ -105,14 +105,12 @@ namespace System.Net
 
                     if(result.IsCompleted) break;
                 }
-            }
-            catch(OperationCanceledException)
-            {
-                // ignored
-            }
-            finally
-            {
+
                 writer.Complete();
+            }
+            catch(Exception exception)
+            {
+                writer.Complete(exception);
             }
         }
 
@@ -141,14 +139,12 @@ namespace System.Net
 
                     if(result.IsCompleted) break;
                 }
-            }
-            catch(OperationCanceledException)
-            {
-                // ignored
-            }
-            finally
-            {
+
                 reader.Complete();
+            }
+            catch(Exception exception)
+            {
+                reader.Complete(exception);
             }
         }
     }
