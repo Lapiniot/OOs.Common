@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using System.Net.Mqtt.Properties;
+using System.Net.Properties;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
