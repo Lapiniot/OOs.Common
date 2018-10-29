@@ -5,12 +5,12 @@ namespace System.Net.Transports
 {
     public class TlsStreamTransport : NetworkTransport
     {
-        public override Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public override Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

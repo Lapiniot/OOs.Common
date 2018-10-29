@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.WebSockets.WebSocketCloseStatus;
 using static System.Net.WebSockets.WebSocketError;
+using static System.Net.WebSockets.WebSocketMessageType;
 using static System.Net.WebSockets.WebSocketState;
 
 namespace System.Net.Transports
@@ -25,14 +26,18 @@ namespace System.Net.Transports
 
         public string[] SubProtocols { get; }
 
-        public override async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             CheckConnected();
             try
             {
-                var result = await webSocket.ReceiveAsync(buffer, cancellationToken);
+                var task = webSocket.ReceiveAsync(buffer, cancellationToken);
 
-                if(result.MessageType == WebSocketMessageType.Close)
+                var result = task.IsCompletedSuccessfully
+                    ? task.Result
+                    : await task.ConfigureAwait(false);
+
+                if(result.MessageType == Close)
                 {
                     await webSocket.CloseAsync(NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
 
@@ -48,12 +53,14 @@ namespace System.Net.Transports
             }
         }
 
-        public override async Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override async ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             CheckConnected();
             try
             {
-                await webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken);
+                var task = webSocket.SendAsync(buffer, Binary, true, cancellationToken);
+
+                if(!task.IsCompletedSuccessfully) await task.ConfigureAwait(false);
 
                 return buffer.Length;
             }

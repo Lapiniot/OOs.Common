@@ -1,14 +1,14 @@
 ﻿using System.Linq;
-using System.Net.Properties;
-using System.Net.WebSockets;
+using System.Net.Transports;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Properties.Strings;
 using static System.String;
 using static System.StringSplitOptions;
 
 namespace System.Net.Listeners
 {
-    public class WebSocketsConnectionListener : ConnectionListener
+    public class WebSocketsListener : ConnectionListener
     {
         private const int ReceiveBufferSize = 16384;
         private const int KeepAliveSeconds = 120;
@@ -19,7 +19,7 @@ namespace System.Net.Listeners
         private readonly Uri uri;
         private HttpListener listener;
 
-        public WebSocketsConnectionListener(Uri uri, string[] subProtocols,
+        public WebSocketsListener(Uri uri, string[] subProtocols,
             TimeSpan keepAliveInterval, int receiveBufferSize)
         {
             this.uri = uri ?? throw new ArgumentNullException(nameof(uri));
@@ -29,7 +29,7 @@ namespace System.Net.Listeners
             shouldMatchSubProtocol = subProtocols != null && subProtocols.Length > 0;
         }
 
-        public WebSocketsConnectionListener(Uri uri, params string[] subProtocols) :
+        public WebSocketsListener(Uri uri, params string[] subProtocols) :
             this(uri, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
         {
         }
@@ -42,7 +42,7 @@ namespace System.Net.Listeners
             {
                 if(!context.Request.IsWebSocketRequest)
                 {
-                    throw new InvalidOperationException(Strings.WebSocketHandshakeExpected);
+                    throw new InvalidOperationException(WebSocketHandshakeExpected);
                 }
 
                 var subProtocol = MatchSubProtocol(context.Request);
@@ -69,14 +69,14 @@ namespace System.Net.Listeners
 
             if(IsNullOrEmpty(header))
             {
-                throw new ArgumentException(Strings.NoWsSubProtocolMessage);
+                throw new ArgumentException(NoWsSubProtocolMessage);
             }
 
             var headers = header.Split(new[] {' ', ','}, RemoveEmptyEntries);
             var subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
             if(subProtocol == null)
             {
-                throw new ArgumentException(Strings.NotSupportedWsSubProtocolMessage);
+                throw new ArgumentException(NotSupportedWsSubProtocolMessage);
             }
 
             return subProtocol;
@@ -95,47 +95,6 @@ namespace System.Net.Listeners
             {
                 listener.Stop();
                 listener.Abort();
-            }
-        }
-
-        private class WebSocketsTransportWrapper : INetworkTransport
-        {
-            private readonly WebSocket webSocket;
-
-            public WebSocketsTransportWrapper(WebSocket webSocket)
-            {
-                this.webSocket = webSocket;
-            }
-
-            public async Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-            {
-                await webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken);
-
-                return buffer.Length;
-            }
-
-            public async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-            {
-                var result = await webSocket.ReceiveAsync(buffer, cancellationToken);
-
-                return result.Count;
-            }
-
-            public void Dispose()
-            {
-                webSocket.Dispose();
-            }
-
-            public bool IsConnected => webSocket.State == WebSocketState.Open;
-
-            public Task ConnectAsync(CancellationToken cancellationToken = default)
-            {
-                throw new NotSupportedException();
-            }
-
-            public Task DisconnectAsync()
-            {
-                return webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnected", default);
             }
         }
     }

@@ -47,7 +47,11 @@ namespace System.Net.Pipes
             {
                 while(!token.IsCancellationRequested)
                 {
-                    var result = await reader.ReadAsync(token).ConfigureAwait(false);
+                    var readTask = reader.ReadAsync(token);
+
+                    var result = readTask.IsCompletedSuccessfully
+                        ? readTask.Result
+                        : await readTask.ConfigureAwait(false);
 
                     var buffer = result.Buffer;
 
@@ -64,7 +68,7 @@ namespace System.Net.Pipes
                         reader.AdvanceTo(buffer.Start, buffer.End);
                     }
 
-                    if(result.IsCompleted) break;
+                    if(result.IsCompleted || result.IsCanceled) break;
                 }
 
                 reader.Complete();

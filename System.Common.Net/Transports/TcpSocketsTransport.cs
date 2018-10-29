@@ -8,6 +8,7 @@ using static System.Net.Sockets.ProtocolType;
 using static System.Net.Sockets.SocketShutdown;
 using static System.Net.Sockets.SocketType;
 using static System.Net.Sockets.SocketError;
+using static System.Net.Sockets.SocketFlags;
 using static System.String;
 using static System.Threading.Tasks.Task;
 
@@ -34,12 +35,13 @@ namespace System.Net.Transports
 
         public IPEndPoint RemoteEndPoint { get; private set; }
 
-        public override async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             CheckConnected();
             try
             {
-                return await socket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+                var task = socket.ReceiveAsync(buffer, None, cancellationToken);
+                return task.IsCompletedSuccessfully ? task.Result : await task.ConfigureAwait(false);
             }
             catch(SocketException se) when(
                 se.SocketErrorCode == ConnectionAborted ||
@@ -51,12 +53,13 @@ namespace System.Net.Transports
             }
         }
 
-        public override async Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override async ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             CheckConnected();
             try
             {
-                return await socket.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
+                var task = socket.SendAsync(buffer, None, cancellationToken);
+                return task.IsCompletedSuccessfully ? task.Result : await task.ConfigureAwait(false);
             }
             catch(SocketException se) when(
                 se.SocketErrorCode == ConnectionAborted ||

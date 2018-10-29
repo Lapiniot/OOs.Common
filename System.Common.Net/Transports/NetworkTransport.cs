@@ -5,8 +5,8 @@ namespace System.Net.Transports
 {
     public abstract class NetworkTransport : AsyncConnectedObject, INetworkTransport
     {
-        public abstract Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+        public abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 
-        public abstract Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+        public abstract ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
     }
 }

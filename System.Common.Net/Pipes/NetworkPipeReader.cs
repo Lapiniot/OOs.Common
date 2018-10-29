@@ -10,7 +10,6 @@ namespace System.Net.Pipes
         private readonly SemaphoreSlim semaphore;
         private readonly INetworkTransport transport;
         private bool disposed;
-        private bool isConnected;
         private Pipe pipe;
         private Task processor;
         private CancellationTokenSource processorCts;
@@ -21,19 +20,19 @@ namespace System.Net.Pipes
             semaphore = new SemaphoreSlim(1);
         }
 
-        public bool IsConnected => isConnected;
+        public bool IsConnected { get; private set; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             CheckDisposed();
 
-            if (!isConnected)
+            if(!IsConnected)
             {
                 await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
                 try
                 {
-                    if (!isConnected)
+                    if(!IsConnected)
                     {
                         pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
 
@@ -43,7 +42,7 @@ namespace System.Net.Pipes
 
                         processor = StartNetworkReaderAsync(pipe.Writer, token);
 
-                        isConnected = true;
+                        IsConnected = true;
                     }
                 }
                 finally
@@ -57,13 +56,13 @@ namespace System.Net.Pipes
         {
             CheckDisposed();
 
-            if (isConnected)
+            if(IsConnected)
             {
                 await semaphore.WaitAsync().ConfigureAwait(false);
 
                 try
                 {
-                    if (isConnected)
+                    if(IsConnected)
                     {
                         using (processorCts)
                         {
@@ -82,7 +81,7 @@ namespace System.Net.Pipes
                 }
                 finally
                 {
-                    isConnected = false;
+                    IsConnected = false;
                     semaphore.Release();
                 }
             }
@@ -100,7 +99,7 @@ namespace System.Net.Pipes
 
         private void CheckConnected([CallerMemberName] string callerName = null)
         {
-            if (!isConnected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state.");
+            if(!IsConnected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state.");
         }
 
         private void CheckDisposed()
@@ -116,7 +115,11 @@ namespace System.Net.Pipes
                 {
                     var buffer = writer.GetMemory();
 
-                    var received = await transport.ReceiveAsync(buffer, token).ConfigureAwait(false);
+                    var receiveTask = transport.ReceiveAsync(buffer, token);
+
+                    var received = receiveTask.IsCompletedSuccessfully
+                        ? receiveTask.Result
+                        : await receiveTask.ConfigureAwait(false);
 
                     if (received == 0)
                     {
@@ -125,9 +128,13 @@ namespace System.Net.Pipes
 
                     writer.Advance(received);
 
-                    var result = await writer.FlushAsync(token).ConfigureAwait(false);
+                    var flushTask = writer.FlushAsync(token);
 
-                    if (result.IsCompleted) break;
+                    var result = flushTask.IsCompletedSuccessfully
+                        ? flushTask.Result
+                        : await flushTask.ConfigureAwait(false);
+
+                    if(result.IsCompleted || result.IsCanceled) break;
                 }
 
                 writer.Complete();
