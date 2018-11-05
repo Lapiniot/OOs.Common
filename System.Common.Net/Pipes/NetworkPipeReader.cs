@@ -115,31 +115,26 @@ namespace System.Net.Pipes
                 {
                     var buffer = writer.GetMemory();
 
-                    var receiveTask = transport.ReceiveAsync(buffer, token);
+                    var rt = transport.ReceiveAsync(buffer, token);
+                    var received = rt.IsCompleted ? rt.Result : await rt.ConfigureAwait(false);
 
-                    var received = receiveTask.IsCompletedSuccessfully
-                        ? receiveTask.Result
-                        : await receiveTask.ConfigureAwait(false);
-
-                    if (received == 0)
-                    {
-                        break;
-                    }
+                    if(received == 0) break;
 
                     writer.Advance(received);
 
-                    var flushTask = writer.FlushAsync(token);
-
-                    var result = flushTask.IsCompletedSuccessfully
-                        ? flushTask.Result
-                        : await flushTask.ConfigureAwait(false);
+                    var ft = writer.FlushAsync(token);
+                    var result = ft.IsCompleted ? ft.Result : await ft.ConfigureAwait(false);
 
                     if(result.IsCompleted || result.IsCanceled) break;
                 }
 
                 writer.Complete();
             }
-            catch (Exception exception)
+            catch(AggregateException agge)
+            {
+                writer.Complete(agge.GetBaseException());
+            }
+            catch(Exception exception)
             {
                 writer.Complete(exception);
             }

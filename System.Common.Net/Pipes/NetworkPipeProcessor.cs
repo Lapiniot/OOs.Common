@@ -47,17 +47,15 @@ namespace System.Net.Pipes
             {
                 while(!token.IsCancellationRequested)
                 {
-                    var readTask = reader.ReadAsync(token);
-
-                    var result = readTask.IsCompletedSuccessfully
-                        ? readTask.Result
-                        : await readTask.ConfigureAwait(false);
+                    var rt = reader.ReadAsync(token);
+                    var result = rt.IsCompleted ? rt.Result : await rt.ConfigureAwait(false);
 
                     var buffer = result.Buffer;
 
                     if(buffer.IsEmpty) continue;
 
-                    ParseBuffer(buffer, out var consumed);
+                    var pt = ProcessAsync(buffer, token);
+                    var consumed = pt.IsCompleted ? pt.Result : await pt.ConfigureAwait(false);
 
                     if(consumed > 0)
                     {
@@ -73,12 +71,16 @@ namespace System.Net.Pipes
 
                 reader.Complete();
             }
+            catch(AggregateException age)
+            {
+                reader.Complete(age.GetBaseException());
+            }
             catch(Exception exception)
             {
                 reader.Complete(exception);
             }
         }
 
-        protected abstract void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed);
+        protected abstract ValueTask<int> ProcessAsync(in ReadOnlySequence<byte> buffer, in CancellationToken token);
     }
 }
