@@ -2,19 +2,21 @@
 
 namespace System.Threading
 {
-    public class WorkerLoop : WorkerLoopBase
+    public class WorkerLoop<T> : WorkerLoopBase<T>
     {
-        public WorkerLoop(Func<CancellationToken, Task> asyncWork) : base(asyncWork)
+        public WorkerLoop(Func<T, CancellationToken, Task> asyncWork, T state) :
+            base(asyncWork, state)
         {
         }
 
-        protected override async Task RunAsync(CancellationToken cancellationToken)
+
+        protected override async Task RunAsync(T state, CancellationToken cancellationToken)
         {
             while(!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    await AsyncWork(cancellationToken).ConfigureAwait(false);
+                    await AsyncWork(state, cancellationToken).ConfigureAwait(false);
                 }
                 catch
                 {

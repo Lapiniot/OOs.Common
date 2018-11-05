@@ -2,16 +2,18 @@
 
 namespace System.Threading
 {
-    public abstract class WorkerLoopBase : IDisposable
+    public abstract class WorkerLoopBase<T> : IDisposable
     {
-        protected Func<CancellationToken, Task> AsyncWork;
+        private readonly T state;
+        protected Func<T, CancellationToken, Task> AsyncWork;
         private bool disposed;
         private Task processorTask;
         private CancellationTokenSource tokenSource;
 
-        protected WorkerLoopBase(Func<CancellationToken, Task> asyncWork)
+        protected WorkerLoopBase(Func<T, CancellationToken, Task> asyncWork, T state)
         {
             AsyncWork = asyncWork ?? throw new ArgumentNullException(nameof(asyncWork));
+            this.state = state;
         }
 
         public bool Running => Volatile.Read(ref tokenSource) != null;
@@ -30,7 +32,7 @@ namespace System.Threading
 
             if(Interlocked.CompareExchange(ref tokenSource, tcs, null) == null)
             {
-                processorTask = RunAsync(tcs.Token);
+                processorTask = RunAsync(state, tcs.Token);
             }
             else
             {
@@ -71,7 +73,7 @@ namespace System.Threading
             }
         }
 
-        protected abstract Task RunAsync(CancellationToken cancellationToken);
+        protected abstract Task RunAsync(T state, CancellationToken cancellationToken);
 
         protected virtual void Dispose(bool disposing)
         {
