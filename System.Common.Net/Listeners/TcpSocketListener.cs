@@ -2,7 +2,6 @@
 using System.Net.Transports;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.ProtocolType;
 using static System.Net.Sockets.SocketType;
 
@@ -32,7 +31,7 @@ namespace System.Net.Listeners
 
         protected override void OnStartListening()
         {
-            socket = new Socket(InterNetwork, Stream, Tcp);
+            socket = new Socket(ipEndPoint.AddressFamily, Stream, Tcp);
             socket.Bind(ipEndPoint);
             socket.Listen(backlog);
         }
