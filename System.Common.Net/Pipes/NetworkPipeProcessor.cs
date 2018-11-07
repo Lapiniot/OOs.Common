@@ -81,6 +81,6 @@ namespace System.Net.Pipes
             }
         }
 
-        protected abstract ValueTask<int> ProcessAsync(in ReadOnlySequence<byte> buffer, in CancellationToken token);
+        protected abstract ValueTask<int> ProcessAsync(ReadOnlySequence<byte> buffer, CancellationToken token);
     }
 }
