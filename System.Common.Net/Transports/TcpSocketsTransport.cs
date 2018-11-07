@@ -3,13 +3,12 @@ using System.Net.Transports.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Dns;
-using static System.Net.Sockets.AddressFamily;
+using static System.Net.Properties.Strings;
 using static System.Net.Sockets.ProtocolType;
 using static System.Net.Sockets.SocketShutdown;
 using static System.Net.Sockets.SocketType;
 using static System.Net.Sockets.SocketError;
 using static System.Net.Sockets.SocketFlags;
-using static System.String;
 using static System.Threading.Tasks.Task;
 
 namespace System.Net.Transports
@@ -28,7 +27,7 @@ namespace System.Net.Transports
         public TcpSocketsTransport(string hostNameOrAddress, int port)
         {
             if(hostNameOrAddress == null) throw new ArgumentNullException(nameof(hostNameOrAddress));
-            if(hostNameOrAddress == "") throw new ArgumentException("Value cannot be empty.", nameof(hostNameOrAddress));
+            if(hostNameOrAddress == "") throw new ArgumentException(NotEmptyExpected, nameof(hostNameOrAddress));
             this.hostNameOrAddress = hostNameOrAddress;
             this.port = port;
         }
@@ -40,15 +39,14 @@ namespace System.Net.Transports
             CheckConnected();
             try
             {
-                var task = socket.ReceiveAsync(buffer, None, cancellationToken);
-                return task.IsCompletedSuccessfully ? task.Result : await task.ConfigureAwait(false);
+                var vt = socket.ReceiveAsync(buffer, None, cancellationToken);
+                return vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.ConfigureAwait(false);
             }
             catch(SocketException se) when(
                 se.SocketErrorCode == ConnectionAborted ||
                 se.SocketErrorCode == ConnectionReset)
             {
                 await DisconnectAsync().ConfigureAwait(false);
-
                 throw new ConnectionAbortedException(se);
             }
         }
@@ -58,15 +56,14 @@ namespace System.Net.Transports
             CheckConnected();
             try
             {
-                var task = socket.SendAsync(buffer, None, cancellationToken);
-                return task.IsCompletedSuccessfully ? task.Result : await task.ConfigureAwait(false);
+                var vt = socket.SendAsync(buffer, None, cancellationToken);
+                return vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.ConfigureAwait(false);
             }
             catch(SocketException se) when(
                 se.SocketErrorCode == ConnectionAborted ||
                 se.SocketErrorCode == ConnectionReset)
             {
                 await DisconnectAsync().ConfigureAwait(false);
-
                 throw new ConnectionAbortedException(se);
             }
         }
@@ -86,13 +83,13 @@ namespace System.Net.Transports
         {
             try
             {
-                socket = new Socket(InterNetwork, Stream, Tcp);
-
-                if(RemoteEndPoint == null && !IsNullOrEmpty(hostNameOrAddress))
+                if(RemoteEndPoint == null)
                 {
                     var addresses = await GetHostAddressesAsync(hostNameOrAddress).ConfigureAwait(false);
                     RemoteEndPoint = new IPEndPoint(addresses[0], port);
                 }
+
+                socket = new Socket(RemoteEndPoint.AddressFamily, Stream, Tcp);
 
                 await socket.ConnectAsync(RemoteEndPoint).ConfigureAwait(false);
             }

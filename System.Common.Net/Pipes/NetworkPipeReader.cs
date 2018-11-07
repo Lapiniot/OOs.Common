@@ -130,9 +130,9 @@ namespace System.Net.Pipes
 
                 writer.Complete();
             }
-            catch(AggregateException agge)
+            catch(AggregateException age)
             {
-                writer.Complete(agge.GetBaseException());
+                writer.Complete(age.GetBaseException());
             }
             catch(Exception exception)
             {

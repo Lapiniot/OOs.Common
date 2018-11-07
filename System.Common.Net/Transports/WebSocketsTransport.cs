@@ -4,6 +4,7 @@ using System.Net.Transports.Exceptions;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Properties.Strings;
 using static System.Net.WebSockets.WebSocketCloseStatus;
 using static System.Net.WebSockets.WebSocketError;
 using static System.Net.WebSockets.WebSocketMessageType;
@@ -19,7 +20,7 @@ namespace System.Net.Transports
         {
             RemoteUri = remoteUri ?? throw new ArgumentNullException(nameof(remoteUri));
             SubProtocols = subProtocols ?? throw new ArgumentNullException(nameof(subProtocols));
-            if(SubProtocols.Length == 0) throw new ArgumentException("At least one sub-protocol name must be provided");
+            if(SubProtocols.Length == 0) throw new ArgumentException(NoWsSubProtocolMessage);
         }
 
         public Uri RemoteUri { get; }
@@ -31,20 +32,15 @@ namespace System.Net.Transports
             CheckConnected();
             try
             {
-                var task = webSocket.ReceiveAsync(buffer, cancellationToken);
+                var vt = webSocket.ReceiveAsync(buffer, cancellationToken);
 
-                var result = task.IsCompletedSuccessfully
-                    ? task.Result
-                    : await task.ConfigureAwait(false);
+                var result = vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.ConfigureAwait(false);
 
-                if(result.MessageType == Close)
-                {
-                    await webSocket.CloseAsync(NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
+                if(result.MessageType != Close) return result.Count;
 
-                    return 0;
-                }
+                await webSocket.CloseAsync(NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
 
-                return result.Count;
+                return 0;
             }
             catch(WebSocketException wse) when(wse.WebSocketErrorCode == ConnectionClosedPrematurely)
             {
@@ -58,9 +54,16 @@ namespace System.Net.Transports
             CheckConnected();
             try
             {
-                var task = webSocket.SendAsync(buffer, Binary, true, cancellationToken);
+                var vt = webSocket.SendAsync(buffer, Binary, true, cancellationToken);
 
-                if(!task.IsCompletedSuccessfully) await task.ConfigureAwait(false);
+                if(vt.IsCompleted)
+                {
+                    vt.GetAwaiter().GetResult();
+                }
+                else
+                {
+                    await vt.ConfigureAwait(false);
+                }
 
                 return buffer.Length;
             }
