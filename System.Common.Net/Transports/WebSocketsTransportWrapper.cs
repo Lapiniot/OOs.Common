@@ -18,18 +18,25 @@ namespace System.Net.Transports
 
         public async ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            var task = webSocket.SendAsync(buffer, Binary, true, cancellationToken);
+            var vt = webSocket.SendAsync(buffer, Binary, true, cancellationToken);
 
-            if(!task.IsCompletedSuccessfully) await task.ConfigureAwait(false);
+            if(vt.IsCompleted)
+            {
+                vt.GetAwaiter().GetResult();
+            }
+            else
+            {
+                await vt.AsTask().ConfigureAwait(false);
+            }
 
             return buffer.Length;
         }
 
         public async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            var task = webSocket.ReceiveAsync(buffer, cancellationToken);
+            var vt = webSocket.ReceiveAsync(buffer, cancellationToken);
 
-            return (task.IsCompletedSuccessfully ? task.Result : await task.ConfigureAwait(false)).Count;
+            return (vt.IsCompleted ? vt.Result : await vt.AsTask().ConfigureAwait(false)).Count;
         }
 
         public void Dispose()

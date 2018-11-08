@@ -8,23 +8,23 @@ namespace System
     {
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
-        public bool IsConnected => isConnected;
+        public bool IsConnected { get; private set; }
 
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             CheckDisposed();
 
-            if(!isConnected)
+            if(!IsConnected)
             {
                 await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
                 try
                 {
-                    if(!isConnected)
+                    if(!IsConnected)
                     {
                         await OnConnectAsync(cancellationToken).ConfigureAwait(false);
 
-                        isConnected = true;
+                        IsConnected = true;
                     }
                 }
                 finally
@@ -38,20 +38,20 @@ namespace System
         {
             CheckDisposed();
 
-            if(isConnected)
+            if(IsConnected)
             {
                 await semaphore.WaitAsync().ConfigureAwait(false);
 
                 try
                 {
-                    if(isConnected)
+                    if(IsConnected)
                     {
                         await OnDisconnectAsync().ConfigureAwait(false);
                     }
                 }
                 finally
                 {
-                    isConnected = false;
+                    IsConnected = false;
                     semaphore.Release();
                 }
             }
@@ -63,7 +63,7 @@ namespace System
 
         protected void CheckConnected([CallerMemberName] string callerName = null)
         {
-            if(!isConnected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state.");
+            if(!IsConnected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state.");
         }
 
         protected void CheckDisposed()
@@ -74,8 +74,6 @@ namespace System
         #region IDisposable Support
 
         private bool disposed;
-
-        private bool isConnected;
 
         protected virtual void Dispose(bool disposing)
         {

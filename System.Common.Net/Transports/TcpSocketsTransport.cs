@@ -40,7 +40,7 @@ namespace System.Net.Transports
             try
             {
                 var vt = socket.ReceiveAsync(buffer, None, cancellationToken);
-                return vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.ConfigureAwait(false);
+                return vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.AsTask().ConfigureAwait(false);
             }
             catch(SocketException se) when(
                 se.SocketErrorCode == ConnectionAborted ||
@@ -57,7 +57,7 @@ namespace System.Net.Transports
             try
             {
                 var vt = socket.SendAsync(buffer, None, cancellationToken);
-                return vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.ConfigureAwait(false);
+                return vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.AsTask().ConfigureAwait(false);
             }
             catch(SocketException se) when(
                 se.SocketErrorCode == ConnectionAborted ||

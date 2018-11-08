@@ -48,14 +48,14 @@ namespace System.Net.Pipes
                 while(!token.IsCancellationRequested)
                 {
                     var rt = reader.ReadAsync(token);
-                    var result = rt.IsCompleted ? rt.Result : await rt.ConfigureAwait(false);
+                    var result = rt.IsCompleted ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
                     var buffer = result.Buffer;
 
                     if(buffer.IsEmpty) continue;
 
                     var pt = ProcessAsync(buffer, token);
-                    var consumed = pt.IsCompleted ? pt.Result : await pt.ConfigureAwait(false);
+                    var consumed = pt.IsCompleted ? pt.Result : await pt.AsTask().ConfigureAwait(false);
 
                     if(consumed > 0)
                     {

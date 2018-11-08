@@ -38,7 +38,8 @@ namespace System.Net.Sockets
         {
             if(TryGetArray(memory, out var segment))
             {
-                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, beginMethod, endMethod, cancellationToken).ConfigureAwait(false);
+                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count,
+                    remoteEndPoint, beginMethod, endMethod, cancellationToken).ConfigureAwait(false);
             }
 
             var length = memory.Length;
@@ -59,7 +60,8 @@ namespace System.Net.Sockets
         {
             if(TryGetArray(memory, out ArraySegment<byte> segment))
             {
-                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count, remoteEndPoint, beginMethod, endMethod, cancellationToken).ConfigureAwait(false);
+                return await FromAsync(socket, segment.Array, segment.Offset, segment.Count,
+                    remoteEndPoint, beginMethod, endMethod, cancellationToken).ConfigureAwait(false);
             }
 
             var length = memory.Length;
@@ -132,7 +134,8 @@ namespace System.Net.Sockets
 
         #region SendToAsync overloads
 
-        public static Task<int> SendToAsync(this Socket socket, byte[] bytes, int offset, int size, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
+        public static Task<int> SendToAsync(this Socket socket, byte[] bytes, int offset,
+            int size, IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
             return FromAsync(socket, bytes, offset, size, remoteEndPoint, BeginSendTo, EndSendTo, cancellationToken);
         }
@@ -188,7 +191,8 @@ namespace System.Net.Sockets
             return FromAsync(socket, bytes, offset, size, endPoint, BeginReceiveFrom, EndReceiveFrom, cancellationToken);
         }
 
-        public static Task<(int Size, IPEndPoint RemoteEndPoint)> ReceiveFromAsync(this Socket socket, byte[] bytes, IPEndPoint endPoint, CancellationToken cancellationToken)
+        public static Task<(int Size, IPEndPoint RemoteEndPoint)> ReceiveFromAsync(this Socket socket, byte[] bytes,
+            IPEndPoint endPoint, CancellationToken cancellationToken)
         {
             return ReceiveFromAsync(socket, bytes, 0, bytes.Length, endPoint, cancellationToken);
         }

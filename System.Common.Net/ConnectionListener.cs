@@ -6,20 +6,19 @@ namespace System.Net
     public abstract class ConnectionListener : IConnectionListener
     {
         private readonly object syncRoot = new object();
-        private bool isListening;
 
-        public bool IsListening => isListening;
+        public bool IsListening { get; private set; }
 
         public void Start()
         {
-            if(!isListening)
+            if(!IsListening)
             {
                 lock(syncRoot)
                 {
-                    if(!isListening)
+                    if(!IsListening)
                     {
                         OnStartListening();
-                        isListening = true;
+                        IsListening = true;
                     }
                 }
             }
@@ -27,14 +26,14 @@ namespace System.Net
 
         public void Stop()
         {
-            if(isListening)
+            if(IsListening)
             {
                 lock(syncRoot)
                 {
-                    if(isListening)
+                    if(IsListening)
                     {
                         OnStopListening();
-                        isListening = false;
+                        IsListening = false;
                     }
                 }
             }

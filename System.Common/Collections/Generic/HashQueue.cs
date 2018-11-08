@@ -83,7 +83,7 @@ namespace System.Collections.Generic
                 {
                     return node.Value;
                 }
-                
+
                 using(lockSlim.WithWriteLock())
                 {
                     return AddNodeInternal(key, value).Value;

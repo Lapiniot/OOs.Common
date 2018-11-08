@@ -9,23 +9,22 @@ namespace System
     {
         private readonly object syncRoot = new object();
         private bool disposed;
-        private bool isConnected;
 
-        public bool IsConnected => isConnected;
+        public bool IsConnected { get; private set; }
 
         public void Connect()
         {
             CheckDisposed();
 
-            if(!isConnected)
+            if(!IsConnected)
             {
                 lock(syncRoot)
                 {
-                    if(!isConnected)
+                    if(!IsConnected)
                     {
                         OnConnect();
 
-                        isConnected = true;
+                        IsConnected = true;
                     }
                 }
             }
@@ -33,15 +32,15 @@ namespace System
 
         public void Close()
         {
-            if(isConnected)
+            if(IsConnected)
             {
                 lock(syncRoot)
                 {
-                    if(isConnected)
+                    if(IsConnected)
                     {
                         OnClose();
 
-                        isConnected = false;
+                        IsConnected = false;
                     }
                 }
             }
@@ -53,7 +52,7 @@ namespace System
 
         protected void CheckConnected([CallerMemberName] string callerName = null)
         {
-            if(!isConnected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state. Call \'Connect()\' before.");
+            if(!IsConnected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state. Call \'Connect()\' before.");
         }
 
         protected void CheckDisposed()
