@@ -34,7 +34,7 @@ namespace System.Net.Transports
             {
                 var vt = webSocket.ReceiveAsync(buffer, cancellationToken);
 
-                var result = vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.AsTask().ConfigureAwait(false);
+                var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
 
                 if(result.MessageType != Close) return result.Count;
 
@@ -56,14 +56,7 @@ namespace System.Net.Transports
             {
                 var vt = webSocket.SendAsync(buffer, Binary, true, cancellationToken);
 
-                if(vt.IsCompleted)
-                {
-                    vt.GetAwaiter().GetResult();
-                }
-                else
-                {
-                    await vt.AsTask().ConfigureAwait(false);
-                }
+                if(!vt.IsCompletedSuccessfully) await vt.AsTask().ConfigureAwait(false);
 
                 return buffer.Length;
             }

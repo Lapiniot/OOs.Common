@@ -36,7 +36,7 @@ namespace System.Net.Transports
         {
             var vt = webSocket.ReceiveAsync(buffer, cancellationToken);
 
-            return (vt.IsCompleted ? vt.Result : await vt.AsTask().ConfigureAwait(false)).Count;
+            return (vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false)).Count;
         }
 
         public void Dispose()
