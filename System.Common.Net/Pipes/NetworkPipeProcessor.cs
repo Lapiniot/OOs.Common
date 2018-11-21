@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -82,5 +83,11 @@ namespace System.Net.Pipes
         }
 
         protected abstract ValueTask<int> ProcessAsync(ReadOnlySequence<byte> buffer, CancellationToken token);
+
+        public TaskAwaiter GetAwaiter()
+        {
+            if(!IsConnected) throw new InvalidOperationException("Pipe processor is not started.");
+            return processor.GetAwaiter();
+        }
     }
 }
