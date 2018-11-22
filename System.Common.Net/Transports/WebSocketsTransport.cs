@@ -20,7 +20,7 @@ namespace System.Net.Transports
         {
             RemoteUri = remoteUri ?? throw new ArgumentNullException(nameof(remoteUri));
             SubProtocols = subProtocols ?? throw new ArgumentNullException(nameof(subProtocols));
-            if(SubProtocols.Length == 0) throw new ArgumentException(NoWsSubProtocolMessage);
+            if(SubProtocols.Length == 0) throw new ArgumentException(NoWsSubProtocol);
         }
 
         public Uri RemoteUri { get; }

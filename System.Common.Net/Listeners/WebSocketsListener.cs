@@ -69,14 +69,14 @@ namespace System.Net.Listeners
 
             if(IsNullOrEmpty(header))
             {
-                throw new ArgumentException(NoWsSubProtocolMessage);
+                throw new ArgumentException(NoWsSubProtocol);
             }
 
             var headers = header.Split(new[] {' ', ','}, RemoveEmptyEntries);
             var subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
             if(subProtocol == null)
             {
-                throw new ArgumentException(NotSupportedWsSubProtocolMessage);
+                throw new ArgumentException(NotSupportedWsSubProtocol);
             }
 
             return subProtocol;

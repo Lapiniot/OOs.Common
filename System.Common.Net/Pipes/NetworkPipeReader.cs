@@ -1,12 +1,13 @@
 using System.IO.Pipelines;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.Properties.Strings;
 
 namespace System.Net.Pipes
 {
     public sealed class NetworkPipeReader : PipeReader, IAsyncConnectedObject, IDisposable
     {
+        private readonly PipeOptions pipeOptions;
         private readonly SemaphoreSlim semaphore;
         private readonly INetworkTransport transport;
         private bool disposed;
@@ -14,10 +15,11 @@ namespace System.Net.Pipes
         private Task processor;
         private CancellationTokenSource processorCts;
 
-        public NetworkPipeReader(INetworkTransport transport)
+        public NetworkPipeReader(INetworkTransport transport, PipeOptions pipeOptions = null)
         {
             this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
             semaphore = new SemaphoreSlim(1);
+            this.pipeOptions = pipeOptions ?? new PipeOptions(useSynchronizationContext: false);
         }
 
         public bool IsConnected { get; private set; }
@@ -34,7 +36,7 @@ namespace System.Net.Pipes
                 {
                     if(!IsConnected)
                     {
-                        pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
+                        pipe = new Pipe(pipeOptions);
 
                         processorCts = new CancellationTokenSource();
 
@@ -91,20 +93,15 @@ namespace System.Net.Pipes
         {
             if (!disposed)
             {
-                DisconnectAsync().ContinueWith(t => { semaphore.Dispose(); });
+                DisconnectAsync().ContinueWith(t => semaphore.Dispose());
 
                 disposed = true;
             }
         }
 
-        private void CheckConnected([CallerMemberName] string callerName = null)
-        {
-            if(!IsConnected) throw new InvalidOperationException($"Cannot call '{callerName}' in disconnected state.");
-        }
-
         private void CheckDisposed()
         {
-            if (disposed) throw new InvalidOperationException("Cannot use this instance - has been already disposed.");
+            if(disposed) throw new InvalidOperationException(ObjectInstanceDisposed);
         }
 
         private async Task StartNetworkReaderAsync(PipeWriter writer, CancellationToken token)
@@ -128,6 +125,10 @@ namespace System.Net.Pipes
                     if(result.IsCompleted || result.IsCanceled) break;
                 }
 
+                writer.Complete();
+            }
+            catch(OperationCanceledException)
+            {
                 writer.Complete();
             }
             catch(AggregateException age)

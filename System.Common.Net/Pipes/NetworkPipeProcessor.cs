@@ -1,7 +1,8 @@
 ﻿using System.Buffers;
-using System.Runtime.CompilerServices;
+using System.Net.Properties;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Threading.Tasks.Task;
 
 namespace System.Net.Pipes
 {
@@ -16,13 +17,23 @@ namespace System.Net.Pipes
             this.reader = reader ?? throw new ArgumentNullException(nameof(reader));
         }
 
+        public Task Completion
+        {
+            get
+            {
+                if(!IsConnected) throw new InvalidOperationException(Strings.PipeNotStarted);
+
+                return processor;
+            }
+        }
+
         protected override Task OnConnectAsync(CancellationToken cancellationToken)
         {
             processorCts = new CancellationTokenSource();
 
-            processor = StartParserAsync(processorCts.Token);
+            processor = StartProcessorAsync(processorCts.Token);
 
-            return Task.CompletedTask;
+            return CompletedTask;
         }
 
         protected override async Task OnDisconnectAsync()
@@ -42,7 +53,7 @@ namespace System.Net.Pipes
             }
         }
 
-        private async Task StartParserAsync(CancellationToken token)
+        private async Task StartProcessorAsync(CancellationToken token)
         {
             try
             {
@@ -72,22 +83,20 @@ namespace System.Net.Pipes
 
                 reader.Complete();
             }
+            catch(OperationCanceledException)
+            {
+                reader.Complete();
+            }
             catch(AggregateException age)
             {
                 reader.Complete(age.GetBaseException());
             }
-            catch(Exception exception)
+            catch(Exception ex)
             {
-                reader.Complete(exception);
+                reader.Complete(ex);
             }
         }
 
         protected abstract ValueTask<int> ProcessAsync(ReadOnlySequence<byte> buffer, CancellationToken token);
-
-        public TaskAwaiter GetAwaiter()
-        {
-            if(!IsConnected) throw new InvalidOperationException("Pipe processor is not started.");
-            return processor.GetAwaiter();
-        }
     }
 }
