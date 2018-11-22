@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Sockets.SocketFlags;
 using static System.Net.Sockets.SocketShutdown;
+using static System.Threading.Tasks.Task;
 
 namespace System.Net.Transports
 {
@@ -34,14 +35,14 @@ namespace System.Net.Transports
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException();
+            return CompletedTask;
         }
 
         public Task DisconnectAsync()
         {
             socket.Shutdown(Both);
             socket.Close();
-            return Task.CompletedTask;
+            return CompletedTask;
         }
     }
 }

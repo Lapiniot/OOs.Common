@@ -48,7 +48,7 @@ namespace System.Net.Transports
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException();
+            return Task.CompletedTask;
         }
 
         public Task DisconnectAsync()
