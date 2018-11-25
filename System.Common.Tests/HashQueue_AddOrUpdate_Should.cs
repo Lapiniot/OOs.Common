@@ -22,14 +22,14 @@ namespace System.Common.Tests
         public void Throw_NullReferenceException_GivenUpdateFactory_Null_ForExistingKey()
         {
             var hq = CreateSampleHashQueue();
-            Assert.ThrowsException<NullReferenceException>(() => hq.AddOrUpdate("key2", "value 2", null));
+            Assert.ThrowsException<NullReferenceException>(() => hq.AddOrUpdate("key2", "value 2", (Func<string, string, string>)null));
         }
 
         [TestMethod]
         public void NotThrow_NullReferenceException_GivenUpdateFactory_Null_ForNewKey()
         {
             var hq = CreateSampleHashQueue();
-            hq.AddOrUpdate("key5", "value 5", null);
+            hq.AddOrUpdate("key5", "value 5", (Func<string, string, string>)null);
         }
 
         [TestMethod]

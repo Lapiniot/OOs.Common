@@ -75,6 +75,16 @@ namespace System.Collections.Generic
             }
         }
 
+        public TV AddOrUpdate(TK key, TV addValue, TV updateValue)
+        {
+            using(lockSlim.WithWriteLock())
+            {
+                return map.TryGetValue(key, out var node)
+                    ? node.Value = updateValue
+                    : AddNodeInternal(key, addValue).Value;
+            }
+        }
+
         public TV GetOrAdd(TK key, TV value)
         {
             using(lockSlim.WithUpgradeableReadLock())
