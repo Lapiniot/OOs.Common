@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.Threading.Tasks;
 using static System.Threading.CancellationTokenSource;
 
 namespace System.Threading
@@ -33,9 +34,9 @@ namespace System.Threading
                         await AsyncWork(state, cancellationToken).ConfigureAwait(false);
                         iteration++;
                     }
-                    catch
+                    catch(Exception exception)
                     {
-                        // ignored
+                        Trace.TraceWarning(exception.Message);
                     }
                 }
             }

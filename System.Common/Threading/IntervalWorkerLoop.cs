@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace System.Threading
 {
@@ -20,9 +21,9 @@ namespace System.Threading
                 {
                     await AsyncWork(state, cancellationToken).ConfigureAwait(false);
                 }
-                catch
+                catch(Exception exception)
                 {
-                    // ignored
+                    Trace.TraceWarning(exception.Message);
                 }
 
                 await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
