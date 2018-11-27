@@ -66,8 +66,7 @@ namespace System.Net.Pipes
 
                     if(buffer.IsEmpty) continue;
 
-                    var pt = ProcessAsync(buffer, token);
-                    var consumed = pt.IsCompletedSuccessfully ? pt.Result : await pt.AsTask().ConfigureAwait(false);
+                    var consumed = Process(buffer);
 
                     if(consumed > 0)
                     {
@@ -97,6 +96,6 @@ namespace System.Net.Pipes
             }
         }
 
-        protected abstract ValueTask<int> ProcessAsync(ReadOnlySequence<byte> buffer, CancellationToken token);
+        protected abstract int Process(ReadOnlySequence<byte> buffer);
     }
 }
