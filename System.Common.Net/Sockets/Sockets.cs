@@ -23,9 +23,7 @@ namespace System.Net.Sockets
 
         private sealed class UdpSocket : Socket
         {
-            public UdpSocket(AddressFamily addressFamily = InterNetwork) : base(addressFamily, Dgram, ProtocolType.Udp)
-            {
-            }
+            public UdpSocket(AddressFamily addressFamily = InterNetwork) : base(addressFamily, Dgram, ProtocolType.Udp) {}
         }
 
         public static class Udp

@@ -54,9 +54,7 @@ namespace System.Threading
             {
                 foreach(var target in targets)
                 {
-                    using(target)
-                    {
-                    }
+                    using(target) {}
                 }
             }
         }

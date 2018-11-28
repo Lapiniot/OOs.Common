@@ -30,9 +30,7 @@ namespace System.Net.Listeners
         }
 
         public WebSocketsListener(Uri uri, params string[] subProtocols) :
-            this(uri, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
-        {
-        }
+            this(uri, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize) {}
 
         public override async Task<INetworkTransport> AcceptAsync(CancellationToken cancellationToken)
         {

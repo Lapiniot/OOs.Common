@@ -6,9 +6,7 @@ namespace System.Threading
     public class WorkerLoop<T> : WorkerLoopBase<T>
     {
         public WorkerLoop(Func<T, CancellationToken, Task> asyncWork, T state) :
-            base(asyncWork, state)
-        {
-        }
+            base(asyncWork, state) {}
 
 
         protected override async Task RunAsync(T state, CancellationToken cancellationToken)

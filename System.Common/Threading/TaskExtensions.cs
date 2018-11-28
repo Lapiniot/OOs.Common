@@ -26,7 +26,7 @@ namespace System.Threading
         /// <returns>Wrapper task</returns>
         public static Task WaitAsync(this Task task, CancellationToken cancellationToken)
         {
-            return task.IsCompleted ? task : task.ContinueWith(t => { t.GetAwaiter().GetResult(); }, cancellationToken, ExecuteSynchronously, Default);
+            return task.IsCompleted ? task : task.ContinueWith(t => t.GetAwaiter().GetResult(), cancellationToken, ExecuteSynchronously, Default);
         }
     }
 }

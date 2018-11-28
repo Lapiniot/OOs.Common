@@ -60,15 +60,18 @@ namespace System.Threading
             if(tcs != null)
             {
                 tcs.Cancel();
-                tcs.Dispose();
 
                 try
                 {
                     await task.ConfigureAwait(false);
                 }
-                catch(OperationCanceledException)
+                catch
                 {
                     // ignored
+                }
+                finally
+                {
+                    tcs.Dispose();
                 }
             }
         }

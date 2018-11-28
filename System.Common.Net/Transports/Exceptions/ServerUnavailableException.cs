@@ -5,13 +5,9 @@ namespace System.Net.Transports.Exceptions
         private const string ServerUnavailable = "Server unavailable.";
 
         public ServerUnavailableException(Exception innerException) :
-            this(ServerUnavailable, innerException)
-        {
-        }
+            this(ServerUnavailable, innerException) {}
 
         public ServerUnavailableException(string message, Exception innerException) :
-            base(message, innerException)
-        {
-        }
+            base(message, innerException) {}
     }
 }

@@ -5,13 +5,9 @@ namespace System.Net.Transports.Exceptions
         protected internal const string ConnectionClosedByRemoteHost = "Connection closed by remote host";
 
         public ConnectionAbortedException(Exception innerException) :
-            base(ConnectionClosedByRemoteHost, innerException)
-        {
-        }
+            base(ConnectionClosedByRemoteHost, innerException) {}
 
         public ConnectionAbortedException(string message, Exception innerException) :
-            base(message, innerException)
-        {
-        }
+            base(message, innerException) {}
     }
 }

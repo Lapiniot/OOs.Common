@@ -53,9 +53,7 @@ namespace System.Net
 
         protected virtual void Dispose(bool disposing)
         {
-            if(disposing)
-            {
-            }
+            if(disposing) {}
         }
     }
 }
