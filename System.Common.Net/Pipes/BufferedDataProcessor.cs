@@ -111,6 +111,6 @@ namespace System.Net.Pipes
 
         protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 
-        protected abstract int Process(in ReadOnlySequence<byte> buffer);
+        protected abstract long Process(in ReadOnlySequence<byte> buffer);
     }
 }
