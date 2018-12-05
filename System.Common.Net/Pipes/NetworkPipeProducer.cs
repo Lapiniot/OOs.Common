@@ -5,17 +5,23 @@ using static System.Net.Properties.Strings;
 
 namespace System.Net.Pipes
 {
-    public sealed class NetworkPipeReader : PipeReader, IAsyncConnectedObject, IDisposable
+    /// <summary>
+    /// Provides generic pipe data producer which reads data from abstract <seealso cref="INetworkTransport"/>
+    /// on data arrival and writes it to the pipe. Reads by consumers are supported via
+    /// implemented <seealso cref="System.IO.Pipelines.PipeReader"/> methods.
+    /// </summary>
+    public sealed class NetworkPipeProducer : PipeReader, IAsyncConnectedObject, IDisposable
     {
         private readonly PipeOptions pipeOptions;
         private readonly SemaphoreSlim semaphore;
         private readonly INetworkTransport transport;
         private bool disposed;
-        private Pipe pipe;
-        private Task processor;
+        private PipeReader pipeReader;
+        private PipeWriter pipeWriter;
+        private Task producer;
         private CancellationTokenSource processorCts;
 
-        public NetworkPipeReader(INetworkTransport transport, PipeOptions pipeOptions = null)
+        public NetworkPipeProducer(INetworkTransport transport, PipeOptions pipeOptions = null)
         {
             this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
             semaphore = new SemaphoreSlim(1);
@@ -36,13 +42,15 @@ namespace System.Net.Pipes
                 {
                     if(!IsConnected)
                     {
-                        pipe = new Pipe(pipeOptions);
+                        var pipe = new Pipe(pipeOptions);
+                        pipeReader = pipe.Reader;
+                        pipeWriter = pipe.Writer;
 
                         processorCts = new CancellationTokenSource();
 
                         var token = processorCts.Token;
 
-                        processor = StartNetworkReaderAsync(pipe.Writer, token);
+                        producer = StartProducerAsync(pipeWriter, token);
 
                         IsConnected = true;
                     }
@@ -72,7 +80,10 @@ namespace System.Net.Pipes
 
                             try
                             {
-                                await processor.ConfigureAwait(false);
+                                pipeReader = null;
+                                pipeWriter = null;
+
+                                await producer.ConfigureAwait(false);
                             }
                             catch
                             {
@@ -104,7 +115,7 @@ namespace System.Net.Pipes
             if(disposed) throw new InvalidOperationException(ObjectInstanceDisposed);
         }
 
-        private async Task StartNetworkReaderAsync(PipeWriter writer, CancellationToken token)
+        private async Task StartProducerAsync(PipeWriter writer, CancellationToken token)
         {
             try
             {
@@ -143,37 +154,37 @@ namespace System.Net.Pipes
 
         public override void AdvanceTo(SequencePosition consumed)
         {
-            pipe.Reader.AdvanceTo(consumed);
+            pipeReader.AdvanceTo(consumed);
         }
 
         public override void AdvanceTo(SequencePosition consumed, SequencePosition examined)
         {
-            pipe.Reader.AdvanceTo(consumed, examined);
+            pipeReader.AdvanceTo(consumed, examined);
         }
 
         public override void CancelPendingRead()
         {
-            pipe.Reader.CancelPendingRead();
+            pipeReader.CancelPendingRead();
         }
 
         public override void Complete(Exception exception = null)
         {
-            pipe.Reader.Complete(exception);
+            pipeReader.Complete(exception);
         }
 
         public override void OnWriterCompleted(Action<Exception, object> callback, object state)
         {
-            pipe.Reader.OnWriterCompleted(callback, state);
+            pipeReader.OnWriterCompleted(callback, state);
         }
 
         public override ValueTask<ReadResult> ReadAsync(CancellationToken cancellationToken = default)
         {
-            return pipe.Reader.ReadAsync(cancellationToken);
+            return pipeReader.ReadAsync(cancellationToken);
         }
 
         public override bool TryRead(out ReadResult result)
         {
-            return pipe.Reader.TryRead(out result);
+            return pipeReader.TryRead(out result);
         }
     }
 }

@@ -2,10 +2,17 @@
 using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Threading.Tasks.Task;
 
 namespace System.Net.Pipes
 {
-    public abstract class BufferedDataProcessor : AsyncConnectedObject
+    /// <summary>
+    /// Provides base pipe processor implementation which runs two loops.
+    /// Producer loop reads data from the abstract source asynchronously on
+    /// arrival via <see cref="ReceiveAsync" /> and writes to the pipe.
+    /// Consumer loop consumes data from the pipe via <see cref="Consume" />.
+    /// </summary>
+    public abstract class PipeProducerConsumer : AsyncConnectedObject
     {
         private CancellationTokenSource cancellationTokenSource;
         private Task processor;
@@ -14,10 +21,14 @@ namespace System.Net.Pipes
         {
             cancellationTokenSource = new CancellationTokenSource();
             var token = cancellationTokenSource.Token;
-            var pipe = new Pipe();
-            processor = Task.WhenAll(StartReaderAsync(pipe.Writer, token), StartProcessorAsync(pipe.Reader, token));
 
-            return Task.CompletedTask;
+            var pipe = new Pipe();
+
+            var producer = StartProducerAsync(pipe.Writer, token);
+            var consumer = StartConsumerAsync(pipe.Reader, token);
+            processor = WhenAll(producer, consumer);
+
+            return CompletedTask;
         }
 
         protected override async Task OnDisconnectAsync()
@@ -29,7 +40,7 @@ namespace System.Net.Pipes
             }
         }
 
-        private async Task StartReaderAsync(PipeWriter writer, CancellationToken cancellationToken)
+        private async Task StartProducerAsync(PipeWriter writer, CancellationToken cancellationToken)
         {
             try
             {
@@ -66,7 +77,7 @@ namespace System.Net.Pipes
             }
         }
 
-        private async Task StartProcessorAsync(PipeReader reader, CancellationToken cancellationToken)
+        private async Task StartConsumerAsync(PipeReader reader, CancellationToken cancellationToken)
         {
             try
             {
@@ -79,7 +90,7 @@ namespace System.Net.Pipes
 
                     if(buffer.IsEmpty) continue;
 
-                    var consumed = Process(buffer);
+                    var consumed = Consume(buffer);
 
                     if(consumed > 0)
                     {
@@ -109,8 +120,22 @@ namespace System.Net.Pipes
             }
         }
 
+        /// <summary>
+        /// Provides abstract data reading support from asynchronous sources (network stream, socket e.g.)
+        /// </summary>
+        /// <param name="buffer">Memory buffer to be filled with data</param>
+        /// <param name="cancellationToken"><see cref="CancellationToken" /> for external cancellation support.</param>
+        /// <returns>Actual amount of the data received.</returns>
         protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 
-        protected abstract long Process(in ReadOnlySequence<byte> buffer);
+        /// <summary>
+        /// The only method to be implemented. It is called every time new data is available.
+        /// </summary>
+        /// <param name="buffer">Sequence of linked buffers containing data produced by the pipe writer</param>
+        /// <returns>
+        /// Amount of bytes actually consumed by our implementation or <value>0</value>
+        /// if no data can be consumed at the moment.
+        /// </returns>
+        protected abstract long Consume(in ReadOnlySequence<byte> buffer);
     }
 }

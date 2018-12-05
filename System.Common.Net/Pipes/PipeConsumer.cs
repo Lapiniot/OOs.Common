@@ -7,13 +7,16 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Net.Pipes
 {
-    public abstract class PipeProcessor : AsyncConnectedObject
+    /// <summary>
+    /// Provides base abstract class for pipe data consumer.
+    /// </summary>
+    public abstract class PipeConsumer : AsyncConnectedObject
     {
         private readonly PipeReader reader;
-        private Task processor;
+        private Task consumer;
         private CancellationTokenSource processorCts;
 
-        protected PipeProcessor(PipeReader reader)
+        protected PipeConsumer(PipeReader reader)
         {
             this.reader = reader ?? throw new ArgumentNullException(nameof(reader));
         }
@@ -24,7 +27,7 @@ namespace System.Net.Pipes
             {
                 if(!IsConnected) throw new InvalidOperationException(Strings.PipeNotStarted);
 
-                return processor;
+                return consumer;
             }
         }
 
@@ -32,7 +35,7 @@ namespace System.Net.Pipes
         {
             processorCts = new CancellationTokenSource();
 
-            processor = StartProcessorAsync(processorCts.Token);
+            consumer = StartConsumerAsync(processorCts.Token);
 
             return CompletedTask;
         }
@@ -45,7 +48,7 @@ namespace System.Net.Pipes
 
                 try
                 {
-                    await processor.ConfigureAwait(false);
+                    await consumer.ConfigureAwait(false);
                 }
                 catch
                 {
@@ -54,7 +57,7 @@ namespace System.Net.Pipes
             }
         }
 
-        private async Task StartProcessorAsync(CancellationToken token)
+        private async Task StartConsumerAsync(CancellationToken token)
         {
             try
             {
@@ -67,7 +70,7 @@ namespace System.Net.Pipes
 
                     if(buffer.IsEmpty) continue;
 
-                    var consumed = Process(buffer);
+                    var consumed = Consume(buffer);
 
                     if(consumed > 0)
                     {
@@ -97,6 +100,14 @@ namespace System.Net.Pipes
             }
         }
 
-        protected abstract int Process(ReadOnlySequence<byte> buffer);
+        /// <summary>
+        /// The only method to be implemented. It is called every time new data is available.
+        /// </summary>
+        /// <param name="buffer">Sequence of linked buffers containing data produced by the pipe writer</param>
+        /// <returns>
+        /// Amount of bytes actually consumed by our implementation or <value>0</value>
+        /// if no data can be consumed at the moment.
+        /// </returns>
+        protected abstract long Consume(in ReadOnlySequence<byte> buffer);
     }
 }
