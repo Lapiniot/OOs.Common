@@ -6,9 +6,9 @@ using static System.Net.Properties.Strings;
 namespace System.Net.Pipes
 {
     /// <summary>
-    /// Provides generic pipe data producer which reads data from abstract <seealso cref="INetworkTransport"/>
+    /// Provides generic pipe data producer which reads data from abstract <seealso cref="INetworkTransport" />
     /// on data arrival and writes it to the pipe. Reads by consumers are supported via
-    /// implemented <seealso cref="System.IO.Pipelines.PipeReader"/> methods.
+    /// implemented <seealso cref="System.IO.Pipelines.PipeReader" /> methods.
     /// </summary>
     public sealed class NetworkPipeProducer : PipeReader, IAsyncConnectedObject, IDisposable
     {
@@ -18,8 +18,8 @@ namespace System.Net.Pipes
         private bool disposed;
         private PipeReader pipeReader;
         private PipeWriter pipeWriter;
-        private Task producer;
         private CancellationTokenSource processorCts;
+        private Task producer;
 
         public NetworkPipeProducer(INetworkTransport transport, PipeOptions pipeOptions = null)
         {
