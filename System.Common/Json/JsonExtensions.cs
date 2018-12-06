@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using static System.Text.Encoding;
 
@@ -36,18 +37,25 @@ namespace System.Json
             }
         }
 
+        public static JsonValue Deserialize(byte[] bytes, int index, int count, Encoding encoding = null)
+        {
+            using(var stream = new MemoryStream(bytes, index, count, false))
+            using(var reader = new StreamReader(stream, encoding ?? UTF8))
+            {
+                return JsonValue.Load(reader);
+            }
+        }
+
         public static JsonValue Deserialize(byte[] bytes, Encoding encoding = null)
         {
             return Deserialize(bytes, 0, bytes.Length, encoding);
         }
 
-        public static JsonValue Deserialize(byte[] bytes, int index, int count, Encoding encoding = null)
+        public static JsonValue Deserialize(ReadOnlyMemory<byte> memory, Encoding encoding = null)
         {
-            using(var stream = new MemoryStream(bytes, index, count))
-            using(var reader = new StreamReader(stream, encoding ?? UTF8))
-            {
-                return JsonValue.Load(reader);
-            }
+            return MemoryMarshal.TryGetArray(memory, out var segment)
+                ? Deserialize(segment.Array, segment.Offset, segment.Count, encoding)
+                : Deserialize(memory.ToArray(), encoding);
         }
     }
 }
