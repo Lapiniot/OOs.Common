@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace System.Net
@@ -45,6 +46,23 @@ namespace System.Net
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public async IAsyncEnumerator<INetworkTransport> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            Start();
+
+            try
+            {
+                while(!cancellationToken.IsCancellationRequested)
+                {
+                    yield return await AcceptAsync(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                Stop();
+            }
         }
 
         protected abstract void OnStartListening();
