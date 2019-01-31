@@ -1,14 +1,15 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net.Transports;
+using System.Net.WebSockets;
 using System.Threading;
-using System.Threading.Tasks;
 using static System.Net.Properties.Strings;
 using static System.String;
 using static System.StringSplitOptions;
 
 namespace System.Net.Listeners
 {
-    public class WebSocketsListener : ConnectionListener
+    public class WebSocketsListener : AsyncAsyncConnectionListener
     {
         private const int ReceiveBufferSize = 16384;
         private const int KeepAliveSeconds = 120;
@@ -17,7 +18,6 @@ namespace System.Net.Listeners
         private readonly bool shouldMatchSubProtocol;
         private readonly string[] subProtocols;
         private readonly Uri uri;
-        private HttpListener listener;
 
         public WebSocketsListener(Uri uri, string[] subProtocols,
             TimeSpan keepAliveInterval, int receiveBufferSize)
@@ -31,33 +31,6 @@ namespace System.Net.Listeners
 
         public WebSocketsListener(Uri uri, params string[] subProtocols) :
             this(uri, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize) {}
-
-        public override async Task<INetworkTransport> AcceptAsync(CancellationToken cancellationToken)
-        {
-            var context = await listener.GetContextAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
-
-            try
-            {
-                if(!context.Request.IsWebSocketRequest)
-                {
-                    throw new InvalidOperationException(WebSocketHandshakeExpected);
-                }
-
-                var subProtocol = MatchSubProtocol(context.Request);
-
-                var socketContext = await context
-                    .AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval)
-                    .WaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
-
-                return new WebSocketsTransportWrapper(socketContext.WebSocket);
-            }
-            catch
-            {
-                context.Response.Close();
-                throw;
-            }
-        }
 
         private string MatchSubProtocol(HttpListenerRequest request)
         {
@@ -80,19 +53,35 @@ namespace System.Net.Listeners
             return subProtocol;
         }
 
-        protected override void OnStartListening()
+        protected override async IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable(CancellationToken cancellationToken)
         {
-            listener = new HttpListener();
+            using var listener = new HttpListener();
+            using var reg = cancellationToken.Register(listener.Abort);
+
             listener.Prefixes.Add(uri.AbsoluteUri);
             listener.Start();
-        }
 
-        protected override void OnStopListening()
-        {
-            using(listener)
+            while(!cancellationToken.IsCancellationRequested)
             {
-                listener.Stop();
-                listener.Abort();
+                HttpListenerContext context = null;
+                HttpListenerWebSocketContext socketContext = null;
+
+                try
+                {
+                    context = await listener.GetContextAsync().ConfigureAwait(false);
+
+                    if(!context.Request.IsWebSocketRequest) throw new InvalidOperationException(WebSocketHandshakeExpected);
+
+                    var subProtocol = MatchSubProtocol(context.Request);
+
+                    socketContext = await context.AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval).ConfigureAwait(false);
+                }
+                catch
+                {
+                    context?.Response.Close();
+                }
+
+                if(socketContext != null) yield return new WebSocketsTransportWrapper(socketContext.WebSocket);
             }
         }
     }
