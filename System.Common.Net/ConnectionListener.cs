@@ -6,72 +6,74 @@ namespace System.Net
 {
     public abstract class ConnectionListener : IConnectionListener
     {
-        private readonly object syncRoot = new object();
+        private IAsyncEnumerator<INetworkTransport> asyncEnumerator;
+        private CancellationTokenSource globalCancellationTokenSource;
 
-        public bool IsListening { get; private set; }
-
-        public void Start()
+        public IAsyncEnumerator<INetworkTransport> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            if(!IsListening)
+            var tokenSource = new CancellationTokenSource();
+
+            try
             {
-                lock(syncRoot)
+                if(Interlocked.CompareExchange(ref globalCancellationTokenSource, tokenSource, null) != null)
                 {
-                    if(!IsListening)
-                    {
-                        OnStartListening();
-                        IsListening = true;
-                    }
+                    throw new InvalidOperationException("Already accepting connections - enumeration is in progress.");
+                }
+
+                asyncEnumerator = StartListeningAsync(cancellationToken, tokenSource.Token);
+
+                return asyncEnumerator;
+            }
+            catch
+            {
+                tokenSource.Dispose();
+                Interlocked.Exchange(ref globalCancellationTokenSource, null);
+                throw;
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            using var tokenSource = Volatile.Read(ref globalCancellationTokenSource);
+
+            if(tokenSource != null)
+            {
+                tokenSource.Cancel();
+                try
+                {
+                    await asyncEnumerator.MoveNextAsync().ConfigureAwait(false);
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref globalCancellationTokenSource, null);
                 }
             }
         }
 
-        public void Stop()
+        private async IAsyncEnumerator<INetworkTransport> StartListeningAsync(CancellationToken externalToken, CancellationToken internalToken)
         {
-            if(IsListening)
+            OnStartListening();
+
+            using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(externalToken, internalToken);
+
+            try
             {
-                lock(syncRoot)
+                var token = linkedSource.Token;
+                while(!token.IsCancellationRequested)
                 {
-                    if(IsListening)
-                    {
-                        OnStopListening();
-                        IsListening = false;
-                    }
+                    yield return await AcceptAsync(token).ConfigureAwait(false);
                 }
+            }
+            finally
+            {
+                OnStopListening();
             }
         }
 
         public abstract Task<INetworkTransport> AcceptAsync(CancellationToken cancellationToken);
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        public async IAsyncEnumerator<INetworkTransport> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            Start();
-
-            try
-            {
-                while(!cancellationToken.IsCancellationRequested)
-                {
-                    yield return await AcceptAsync(cancellationToken).ConfigureAwait(false);
-                }
-            }
-            finally
-            {
-                Stop();
-            }
-        }
-
         protected abstract void OnStartListening();
 
         protected abstract void OnStopListening();
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if(disposing) {}
-        }
     }
 }
