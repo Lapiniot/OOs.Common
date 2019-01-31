@@ -9,7 +9,7 @@ using static System.StringSplitOptions;
 
 namespace System.Net.Listeners
 {
-    public class WebSocketsListener : AsyncAsyncConnectionListener
+    public class WebSocketsListener : AsyncConnectionListener
     {
         private const int ReceiveBufferSize = 16384;
         private const int KeepAliveSeconds = 120;

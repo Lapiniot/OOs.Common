@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Listeners
 {
-    public abstract class AsyncAsyncConnectionListener : IAsyncConnectionListener
+    public abstract class AsyncConnectionListener : IAsyncConnectionListener
     {
         private CancellationTokenSource globalCts;
 

@@ -7,7 +7,7 @@ using static System.Net.Sockets.SocketType;
 
 namespace System.Net.Listeners
 {
-    public sealed class TcpSocketListener : AsyncAsyncConnectionListener
+    public sealed class TcpSocketListener : AsyncConnectionListener
     {
         private readonly int backlog;
         private readonly IPEndPoint ipEndPoint;
