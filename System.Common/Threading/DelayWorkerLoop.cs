@@ -34,6 +34,7 @@ namespace System.Threading
                         await AsyncWork(state, cancellationToken).ConfigureAwait(false);
                         iteration++;
                     }
+                    catch(OperationCanceledException) {}
                     catch(Exception exception)
                     {
                         Trace.TraceWarning(exception.Message);

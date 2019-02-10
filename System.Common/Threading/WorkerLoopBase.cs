@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.Threading.Tasks;
+using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace System.Threading
 {
@@ -28,27 +30,24 @@ namespace System.Threading
         {
             CheckDisposed();
 
-            var tcs = new CancellationTokenSource();
+            StartAsync().ContinueWith(t => Trace.TraceError(t.Exception?.GetBaseException().ToString()), NotOnRanToCompletion);
+        }
 
-            if(Interlocked.CompareExchange(ref tokenSource, tcs, null) == null)
+        private async Task StartAsync()
+        {
+            using(var tcs = new CancellationTokenSource())
             {
-                processorTask = RunAsync(state, tcs.Token);
-            }
-            else
-            {
-                tcs.Dispose();
+                if(Interlocked.CompareExchange(ref tokenSource, tcs, null) == null)
+                {
+                    processorTask = RunAsync(state, tcs.Token);
+                    await processorTask.ConfigureAwait(false);
+                }
             }
         }
 
         public void Stop()
         {
-            var tcs = Interlocked.Exchange(ref tokenSource, null);
-
-            if(tcs != null)
-            {
-                tcs.Cancel();
-                tcs.Dispose();
-            }
+            Interlocked.Exchange(ref tokenSource, null)?.Cancel();
         }
 
         public async Task StopAsync()
@@ -68,10 +67,6 @@ namespace System.Threading
                 catch
                 {
                     // ignored
-                }
-                finally
-                {
-                    tcs.Dispose();
                 }
             }
         }
