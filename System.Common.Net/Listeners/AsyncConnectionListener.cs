@@ -26,17 +26,17 @@ namespace System.Net.Listeners
             }
         }
 
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
         protected abstract IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable(CancellationToken cancellationToken);
 
         protected virtual void Dispose(bool disposing)
         {
             Volatile.Read(ref globalCts)?.Cancel();
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }
