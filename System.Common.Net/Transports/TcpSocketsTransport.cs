@@ -102,5 +102,10 @@ namespace System.Net.Transports
                 throw new ServerUnavailableException(se);
             }
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(TcpSocketsTransport)}: {socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
+        }
     }
 }

@@ -42,5 +42,10 @@ namespace System.Net.Listeners
                 if(connectedSocket != null) yield return new TcpSocketsTransportWrapper(connectedSocket);
             }
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(TcpSocketListener)}: tcp://{ipEndPoint}";
+        }
     }
 }

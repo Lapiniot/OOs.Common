@@ -80,6 +80,8 @@ namespace System.Net.Transports
             {
                 // ignored
             }
+
+            webSocket = null;
         }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
@@ -106,6 +108,11 @@ namespace System.Net.Transports
             {
                 throw new ServerUnavailableException(wse);
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(WebSocketsTransport)}: {(webSocket != null ? RemoteUri.ToString() : "Not Connected")}";
         }
     }
 }

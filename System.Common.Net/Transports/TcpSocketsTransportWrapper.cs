@@ -44,5 +44,10 @@ namespace System.Net.Transports
             socket.Close();
             return CompletedTask;
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(TcpSocketsTransportWrapper)}: {socket?.RemoteEndPoint}";
+        }
     }
 }

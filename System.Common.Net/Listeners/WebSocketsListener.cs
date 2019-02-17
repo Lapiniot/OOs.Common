@@ -81,8 +81,13 @@ namespace System.Net.Listeners
                     context?.Response.Close();
                 }
 
-                if(socketContext != null) yield return new WebSocketsTransportWrapper(socketContext.WebSocket);
+                if(socketContext != null) yield return new WebSocketsTransportWrapper(socketContext.WebSocket, context.Request.RemoteEndPoint);
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(WebSocketsListener)}: {uri} ({Join(", ", subProtocols)})";
         }
     }
 }

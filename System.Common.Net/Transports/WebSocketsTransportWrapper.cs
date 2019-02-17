@@ -9,11 +9,13 @@ namespace System.Net.Transports
 {
     public class WebSocketsTransportWrapper : INetworkTransport
     {
+        private readonly IPEndPoint remoteEndPoint;
         private readonly WebSocket webSocket;
 
-        public WebSocketsTransportWrapper(WebSocket webSocket)
+        public WebSocketsTransportWrapper(WebSocket webSocket, IPEndPoint remoteEndPoint)
         {
             this.webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
+            this.remoteEndPoint = remoteEndPoint;
         }
 
         public async ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
@@ -54,6 +56,11 @@ namespace System.Net.Transports
         public Task DisconnectAsync()
         {
             return webSocket.CloseAsync(NormalClosure, "Good bye.", default);
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(WebSocketsTransportWrapper)}: {remoteEndPoint}";
         }
     }
 }
