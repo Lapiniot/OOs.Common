@@ -12,9 +12,9 @@ namespace System.Collections.Generic
 
         public HashQueue(params (TK key, TV value)[] items) : this()
         {
-            foreach(var item in items)
+            foreach(var (key, value) in items)
             {
-                AddNodeInternal(item.key, item.value);
+                AddNodeInternal(key, value);
             }
         }
 
