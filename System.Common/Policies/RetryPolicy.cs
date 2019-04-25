@@ -25,39 +25,39 @@ namespace System.Policies
             var attempt = 1;
             var delay = TimeSpan.Zero;
             var startedAt = DateTime.UtcNow;
-            using(var timeoutTokenSource = new CancellationTokenSource(Timeout))
-            using(var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, cancellationToken))
+
+            using var timeoutTokenSource = new CancellationTokenSource(Timeout);
+            using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, cancellationToken);
+
+            var token = linkedTokenSource.Token;
+            while(true)
             {
-                var token = linkedTokenSource.Token;
-                while(true)
+                try
                 {
-                    try
-                    {
-                        token.ThrowIfCancellationRequested();
-                        await Task.Delay(delay, token).ConfigureAwait(false);
-                        token.ThrowIfCancellationRequested();
-                        return await asyncFunc(token)
-                            // This is a protection step for the operations that do not handle cancellation properly by themselves.
-                            // In case of external cancellation, WaitAsync transits to Cancelled state, throwing OperationCancelled exception,
-                            // and terminates retry loop. Original async operation may still be in progress, but we give up in order
-                            // to stop retry loop as soon as possible
-                            .WaitAsync(token)
-                            .ConfigureAwait(false);
-                    }
-                    catch(OperationCanceledException)
+                    token.ThrowIfCancellationRequested();
+                    return await asyncFunc(token)
+                        // This is a protection step for the operations that do not handle cancellation properly by themselves.
+                        // In case of external cancellation, WaitAsync transits to Cancelled state, throwing OperationCancelled exception,
+                        // and terminates retry loop. Original async operation may still be in progress, but we give up in order
+                        // to stop retry loop as soon as possible
+                        .WaitAsync(token)
+                        .ConfigureAwait(false);
+                }
+                catch(OperationCanceledException)
+                {
+                    throw;
+                }
+                catch(Exception e)
+                {
+                    if(!ShouldRetry(e, attempt, DateTime.UtcNow - startedAt, ref delay))
                     {
                         throw;
                     }
-                    catch(Exception e)
-                    {
-                        if(!ShouldRetry(e, attempt, DateTime.UtcNow - startedAt, ref delay))
-                        {
-                            throw;
-                        }
-                    }
-
-                    attempt++;
                 }
+
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                attempt++;
             }
         }
 

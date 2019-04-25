@@ -35,13 +35,11 @@ namespace System.Threading
 
         private async Task StartAsync()
         {
-            using(var tcs = new CancellationTokenSource())
+            using var tcs = new CancellationTokenSource();
+            if(Interlocked.CompareExchange(ref tokenSource, tcs, null) == null)
             {
-                if(Interlocked.CompareExchange(ref tokenSource, tcs, null) == null)
-                {
-                    processorTask = RunAsync(state, tcs.Token);
-                    await processorTask.ConfigureAwait(false);
-                }
+                processorTask = RunAsync(state, tcs.Token);
+                await processorTask.ConfigureAwait(false);
             }
         }
 

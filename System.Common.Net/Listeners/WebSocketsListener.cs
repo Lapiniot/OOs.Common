@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Transports;
 using System.Net.WebSockets;
 using System.Threading;
+using System.Threading.Tasks;
 using static System.Net.Properties.Strings;
 using static System.String;
 using static System.StringSplitOptions;
@@ -56,7 +57,7 @@ namespace System.Net.Listeners
         protected override async IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable(CancellationToken cancellationToken)
         {
             using var listener = new HttpListener();
-            using var reg = cancellationToken.Register(listener.Abort);
+            await using var _ = cancellationToken.Register(listener.Abort).ConfigureAwait(false);
 
             listener.Prefixes.Add(uri.AbsoluteUri);
             listener.Start();

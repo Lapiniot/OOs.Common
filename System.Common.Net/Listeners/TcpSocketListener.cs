@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Net.Transports;
 using System.Threading;
+using System.Threading.Tasks;
 using static System.Net.Sockets.ProtocolType;
 using static System.Net.Sockets.SocketType;
 
@@ -21,7 +22,7 @@ namespace System.Net.Listeners
         protected override async IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable(CancellationToken cancellationToken)
         {
             using var socket = new Socket(ipEndPoint.AddressFamily, Stream, Tcp);
-            using var tokenRegistration = cancellationToken.Register(socket.Close);
+            await using var _ = cancellationToken.Register(socket.Close).ConfigureAwait(false);
 
             socket.Bind(ipEndPoint);
             socket.Listen(backlog);

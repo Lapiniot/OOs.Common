@@ -26,35 +26,31 @@ namespace System.Threading
             while(!cancellationToken.IsCancellationRequested &&
                   (maxIterations == -1 || iteration < maxIterations))
             {
-                using(var linkedSource = CreateLinkedTokenSource(cancellationToken, resetSource.Token))
+                using var linkedSource = CreateLinkedTokenSource(cancellationToken, resetSource.Token);
+
+                try
                 {
-                    try
-                    {
-                        await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
-                        await AsyncWork(state, cancellationToken).ConfigureAwait(false);
-                        iteration++;
-                    }
-                    catch(OperationCanceledException) {}
-                    catch(Exception exception)
-                    {
-                        Trace.TraceWarning(exception.Message);
-                    }
+                    await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
+                    await AsyncWork(state, cancellationToken).ConfigureAwait(false);
+                    iteration++;
+                }
+                catch(OperationCanceledException) {}
+                catch(Exception exception)
+                {
+                    Trace.TraceWarning(exception.Message);
                 }
             }
         }
 
         public void ResetDelay()
         {
-            using(var source = Interlocked.Exchange(ref resetSource, new CancellationTokenSource()))
-            {
-                source?.Cancel();
-            }
+            using var source = Interlocked.Exchange(ref resetSource, new CancellationTokenSource());
+            source?.Cancel();
         }
 
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-
             resetSource.Dispose();
         }
     }

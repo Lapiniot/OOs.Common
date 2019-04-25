@@ -16,21 +16,20 @@ namespace System.Net.Sockets
         {
             var completionSource = new TaskCompletionSource<T>();
 
-            using(completionSource.Bind(cancellationToken))
+            using var _ = completionSource.Bind(cancellationToken);
+
+            try
             {
-                try
-                {
-                    var asyncState = new AsyncStateBag<T>(socket, remoteEndPoint, completionSource, endMethod);
+                var asyncState = new AsyncStateBag<T>(socket, remoteEndPoint, completionSource, endMethod);
 
-                    beginMethod(bytes, offset, size, SocketFlags.None, asyncState.AsyncCallback, asyncState);
-                }
-                catch(Exception exception)
-                {
-                    completionSource.TrySetException(exception);
-                }
-
-                return await completionSource.Task.ConfigureAwait(false);
+                beginMethod(bytes, offset, size, SocketFlags.None, asyncState.AsyncCallback, asyncState);
             }
+            catch(Exception exception)
+            {
+                completionSource.TrySetException(exception);
+            }
+
+            return await completionSource.Task.ConfigureAwait(false);
         }
 
         private static async Task<T> SendFromAsync<T>(Socket socket, ReadOnlyMemory<byte> memory, IPEndPoint remoteEndPoint,
