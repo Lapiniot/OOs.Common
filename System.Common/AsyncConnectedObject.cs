@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace System
 {
-    public abstract class AsyncConnectedObject : IAsyncConnectedObject, IDisposable
+    public abstract class AsyncConnectedObject : IAsyncConnectedObject, IDisposable, IAsyncDisposable
     {
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
@@ -56,6 +56,26 @@ namespace System
                 }
             }
         }
+
+        #region Implementation of IAsyncDisposable
+
+        public virtual async ValueTask DisposeAsync()
+        {
+            if(!disposed)
+            {
+                try
+                {
+                    await DisconnectAsync().ConfigureAwait(false);
+                }
+                finally
+                {
+                    semaphore.Dispose();
+                    disposed = true;
+                }
+            }
+        }
+
+        #endregion
 
         protected abstract Task OnConnectAsync(CancellationToken cancellationToken);
 
