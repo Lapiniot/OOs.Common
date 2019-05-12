@@ -46,6 +46,12 @@ namespace System.Net.Transports
             webSocket.Dispose();
         }
 
+        public ValueTask DisposeAsync()
+        {
+            webSocket.Dispose();
+            return default;
+        }
+
         public bool IsConnected => webSocket.State == Open;
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)

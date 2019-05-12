@@ -10,7 +10,7 @@ namespace System.Net.Pipes
     /// on data arrival and writes it to the pipe. Reads by consumers are supported via
     /// implemented <seealso cref="System.IO.Pipelines.PipeReader" /> methods.
     /// </summary>
-    public sealed class NetworkPipeProducer : PipeReader, IAsyncConnectedObject, IDisposable
+    public sealed class NetworkPipeProducer : PipeReader, IAsyncConnectedObject, IAsyncDisposable, IDisposable
     {
         private readonly PipeOptions pipeOptions;
         private readonly SemaphoreSlim semaphore;
@@ -100,15 +100,34 @@ namespace System.Net.Pipes
             }
         }
 
-        public void Dispose()
+        #region Implementation of IAsyncDisposable
+
+        public async ValueTask DisposeAsync()
         {
             if (!disposed)
             {
-                DisconnectAsync().ContinueWith(t => semaphore.Dispose());
-
-                disposed = true;
+                try
+                {
+                    await DisconnectAsync().ConfigureAwait(false);
+                }
+                finally
+                {
+                    disposed = true;
+                    semaphore.Dispose();
+                }
             }
         }
+
+        #endregion
+
+        #region Implementation of IDisposable
+
+        public void Dispose()
+        {
+            _ = DisposeAsync();
+        }
+
+        #endregion
 
         private void CheckDisposed()
         {

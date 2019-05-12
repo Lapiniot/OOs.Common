@@ -31,6 +31,12 @@ namespace System.Net.Transports
             socket.Dispose();
         }
 
+        public ValueTask DisposeAsync()
+        {
+            socket.Dispose();
+            return default;
+        }
+
         public bool IsConnected => socket.Connected;
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)
