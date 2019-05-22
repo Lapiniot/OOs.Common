@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Transports;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Properties.Strings;
@@ -54,7 +55,7 @@ namespace System.Net.Listeners
             return subProtocol;
         }
 
-        protected override async IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable(CancellationToken cancellationToken)
+        protected override async IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var listener = new HttpListener();
             await using var _ = cancellationToken.Register(listener.Abort).ConfigureAwait(false);

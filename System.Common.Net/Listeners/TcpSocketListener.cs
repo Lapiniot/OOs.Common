@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net.Transports;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Sockets.ProtocolType;
@@ -19,7 +20,7 @@ namespace System.Net.Listeners
             this.backlog = backlog;
         }
 
-        protected override async IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable(CancellationToken cancellationToken)
+        protected override async IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var socket = new Socket(ipEndPoint.AddressFamily, Stream, Tcp);
             await using var _ = cancellationToken.Register(socket.Close).ConfigureAwait(false);
