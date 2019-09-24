@@ -44,34 +44,25 @@ namespace System.Net.Sockets
 
             public static class Multicast
             {
-                public static Socket Sender()
+                public static Socket DefaultSender()
                 {
                     var udpSocket = new UdpSocket();
 
-                    foreach(var i in NetworkInterface.GetAllNetworkInterfaces())
+                    var @interface = NetworkInterface.GetAllNetworkInterfaces().First(i => i.SupportsMulticast && i.OperationalStatus == Up &&
+                                                                                           i.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                                                                                           i.NetworkInterfaceType != Ppp &&
+                                                                                           i.NetworkInterfaceType != GenericModem && i.NetworkInterfaceType != Tunnel);
+                    var interfaceProperties = @interface.GetIPProperties();
+
+                    if(interfaceProperties != null && interfaceProperties.MulticastAddresses.Any())
                     {
-                        if(!i.SupportsMulticast || i.OperationalStatus != Up ||
-                           i.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
-                           i.NetworkInterfaceType == Ppp ||
-                           i.NetworkInterfaceType == GenericModem ||
-                           i.NetworkInterfaceType == Tunnel)
-                        {
-                            continue;
-                        }
-
-                        var interfaceProperties = i.GetIPProperties();
-
-                        if(interfaceProperties == null || !interfaceProperties.MulticastAddresses.Any()) continue;
-
                         var properties = interfaceProperties.GetIPv4Properties();
 
-                        if(properties == null) continue;
+                        if(properties != null) udpSocket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
 
-                        udpSocket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
+                        udpSocket.SetSocketOption(IP, MulticastTimeToLive, 1);
+                        udpSocket.SetSocketOption(IP, MulticastLoopback, 1);
                     }
-
-                    udpSocket.SetSocketOption(IP, MulticastTimeToLive, 1);
-                    udpSocket.SetSocketOption(IP, MulticastLoopback, 1);
 
                     return udpSocket;
                 }
