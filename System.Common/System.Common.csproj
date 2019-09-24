@@ -3,15 +3,11 @@
   <Import Project="../common.props" />
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>System</RootNamespace>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.1</AssemblyVersion>
-    <FileVersion>1.1.0.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Json" Version="4.6.0-preview8.19405.3" />
+    <PackageReference Include="System.Json" Version="4.6.0" />
   </ItemGroup>
 
 </Project>
