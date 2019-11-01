@@ -57,17 +57,15 @@ namespace System.Common.CommandLine
             var smap = new SortedDictionary<string, ArgumentAttribute>(comparer);
             var nmap = new SortedDictionary<string, ArgumentAttribute>(comparer);
 
-            var schema = Assembly
-                .GetEntryAssembly()
-                .GetCustomAttributes<ArgumentAttribute>()
-                .Distinct(argumentByNameComparer)
-                .ToArray();
+            var schema = Assembly.GetEntryAssembly()?
+                             .GetCustomAttributes<ArgumentAttribute>()
+                             .Distinct(argumentByNameComparer)
+                             .ToArray() ?? Array.Empty<ArgumentAttribute>();
 
-            var commands = Assembly
-                .GetEntryAssembly()
-                .GetCustomAttributes<CommandAttribute>()
-                .Distinct(commandByNameComparer)
-                .ToArray();
+            var commands = Assembly.GetEntryAssembly()?
+                               .GetCustomAttributes<CommandAttribute>()
+                               .Distinct(commandByNameComparer)
+                               .ToArray() ?? Array.Empty<CommandAttribute>();
 
             foreach(var item in schema)
             {

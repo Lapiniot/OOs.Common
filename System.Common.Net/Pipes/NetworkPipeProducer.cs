@@ -124,7 +124,7 @@ namespace System.Net.Pipes
 
         public void Dispose()
         {
-            _ = DisposeAsync();
+            var _ = DisposeAsync();
         }
 
         #endregion
