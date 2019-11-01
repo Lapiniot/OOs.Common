@@ -191,12 +191,6 @@ namespace System.Net.Pipes
             pipeReader.Complete(exception);
         }
 
-        [Obsolete]
-        public override void OnWriterCompleted(Action<Exception, object> callback, object state)
-        {
-            pipeReader.OnWriterCompleted(callback, state);
-        }
-
         public override ValueTask<ReadResult> ReadAsync(CancellationToken cancellationToken = default)
         {
             return pipeReader.ReadAsync(cancellationToken);

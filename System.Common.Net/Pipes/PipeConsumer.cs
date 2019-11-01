@@ -85,23 +85,28 @@ namespace System.Net.Pipes
                 }
 
                 reader.Complete();
+                OnCompleted();
             }
             catch(OperationCanceledException)
             {
                 reader.Complete();
+                OnCompleted();
             }
             catch(AggregateException age)
             {
-                reader.Complete(age.GetBaseException());
+                var exception = age.GetBaseException();
+                reader.Complete(exception);
+                OnCompleted(exception);
             }
             catch(Exception ex)
             {
                 reader.Complete(ex);
+                OnCompleted(ex);
             }
         }
 
         /// <summary>
-        /// The only method to be implemented. It is called every time new data is available.
+        /// Method gets called every time new data is available.
         /// </summary>
         /// <param name="buffer">Sequence of linked buffers containing data produced by the pipe writer</param>
         /// <returns>
@@ -109,5 +114,11 @@ namespace System.Net.Pipes
         /// if no data can be consumed at the moment.
         /// </returns>
         protected abstract long Consume(in ReadOnlySequence<byte> buffer);
+
+        /// <summary>
+        /// Method gets called when consumer completed its work
+        /// </summary>
+        /// <param name="exception">Should exceptions occur, last value is passed</param>
+        protected abstract void OnCompleted(Exception exception = null);
     }
 }
