@@ -18,21 +18,22 @@ namespace System.Net.Listeners
         private readonly TimeSpan keepAliveInterval;
         private readonly int receiveBufferSize;
         private readonly bool shouldMatchSubProtocol;
+        private readonly string[] prefixes;
         private readonly string[] subProtocols;
-        private readonly Uri uri;
 
-        public WebSocketsListener(Uri uri, string[] subProtocols,
+        public WebSocketsListener(string[] prefixes, string[] subProtocols,
             TimeSpan keepAliveInterval, int receiveBufferSize)
         {
-            this.uri = uri ?? throw new ArgumentNullException(nameof(uri));
+            this.prefixes = prefixes ?? throw new ArgumentNullException(nameof(prefixes));
             this.subProtocols = subProtocols;
             this.keepAliveInterval = keepAliveInterval;
             this.receiveBufferSize = receiveBufferSize;
             shouldMatchSubProtocol = subProtocols != null && subProtocols.Length > 0;
         }
 
-        public WebSocketsListener(Uri uri, params string[] subProtocols) :
-            this(uri, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize) {}
+        public WebSocketsListener(string[] prefixes, params string[] subProtocols) :
+            this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
+        { }
 
         private string MatchSubProtocol(HttpListenerRequest request)
         {
@@ -60,7 +61,11 @@ namespace System.Net.Listeners
             using var listener = new HttpListener();
             await using var _ = cancellationToken.Register(listener.Abort).ConfigureAwait(false);
 
-            listener.Prefixes.Add(uri.AbsoluteUri);
+            foreach(var prefix in prefixes)
+            {
+                listener.Prefixes.Add(prefix);
+            }
+
             listener.Start();
 
             while(!cancellationToken.IsCancellationRequested)
@@ -89,7 +94,7 @@ namespace System.Net.Listeners
 
         public override string ToString()
         {
-            return $"{nameof(WebSocketsListener)}: {uri} ({Join(", ", subProtocols)})";
+            return $"{nameof(WebSocketsListener)}: {string.Join(", ", prefixes)} ({Join(", ", subProtocols)})";
         }
     }
 }
