@@ -12,13 +12,19 @@ namespace System.Net.Listeners
         {
             using var tokenSource = new CancellationTokenSource();
 
-            if(Interlocked.CompareExchange(ref globalCts, tokenSource, null) != null) throw new ArgumentException("Enumeration is already in progress.");
+            if(Interlocked.CompareExchange(ref globalCts, tokenSource, null) != null)
+            {
+                throw new ArgumentException("Enumeration is already in progress.");
+            }
 
             using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, tokenSource.Token);
 
             try
             {
-                await foreach(var t in GetAsyncEnumerable(linkedSource.Token).ConfigureAwait(false)) yield return t;
+                await foreach(var transport in GetAsyncEnumerable(linkedSource.Token).ConfigureAwait(false))
+                {
+                    yield return transport;
+                }
             }
             finally
             {

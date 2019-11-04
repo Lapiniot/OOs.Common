@@ -16,9 +16,9 @@ namespace System.Net.Listeners
         private const int ReceiveBufferSize = 16384;
         private const int KeepAliveSeconds = 120;
         private readonly TimeSpan keepAliveInterval;
+        private readonly string[] prefixes;
         private readonly int receiveBufferSize;
         private readonly bool shouldMatchSubProtocol;
-        private readonly string[] prefixes;
         private readonly string[] subProtocols;
 
         public WebSocketsListener(string[] prefixes, string[] subProtocols,
@@ -32,8 +32,7 @@ namespace System.Net.Listeners
         }
 
         public WebSocketsListener(string[] prefixes, params string[] subProtocols) :
-            this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
-        { }
+            this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize) {}
 
         private string MatchSubProtocol(HttpListenerRequest request)
         {
@@ -94,7 +93,7 @@ namespace System.Net.Listeners
 
         public override string ToString()
         {
-            return $"{nameof(WebSocketsListener)}: {string.Join(", ", prefixes)} ({Join(", ", subProtocols)})";
+            return $"{nameof(WebSocketsListener)}: {Join(", ", prefixes)} ({Join(", ", subProtocols)})";
         }
     }
 }

@@ -9,12 +9,12 @@ using static System.Net.Sockets.SocketType;
 
 namespace System.Net.Listeners
 {
-    public sealed class TcpSocketListener : AsyncConnectionListener
+    public sealed class TcpSocketsListener : AsyncConnectionListener
     {
         private readonly int backlog;
         private readonly IPEndPoint ipEndPoint;
 
-        public TcpSocketListener(IPEndPoint ipEndPoint, int backlog = 100)
+        public TcpSocketsListener(IPEndPoint ipEndPoint, int backlog = 100)
         {
             this.ipEndPoint = ipEndPoint;
             this.backlog = backlog;
@@ -41,13 +41,16 @@ namespace System.Net.Listeners
                     // ignored
                 }
 
-                if(connectedSocket != null) yield return new TcpSocketsTransportWrapper(connectedSocket);
+                if(connectedSocket != null)
+                {
+                    yield return new TcpSocketsTransportWrapper(connectedSocket);
+                }
             }
         }
 
         public override string ToString()
         {
-            return $"{nameof(TcpSocketListener)}: tcp://{ipEndPoint}";
+            return $"{nameof(TcpSocketsListener)}: tcp://{ipEndPoint}";
         }
     }
 }
