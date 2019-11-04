@@ -13,18 +13,18 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Net.Transports
 {
-    public class TcpSocketsTransport : NetworkTransport
+    public class TcpSocketTransport : NetworkTransport
     {
         private readonly string hostNameOrAddress;
         private readonly int port;
         private Socket socket;
 
-        public TcpSocketsTransport(IPEndPoint ipEndPoint)
+        public TcpSocketTransport(IPEndPoint ipEndPoint)
         {
             RemoteEndPoint = ipEndPoint ?? throw new ArgumentNullException(nameof(ipEndPoint));
         }
 
-        public TcpSocketsTransport(string hostNameOrAddress, int port)
+        public TcpSocketTransport(string hostNameOrAddress, int port)
         {
             if(hostNameOrAddress == null) throw new ArgumentNullException(nameof(hostNameOrAddress));
             if(hostNameOrAddress == "") throw new ArgumentException(NotEmptyExpected, nameof(hostNameOrAddress));
@@ -105,7 +105,7 @@ namespace System.Net.Transports
 
         public override string ToString()
         {
-            return $"{nameof(TcpSocketsTransport)}: {socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
+            return $"{nameof(TcpSocketTransport)}: {socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
         }
     }
 }

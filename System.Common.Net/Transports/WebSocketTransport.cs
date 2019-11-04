@@ -12,11 +12,11 @@ using static System.Net.WebSockets.WebSocketState;
 
 namespace System.Net.Transports
 {
-    public class WebSocketsTransport : NetworkTransport
+    public class WebSocketTransport : NetworkTransport
     {
         private ClientWebSocket webSocket;
 
-        public WebSocketsTransport(Uri remoteUri, params string[] subProtocols)
+        public WebSocketTransport(Uri remoteUri, params string[] subProtocols)
         {
             RemoteUri = remoteUri ?? throw new ArgumentNullException(nameof(remoteUri));
             SubProtocols = subProtocols ?? throw new ArgumentNullException(nameof(subProtocols));
@@ -112,7 +112,7 @@ namespace System.Net.Transports
 
         public override string ToString()
         {
-            return $"{nameof(WebSocketsTransport)}: {(webSocket != null ? RemoteUri.ToString() : "Not Connected")}";
+            return $"{nameof(WebSocketTransport)}: {(webSocket != null ? RemoteUri.ToString() : "Not Connected")}";
         }
     }
 }

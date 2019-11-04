@@ -11,7 +11,7 @@ using static System.StringSplitOptions;
 
 namespace System.Net.Listeners
 {
-    public class WebSocketsListener : AsyncConnectionListener
+    public class WebSocketListener : AsyncConnectionListener
     {
         private const int ReceiveBufferSize = 16384;
         private const int KeepAliveSeconds = 120;
@@ -21,7 +21,7 @@ namespace System.Net.Listeners
         private readonly bool shouldMatchSubProtocol;
         private readonly string[] subProtocols;
 
-        public WebSocketsListener(string[] prefixes, string[] subProtocols,
+        public WebSocketListener(string[] prefixes, string[] subProtocols,
             TimeSpan keepAliveInterval, int receiveBufferSize)
         {
             this.prefixes = prefixes ?? throw new ArgumentNullException(nameof(prefixes));
@@ -31,7 +31,7 @@ namespace System.Net.Listeners
             shouldMatchSubProtocol = subProtocols != null && subProtocols.Length > 0;
         }
 
-        public WebSocketsListener(string[] prefixes, params string[] subProtocols) :
+        public WebSocketListener(string[] prefixes, params string[] subProtocols) :
             this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize) {}
 
         private string MatchSubProtocol(HttpListenerRequest request)
@@ -87,13 +87,13 @@ namespace System.Net.Listeners
                     context?.Response.Close();
                 }
 
-                if(socketContext != null) yield return new WebSocketsTransportWrapper(socketContext.WebSocket, context.Request.RemoteEndPoint);
+                if(socketContext != null) yield return new WebSocketTransportWrapper(socketContext.WebSocket, context.Request.RemoteEndPoint);
             }
         }
 
         public override string ToString()
         {
-            return $"{nameof(WebSocketsListener)}: {Join(", ", prefixes)} ({Join(", ", subProtocols)})";
+            return $"{nameof(WebSocketListener)}: {Join(", ", prefixes)} ({Join(", ", subProtocols)})";
         }
     }
 }
