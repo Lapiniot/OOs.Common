@@ -10,7 +10,7 @@ namespace System.Net.Pipes
     /// <summary>
     /// Provides base abstract class for pipe data consumer.
     /// </summary>
-    public abstract class PipeConsumer : AsyncConnectedObject
+    public abstract class PipeConsumer : ConnectedObject
     {
         private readonly PipeReader reader;
         private Task consumer;

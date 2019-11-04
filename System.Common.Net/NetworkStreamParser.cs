@@ -7,7 +7,7 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Net
 {
-    public abstract class NetworkStreamParser : AsyncConnectedObject
+    public abstract class NetworkStreamParser : ConnectedObject
     {
         private readonly INetworkTransport transport;
         private Pipe pipe;

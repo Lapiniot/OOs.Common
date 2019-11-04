@@ -11,7 +11,7 @@ using static System.StringSplitOptions;
 
 namespace System.Net.Listeners
 {
-    public class WebSocketListener : AsyncConnectionListener
+    public class WebSocketListener : ConnectionListener
     {
         private const int ReceiveBufferSize = 16384;
         private const int KeepAliveSeconds = 120;

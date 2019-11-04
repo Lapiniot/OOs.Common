@@ -9,7 +9,7 @@ using static System.Net.Sockets.SocketType;
 
 namespace System.Net.Listeners
 {
-    public sealed class TcpSocketListener : AsyncConnectionListener
+    public sealed class TcpSocketListener : ConnectionListener
     {
         private readonly int backlog;
         private readonly IPEndPoint ipEndPoint;

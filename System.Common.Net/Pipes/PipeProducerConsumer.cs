@@ -12,7 +12,7 @@ namespace System.Net.Pipes
     /// arrival via <see cref="ReceiveAsync" /> and writes to the pipe.
     /// Consumer loop consumes data from the pipe via <see cref="Consume" />.
     /// </summary>
-    public abstract class PipeProducerConsumer : AsyncConnectedObject
+    public abstract class PipeProducerConsumer : ConnectedObject
     {
         private CancellationTokenSource cancellationTokenSource;
         private Task processor;

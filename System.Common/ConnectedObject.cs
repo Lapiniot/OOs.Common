@@ -1,10 +1,10 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace System
 {
-    public abstract class AsyncConnectedObject : IAsyncConnectedObject, IDisposable, IAsyncDisposable
+    public abstract class ConnectedObject : IConnectedObject, IAsyncDisposable
     {
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
 
@@ -58,6 +58,7 @@ namespace System
         }
 
         #region Implementation of IAsyncDisposable
+        private bool disposed;
 
         public virtual async ValueTask DisposeAsync()
         {
@@ -90,29 +91,5 @@ namespace System
         {
             if(disposed) throw new InvalidOperationException("Cannot use this instance - has been already disposed.");
         }
-
-        #region IDisposable Support
-
-        private bool disposed;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if(!disposed)
-            {
-                if(disposing)
-                {
-                    DisconnectAsync().ContinueWith(t => { semaphore.Dispose(); });
-                }
-
-                disposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        #endregion
     }
 }

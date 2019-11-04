@@ -10,7 +10,7 @@ namespace System.Net.Pipes
     /// on data arrival and writes it to the pipe. Reads by consumers are supported via
     /// implemented <seealso cref="System.IO.Pipelines.PipeReader" /> methods.
     /// </summary>
-    public sealed class NetworkPipeProducer : PipeReader, IAsyncConnectedObject, IAsyncDisposable, IDisposable
+    public sealed class NetworkPipeProducer : PipeReader, IConnectedObject, IAsyncDisposable, IDisposable
     {
         private readonly PipeOptions pipeOptions;
         private readonly SemaphoreSlim semaphore;
