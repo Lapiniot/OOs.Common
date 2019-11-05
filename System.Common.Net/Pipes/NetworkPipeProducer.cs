@@ -6,7 +6,7 @@ using static System.Net.Properties.Strings;
 namespace System.Net.Pipes
 {
     /// <summary>
-    /// Provides generic pipe data producer which reads data from abstract <seealso cref="INetworkTransport" />
+    /// Provides generic pipe data producer which reads data from abstract <seealso cref="INetworkConnection" />
     /// on data arrival and writes it to the pipe. Reads by consumers are supported via
     /// implemented <seealso cref="System.IO.Pipelines.PipeReader" /> methods.
     /// </summary>
@@ -14,16 +14,16 @@ namespace System.Net.Pipes
     {
         private readonly PipeOptions pipeOptions;
         private readonly SemaphoreSlim semaphore;
-        private readonly INetworkTransport transport;
+        private readonly INetworkConnection connection;
         private bool disposed;
         private PipeReader pipeReader;
         private PipeWriter pipeWriter;
         private CancellationTokenSource processorCts;
         private Task producer;
 
-        public NetworkPipeProducer(INetworkTransport transport, PipeOptions pipeOptions = null)
+        public NetworkPipeProducer(INetworkConnection connection, PipeOptions pipeOptions = null)
         {
-            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
             semaphore = new SemaphoreSlim(1);
             this.pipeOptions = pipeOptions ?? new PipeOptions(useSynchronizationContext: false);
         }
@@ -142,7 +142,7 @@ namespace System.Net.Pipes
                 {
                     var buffer = writer.GetMemory();
 
-                    var rt = transport.ReceiveAsync(buffer, token);
+                    var rt = connection.ReceiveAsync(buffer, token);
                     var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
                     if(received == 0) break;

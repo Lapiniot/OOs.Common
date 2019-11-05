@@ -7,13 +7,13 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Net.Transports
 {
-    public class TcpSocketTransportWrapper : INetworkTransport
+    public class TcpSocketServerConnection : INetworkConnection
     {
         private readonly Socket socket;
 
-        public TcpSocketTransportWrapper(Socket socket)
+        public TcpSocketServerConnection(Socket acceptedSocket)
         {
-            this.socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            socket = acceptedSocket ?? throw new ArgumentNullException(nameof(acceptedSocket));
         }
 
         public ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
@@ -50,7 +50,7 @@ namespace System.Net.Transports
 
         public override string ToString()
         {
-            return $"{nameof(TcpSocketTransportWrapper)}: {socket?.RemoteEndPoint}";
+            return $"{nameof(TcpSocketServerConnection)}: {socket?.RemoteEndPoint}";
         }
     }
 }

@@ -8,7 +8,7 @@ namespace System.Net.Listeners
     {
         private CancellationTokenSource globalCts;
 
-        public async IAsyncEnumerator<INetworkTransport> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             using var tokenSource = new CancellationTokenSource();
 
@@ -38,7 +38,7 @@ namespace System.Net.Listeners
             GC.SuppressFinalize(this);
         }
 
-        protected abstract IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable(CancellationToken cancellationToken);
+        protected abstract IAsyncEnumerable<INetworkConnection> GetAsyncEnumerable(CancellationToken cancellationToken);
 
         protected virtual void Dispose(bool disposing)
         {

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace System.Net.Transports
 {
-    public class TlsStreamTransport : NetworkTransport
+    public class TlsStreamConnection : NetworkConnection
     {
         public override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {

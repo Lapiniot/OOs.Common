@@ -20,7 +20,7 @@ namespace System.Net.Listeners
             this.backlog = backlog;
         }
 
-        protected override async IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken)
+        protected override async IAsyncEnumerable<INetworkConnection> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var socket = new Socket(ipEndPoint.AddressFamily, Stream, Tcp);
             await using var _ = cancellationToken.Register(socket.Close).ConfigureAwait(false);
@@ -43,7 +43,7 @@ namespace System.Net.Listeners
 
                 if(connectedSocket != null)
                 {
-                    yield return new TcpSocketTransportWrapper(connectedSocket);
+                    yield return new TcpSocketServerConnection(connectedSocket);
                 }
             }
         }

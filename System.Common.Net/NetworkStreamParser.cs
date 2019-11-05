@@ -9,17 +9,17 @@ namespace System.Net
 {
     public abstract class NetworkStreamParser : ConnectedObject
     {
-        private readonly INetworkTransport transport;
+        private readonly INetworkConnection connection;
         private Pipe pipe;
         private Task processor;
         private CancellationTokenSource processorCts;
 
-        protected NetworkStreamParser(INetworkTransport transport)
+        protected NetworkStreamParser(INetworkConnection connection)
         {
-            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
-        protected INetworkTransport Transport => transport;
+        protected INetworkConnection Connection => connection;
 
         protected override Task OnConnectAsync(CancellationToken cancellationToken)
         {
@@ -57,7 +57,7 @@ namespace System.Net
         {
             try
             {
-                return await transport.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+                return await connection.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
             }
             catch(ConnectionAbortedException)
             {
@@ -70,7 +70,7 @@ namespace System.Net
         {
             try
             {
-                return await transport.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
+                return await connection.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
             }
             catch(ConnectionAbortedException)
             {

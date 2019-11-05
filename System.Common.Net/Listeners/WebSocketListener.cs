@@ -55,7 +55,7 @@ namespace System.Net.Listeners
             return subProtocol;
         }
 
-        protected override async IAsyncEnumerable<INetworkTransport> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken)
+        protected override async IAsyncEnumerable<INetworkConnection> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var listener = new HttpListener();
             await using var _ = cancellationToken.Register(listener.Abort).ConfigureAwait(false);
@@ -87,7 +87,7 @@ namespace System.Net.Listeners
                     context?.Response.Close();
                 }
 
-                if(socketContext != null) yield return new WebSocketTransportWrapper(socketContext.WebSocket, context.Request.RemoteEndPoint);
+                if(socketContext != null) yield return new WebSocketServerConnection(socketContext.WebSocket, context.Request.RemoteEndPoint);
             }
         }
 

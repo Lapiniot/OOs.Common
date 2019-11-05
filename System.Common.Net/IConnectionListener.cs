@@ -2,5 +2,5 @@
 
 namespace System.Net
 {
-    public interface IConnectionListener : IAsyncEnumerable<INetworkTransport> {}
+    public interface IConnectionListener : IAsyncEnumerable<INetworkConnection> {}
 }
