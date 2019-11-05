@@ -10,23 +10,19 @@ namespace System.Net.Transports
     public class WebSocketTransportWrapper : INetworkTransport
     {
         private readonly IPEndPoint remoteEndPoint;
-        private readonly WebSocket webSocket;
+        private readonly WebSocket socket;
 
         public WebSocketTransportWrapper(WebSocket webSocket, IPEndPoint remoteEndPoint)
         {
-            this.webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
+            socket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
             this.remoteEndPoint = remoteEndPoint;
         }
 
         public async ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            var vt = webSocket.SendAsync(buffer, Binary, true, cancellationToken);
+            var vt = socket.SendAsync(buffer, Binary, true, cancellationToken);
 
-            if(vt.IsCompleted)
-            {
-                vt.GetAwaiter().GetResult();
-            }
-            else
+            if(!vt.IsCompletedSuccessfully)
             {
                 await vt.AsTask().ConfigureAwait(false);
             }
@@ -36,23 +32,20 @@ namespace System.Net.Transports
 
         public async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            var vt = webSocket.ReceiveAsync(buffer, cancellationToken);
+            var vt = socket.ReceiveAsync(buffer, cancellationToken);
 
-            return (vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false)).Count;
+            return (vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.AsTask().ConfigureAwait(false)).Count;
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            webSocket.Dispose();
+            using(socket)
+            {
+                await DisconnectAsync().ConfigureAwait(false);
+            }
         }
 
-        public ValueTask DisposeAsync()
-        {
-            webSocket.Dispose();
-            return default;
-        }
-
-        public bool IsConnected => webSocket.State == Open;
+        public bool IsConnected => socket.State == Open;
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)
         {
@@ -61,7 +54,7 @@ namespace System.Net.Transports
 
         public Task DisconnectAsync()
         {
-            return webSocket.CloseAsync(NormalClosure, "Good bye.", default);
+            return socket.CloseAsync(NormalClosure, "Good bye.", default);
         }
 
         public override string ToString()

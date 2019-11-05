@@ -14,7 +14,7 @@ namespace System.Net.Transports
 {
     public class WebSocketTransport : NetworkTransport
     {
-        private ClientWebSocket webSocket;
+        private ClientWebSocket socket;
 
         public WebSocketTransport(Uri remoteUri, params string[] subProtocols)
         {
@@ -32,13 +32,13 @@ namespace System.Net.Transports
             CheckConnected();
             try
             {
-                var vt = webSocket.ReceiveAsync(buffer, cancellationToken);
+                var vt = socket.ReceiveAsync(buffer, cancellationToken);
 
-                var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
+                var result = vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.AsTask().ConfigureAwait(false);
 
                 if(result.MessageType != Close) return result.Count;
 
-                await webSocket.CloseAsync(NormalClosure, string.Empty, cancellationToken).ConfigureAwait(false);
+                await socket.CloseAsync(NormalClosure, "Good bye.", cancellationToken).ConfigureAwait(false);
 
                 return 0;
             }
@@ -54,7 +54,7 @@ namespace System.Net.Transports
             CheckConnected();
             try
             {
-                var vt = webSocket.SendAsync(buffer, Binary, true, cancellationToken);
+                var vt = socket.SendAsync(buffer, Binary, true, cancellationToken);
 
                 if(!vt.IsCompletedSuccessfully) await vt.AsTask().ConfigureAwait(false);
 
@@ -71,9 +71,11 @@ namespace System.Net.Transports
         {
             try
             {
-                if(webSocket.State == Open || webSocket.State == CloseReceived)
+                var state = socket.State;
+
+                if(state == Open || state == CloseReceived || state == CloseSent)
                 {
-                    await webSocket.CloseAsync(NormalClosure, string.Empty, default).ConfigureAwait(false);
+                    await socket.CloseAsync(NormalClosure, "Good bye.", default).ConfigureAwait(false);
                 }
             }
             catch
@@ -81,21 +83,21 @@ namespace System.Net.Transports
                 // ignored
             }
 
-            webSocket = null;
+            socket = null;
         }
 
         protected override async Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            webSocket = new ClientWebSocket();
+            socket = new ClientWebSocket();
 
             foreach(var subProtocol in SubProtocols)
             {
-                webSocket.Options.AddSubProtocol(subProtocol);
+                socket.Options.AddSubProtocol(subProtocol);
             }
 
             try
             {
-                await webSocket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
+                await socket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
             }
             catch(WebSocketException wse) when(
                 wse.InnerException is HttpRequestException hre &&
@@ -112,7 +114,7 @@ namespace System.Net.Transports
 
         public override string ToString()
         {
-            return $"{nameof(WebSocketTransport)}: {(webSocket != null ? RemoteUri.ToString() : "Not Connected")}";
+            return $"{nameof(WebSocketTransport)}: {(socket != null ? RemoteUri.ToString() : "Not Connected")}";
         }
     }
 }

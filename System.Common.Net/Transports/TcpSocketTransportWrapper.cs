@@ -26,15 +26,12 @@ namespace System.Net.Transports
             return socket.ReceiveAsync(buffer, None, cancellationToken);
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            socket.Dispose();
-        }
-
-        public ValueTask DisposeAsync()
-        {
-            socket.Dispose();
-            return default;
+            using(socket)
+            {
+                await DisconnectAsync().ConfigureAwait(false);
+            }
         }
 
         public bool IsConnected => socket.Connected;
