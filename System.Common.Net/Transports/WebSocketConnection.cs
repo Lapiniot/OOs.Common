@@ -32,7 +32,7 @@ namespace System.Net.Transports
 
         public abstract Task ConnectAsync(CancellationToken cancellationToken = default);
 
-        public async Task DisconnectAsync()
+        public virtual async Task DisconnectAsync()
         {
             var state = Socket.State;
 
