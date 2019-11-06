@@ -30,7 +30,7 @@ namespace System.Threading
         {
             CheckDisposed();
 
-            StartAsync().ContinueWith(t => Trace.TraceError(t.Exception?.GetBaseException().ToString()), NotOnRanToCompletion);
+            var _ = StartAsync().ContinueWith(t => Trace.TraceError(t.Exception?.GetBaseException().ToString()), default, NotOnRanToCompletion, TaskScheduler.Default);
         }
 
         private async Task StartAsync()
