@@ -19,13 +19,9 @@ namespace System.Threading
             {
                 try
                 {
-                    await AsyncWork(state, cancellationToken).ConfigureAwait(false);
+                    await DoWorkAsync(state, cancellationToken).ConfigureAwait(false);
                 }
                 catch(OperationCanceledException) {}
-                catch(Exception exception)
-                {
-                    Trace.TraceWarning(exception.Message);
-                }
 
                 await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
             }

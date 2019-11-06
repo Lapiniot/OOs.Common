@@ -6,7 +6,8 @@ namespace System.Threading
     public class WorkerLoop<T> : WorkerLoopBase<T>
     {
         public WorkerLoop(Func<T, CancellationToken, Task> asyncWork, T state) :
-            base(asyncWork, state) {}
+            base(asyncWork, state)
+        { }
 
 
         protected override async Task RunAsync(T state, CancellationToken cancellationToken)
@@ -15,13 +16,9 @@ namespace System.Threading
             {
                 try
                 {
-                    await AsyncWork(state, cancellationToken).ConfigureAwait(false);
+                    await DoWorkAsync(state, cancellationToken).ConfigureAwait(false);
                 }
-                catch(OperationCanceledException) {}
-                catch(Exception exception)
-                {
-                    Trace.TraceWarning(exception.Message);
-                }
+                catch(OperationCanceledException) { }
             }
         }
     }

@@ -9,7 +9,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnTrue_AndValue_GivenExistingKey()
         {
-            var hq = new HashQueue<int, string>(
+            var hq = new HashQueueCollection<int, string>(
                 (1, "value 1"),
                 (2, "value 2"),
                 (3, "value 3"));
@@ -30,7 +30,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnFalse_AndDefaultValue_GivenNonExistingKey()
         {
-            var stringHashQueue = new HashQueue<int, string>(
+            var stringHashQueue = new HashQueueCollection<int, string>(
                 (1, "value 1"),
                 (2, "value 2"),
                 (3, "value 3"));
@@ -39,7 +39,7 @@ namespace System.Common.Tests
             Assert.IsFalse(actual);
             Assert.AreEqual(default, strValue);
 
-            var intHashQueue = new HashQueue<string, int>(
+            var intHashQueue = new HashQueueCollection<string, int>(
                 ("1", 1),
                 ("2", 2),
                 ("3", 3));
@@ -52,7 +52,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void Throw_ArgumentNullException_GivenKey_Null()
         {
-            var hq = new HashQueue<string, string>();
+            var hq = new HashQueueCollection<string, string>();
             Assert.ThrowsException<ArgumentNullException>(() => hq.TryGet(null, out _));
         }
     }

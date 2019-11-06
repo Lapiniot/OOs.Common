@@ -30,21 +30,7 @@ namespace System.Net.Listeners
 
             while(!cancellationToken.IsCancellationRequested)
             {
-                Socket connectedSocket = null;
-
-                try
-                {
-                    connectedSocket = await socket.AcceptAsync().ConfigureAwait(false);
-                }
-                catch
-                {
-                    // ignored
-                }
-
-                if(connectedSocket != null)
-                {
-                    yield return new TcpSocketServerConnection(connectedSocket);
-                }
+                yield return new TcpSocketServerConnection(await socket.AcceptAsync().ConfigureAwait(false));
             }
         }
 

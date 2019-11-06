@@ -15,6 +15,8 @@ namespace System.Threading
         /// <returns>Wrapper task</returns>
         public static Task<T> WaitAsync<T>(this Task<T> task, CancellationToken cancellationToken)
         {
+            if(task is null) throw new ArgumentNullException(nameof(task));
+
             return task.IsCompleted ? task : task.ContinueWith(t => t.GetAwaiter().GetResult(), cancellationToken, ExecuteSynchronously, Default);
         }
 
@@ -26,6 +28,8 @@ namespace System.Threading
         /// <returns>Wrapper task</returns>
         public static Task WaitAsync(this Task task, CancellationToken cancellationToken)
         {
+            if(task is null) throw new ArgumentNullException(nameof(task));
+
             return task.IsCompleted ? task : task.ContinueWith(t => t.GetAwaiter().GetResult(), cancellationToken, ExecuteSynchronously, Default);
         }
     }

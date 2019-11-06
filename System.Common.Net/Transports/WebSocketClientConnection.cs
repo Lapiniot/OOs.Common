@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Net.Transports.Exceptions;
@@ -10,31 +11,34 @@ namespace System.Net.Transports
 {
     public class WebSocketClientConnection : WebSocketConnection<ClientWebSocket>
     {
+        private readonly string[] subProtocols;
+
         public WebSocketClientConnection(Uri remoteUri, params string[] subProtocols) : base(null)
         {
             RemoteUri = remoteUri ?? throw new ArgumentNullException(nameof(remoteUri));
-            SubProtocols = subProtocols ?? throw new ArgumentNullException(nameof(subProtocols));
-            if(SubProtocols.Length == 0) throw new ArgumentException(NoWsSubProtocol);
+            this.subProtocols = subProtocols ?? throw new ArgumentNullException(nameof(subProtocols));
+            if(subProtocols.Length == 0) throw new ArgumentException(NoWsSubProtocol);
         }
 
         public Uri RemoteUri { get; }
 
-        public string[] SubProtocols { get; }
+        public IEnumerable<string> SubProtocols => subProtocols;
 
         #region Overrides of WebSocketTransportBase
 
         public override async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            Socket = new ClientWebSocket();
+            var socket = new ClientWebSocket();
 
             foreach(var subProtocol in SubProtocols)
             {
-                Socket.Options.AddSubProtocol(subProtocol);
+                socket.Options.AddSubProtocol(subProtocol);
             }
 
             try
             {
-                await Socket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
+                await socket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
+                SetWebSocket(socket);
             }
             catch(WebSocketException wse) when(
                 wse.InnerException is HttpRequestException hre &&
@@ -50,10 +54,5 @@ namespace System.Net.Transports
         }
 
         #endregion
-
-        public override string ToString()
-        {
-            return $"{nameof(WebSocketClientConnection)}: {(Socket != null ? RemoteUri.ToString() : "Not Connected")}";
-        }
     }
 }

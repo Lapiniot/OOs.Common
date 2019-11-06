@@ -7,18 +7,28 @@ namespace System.Net.Transports
 {
     public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where TWebSocket : WebSocket
     {
-        protected TWebSocket Socket;
+        private TWebSocket socket;
 
         protected WebSocketConnection(TWebSocket socket)
         {
-            Socket = socket;
+            this.socket = socket;
+        }
+
+        protected void SetWebSocket(TWebSocket socket)
+        {
+            this.socket = socket;
+        }
+
+        public override string ToString()
+        {
+            return $"{GetType().Name} (SubProtocol:'{socket?.SubProtocol}'; State: {socket?.State})";
         }
 
         #region Implementation of IAsyncDisposable
 
         public async ValueTask DisposeAsync()
         {
-            using(Socket)
+            using(socket)
             {
                 await DisconnectAsync().ConfigureAwait(false);
             }
@@ -28,17 +38,17 @@ namespace System.Net.Transports
 
         #region Implementation of IConnectedObject
 
-        public bool IsConnected => Socket?.State == WebSocketState.Open;
+        public bool IsConnected => socket?.State == WebSocketState.Open;
 
         public abstract Task ConnectAsync(CancellationToken cancellationToken = default);
 
         public virtual async Task DisconnectAsync()
         {
-            var state = Socket.State;
+            var state = socket.State;
 
             if(state == WebSocketState.Open || state == WebSocketState.CloseReceived || state == WebSocketState.CloseSent)
             {
-                await Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good bye.", default).ConfigureAwait(false);
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good bye.", default).ConfigureAwait(false);
             }
         }
 
@@ -50,7 +60,7 @@ namespace System.Net.Transports
         {
             try
             {
-                var vt = Socket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken);
+                var vt = socket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken);
 
                 if(!vt.IsCompletedSuccessfully) await vt.AsTask().ConfigureAwait(false);
 
@@ -67,7 +77,7 @@ namespace System.Net.Transports
         {
             try
             {
-                var vt = Socket.ReceiveAsync(buffer, cancellationToken);
+                var vt = socket.ReceiveAsync(buffer, cancellationToken);
 
                 var result = vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.AsTask().ConfigureAwait(false);
 

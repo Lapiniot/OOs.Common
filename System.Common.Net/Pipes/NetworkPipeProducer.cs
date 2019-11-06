@@ -85,9 +85,8 @@ namespace System.Net.Pipes
 
                                 await producer.ConfigureAwait(false);
                             }
-                            catch
+                            catch(OperationCanceledException)
                             {
-                                // ignored
                             }
                         }
                     }
@@ -164,10 +163,12 @@ namespace System.Net.Pipes
             catch(AggregateException age)
             {
                 writer.Complete(age.GetBaseException());
+                throw;
             }
             catch(Exception exception)
             {
                 writer.Complete(exception);
+                throw;
             }
         }
 

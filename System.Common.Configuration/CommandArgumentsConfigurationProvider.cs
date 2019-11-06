@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Common.CommandLine;
+using System.Globalization;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 
@@ -16,12 +17,11 @@ namespace System.Configuration
 
         public override bool TryGet(string key, out string value)
         {
-            return base.TryGet(key, out value);
-        }
+            if(key is null) throw new ArgumentNullException(nameof(key));
 
-        public override void Set(string key, string value)
-        {
-            base.Set(key, value);
+            value = null;
+
+            return key.StartsWith("args:", false, CultureInfo.InvariantCulture) && base.TryGet(key.Substring(5), out value);
         }
 
         public override void Load()

@@ -9,7 +9,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnTrue_AndValue_GivenExistingKey()
         {
-            var hq = new HashQueue<int, string>(
+            var hq = new HashQueueCollection<int, string>(
                 (1, "value 1"),
                 (2, "value 2"),
                 (3, "value 3"));
@@ -22,7 +22,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnFalse_AndDefaultValue_GivenNonExistingKey()
         {
-            var stringHashQueue = new HashQueue<int, string>(
+            var stringHashQueue = new HashQueueCollection<int, string>(
                 (1, "value 1"),
                 (2, "value 2"),
                 (3, "value 3"));
@@ -31,7 +31,7 @@ namespace System.Common.Tests
             Assert.IsFalse(actual);
             Assert.AreEqual(default, strValue);
 
-            var intHashQueue = new HashQueue<string, int>(
+            var intHashQueue = new HashQueueCollection<string, int>(
                 ("1", 1),
                 ("2", 2),
                 ("3", 3));
@@ -44,7 +44,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void RemoveFromMap_GivenExistingKey()
         {
-            var hq = new HashQueue<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
+            var hq = new HashQueueCollection<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
 
             var actual = hq.TryRemove(2, out _);
             Assert.IsTrue(actual);
@@ -55,7 +55,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void UpdateHead_RemovingFirstItemByKey()
         {
-            var hq = new HashQueue<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
+            var hq = new HashQueueCollection<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
 
             Assert.AreSame(hq.Map[1], hq.Head);
 
@@ -67,7 +67,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void NotUpdateHead_RemovingNonFirstItemByKey()
         {
-            var hq = new HashQueue<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
+            var hq = new HashQueueCollection<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
 
             Assert.AreSame(hq.Map[1], hq.Head);
 
@@ -79,7 +79,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void UpdateTail_RemovingLastItemByKey()
         {
-            var hq = new HashQueue<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
+            var hq = new HashQueueCollection<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
 
             Assert.AreSame(hq.Map[3], hq.Tail);
 
@@ -91,7 +91,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void NotUpdateTail_RemovingNonLastItemByKey()
         {
-            var hq = new HashQueue<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
+            var hq = new HashQueueCollection<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
 
             Assert.AreSame(hq.Map[3], hq.Tail);
 
@@ -103,7 +103,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void UpdateReferences_RemovingItemByKey()
         {
-            var hq = new HashQueue<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"), (4, "value 4"), (5, "value 5"));
+            var hq = new HashQueueCollection<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"), (4, "value 4"), (5, "value 5"));
 
             var node1 = hq.Map[1];
             var node2 = hq.Map[2];
@@ -150,7 +150,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void NotUpdateReferences_RemovingNonExistingItemByKey()
         {
-            var hq = new HashQueue<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
+            var hq = new HashQueueCollection<int, string>((1, "value 1"), (2, "value 2"), (3, "value 3"));
 
             var node1 = hq.Map[1];
             var node2 = hq.Map[2];
@@ -172,7 +172,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void Throw_ArgumentNullException_GivenKey_Null()
         {
-            var hq = new HashQueue<string, string>();
+            var hq = new HashQueueCollection<string, string>();
             Assert.ThrowsException<ArgumentNullException>(() => hq.TryRemove(null, out _));
         }
     }

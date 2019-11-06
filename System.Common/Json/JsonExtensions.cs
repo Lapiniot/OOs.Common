@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -14,7 +15,7 @@ namespace System.Json
 
         public static JsonValue ToJsonValue<TEnum>(this TEnum value) where TEnum : struct, Enum
         {
-            return value.ToString().ToLower();
+            return value.ToString().ToLowerInvariant();
         }
 
         public static byte[] Serialize(this JsonValue json, Encoding encoding = null)
@@ -26,6 +27,9 @@ namespace System.Json
 
         public static void SerializeTo(this JsonValue json, Stream stream, Encoding encoding = null)
         {
+            if(json is null) throw new ArgumentNullException(nameof(json));
+            if(stream is null) throw new ArgumentNullException(nameof(stream));
+
             using var writer = new StreamWriter(stream, encoding ?? ASCII, 2 * 1024, true);
             json.Save(writer);
             writer.Flush();
@@ -40,6 +44,8 @@ namespace System.Json
 
         public static JsonValue Deserialize(byte[] bytes, Encoding encoding = null)
         {
+            if(bytes is null) throw new ArgumentNullException(nameof(bytes));
+
             return Deserialize(bytes, 0, bytes.Length, encoding);
         }
 

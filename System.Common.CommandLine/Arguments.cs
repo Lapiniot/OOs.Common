@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using static System.String;
@@ -82,7 +83,7 @@ namespace System.Common.CommandLine
 
             var arg = queue.Peek();
 
-            if(!arg.StartsWith("-") && !arg.StartsWith("/"))
+            if(!arg.StartsWith('-') && !arg.StartsWith('/'))
             {
                 var name = arg;
 
@@ -95,7 +96,7 @@ namespace System.Common.CommandLine
             {
                 arg = queue.Dequeue();
 
-                if(arg.StartsWith("--"))
+                if(arg.StartsWith("--", false, CultureInfo.InvariantCulture))
                 {
                     AddBySynonym(arg.Substring(2), smap, arguments);
                 }
@@ -134,7 +135,7 @@ namespace System.Common.CommandLine
                 {
                     if(queue.Count == 0) throw new ArgumentException($"No value was specified for argument {arg}");
 
-                    arguments[arg] = Convert.ChangeType(queue.Dequeue(), def.Type);
+                    arguments[arg] = Convert.ChangeType(queue.Dequeue(), def.Type, CultureInfo.InvariantCulture);
                 }
             }
             else
@@ -161,11 +162,11 @@ namespace System.Common.CommandLine
                 var type = def.Type;
                 var key = item.Key;
 
-                if(arg.StartsWith(key))
+                if(arg.StartsWith(key, false, CultureInfo.InvariantCulture))
                 {
                     if(type != typeof(bool))
                     {
-                        arguments[arg] = Convert.ChangeType(arg.Substring(key.Length), type);
+                        arguments[key] = Convert.ChangeType(arg.Substring(key.Length), type, CultureInfo.InvariantCulture);
 
                         return true;
                     }
@@ -198,7 +199,7 @@ namespace System.Common.CommandLine
 
                     var key = item.Key;
 
-                    if(arg.StartsWith(key))
+                    if(arg.StartsWith(key, false, CultureInfo.InvariantCulture))
                     {
                         keys.Add(key);
 
@@ -206,12 +207,12 @@ namespace System.Common.CommandLine
 
                         match = true;
 
-                        if(arg == Empty) break;
+                        if(arg.Length == 0) break;
                     }
                 }
-            } while(match && arg != Empty);
+            } while(match && arg.Length > 0);
 
-            if(arg != Empty) return false;
+            if(arg.Length > 0) return false;
 
             foreach(var k in keys)
             {
@@ -251,7 +252,7 @@ namespace System.Common.CommandLine
                 {
                     if(pair.Length == 2)
                     {
-                        arguments[key] = Convert.ChangeType(pair[1], def.Type);
+                        arguments[key] = Convert.ChangeType(pair[1], def.Type, CultureInfo.InvariantCulture);
                     }
                     else
                     {

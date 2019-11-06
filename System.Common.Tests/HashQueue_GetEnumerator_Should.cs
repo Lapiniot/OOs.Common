@@ -9,7 +9,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnOrderedSequence()
         {
-            var hashQueue = new HashQueue<int, string>((0, "Value 0"), (1, "Value 1"), (2, "Value 2"));
+            var hashQueue = new HashQueueCollection<int, string>((0, "Value 0"), (1, "Value 1"), (2, "Value 2"));
 
             hashQueue.TryAdd(4, "Value 4");
             hashQueue.TryAdd(3, "Value 3");

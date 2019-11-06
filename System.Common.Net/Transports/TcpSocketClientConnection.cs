@@ -27,7 +27,7 @@ namespace System.Net.Transports
         public TcpSocketClientConnection(string hostNameOrAddress, int port)
         {
             if(hostNameOrAddress == null) throw new ArgumentNullException(nameof(hostNameOrAddress));
-            if(hostNameOrAddress == "") throw new ArgumentException(NotEmptyExpected, nameof(hostNameOrAddress));
+            if(hostNameOrAddress.Length == 0) throw new ArgumentException(NotEmptyExpected, nameof(hostNameOrAddress));
             this.hostNameOrAddress = hostNameOrAddress;
             this.port = port;
         }

@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace System
 {
@@ -23,9 +25,10 @@ namespace System
             observers?.TryRemove(observer, out _);
         }
 
+        [SuppressMessage("Microsoft.Design", "CA1031")]
         public void Notify(T value)
         {
-            foreach(var pair in observers)
+            Parallel.ForEach(observers, (pair, state) =>
             {
                 try
                 {
@@ -35,12 +38,13 @@ namespace System
                 {
                     // ignored
                 }
-            }
+            });
         }
 
+        [SuppressMessage("Microsoft.Design", "CA1031")]
         public void NotifyError(Exception error)
         {
-            foreach(var pair in observers)
+            Parallel.ForEach(observers, (pair, state) =>
             {
                 try
                 {
@@ -50,12 +54,13 @@ namespace System
                 {
                     // ignored
                 }
-            }
+            });
         }
 
+        [SuppressMessage("Microsoft.Design", "CA1031")]
         public void NotifyCompleted()
         {
-            foreach(var pair in observers)
+            Parallel.ForEach(observers, (pair, state) =>
             {
                 try
                 {
@@ -65,7 +70,7 @@ namespace System
                 {
                     // ignored
                 }
-            }
+            });
         }
 
         private sealed class Subscription : IDisposable

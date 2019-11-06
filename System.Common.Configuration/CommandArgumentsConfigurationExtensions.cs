@@ -6,6 +6,11 @@ namespace System.Configuration
     {
         public static IConfigurationBuilder AddCommandArguments(this IConfigurationBuilder builder, string[] args)
         {
+            if(builder is null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
             return builder.Add(new CommandArgumentsConfigurationSource(args));
         }
     }

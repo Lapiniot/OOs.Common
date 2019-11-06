@@ -50,9 +50,8 @@ namespace System.Net.Pipes
                 {
                     await consumer.ConfigureAwait(false);
                 }
-                catch
+                catch(OperationCanceledException)
                 {
-                    // ignored
                 }
             }
         }
@@ -97,11 +96,13 @@ namespace System.Net.Pipes
                 var exception = age.GetBaseException();
                 reader.Complete(exception);
                 OnCompleted(exception);
+                throw;
             }
             catch(Exception ex)
             {
                 reader.Complete(ex);
                 OnCompleted(ex);
+                throw;
             }
         }
 

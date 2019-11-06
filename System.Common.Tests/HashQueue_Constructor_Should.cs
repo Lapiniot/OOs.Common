@@ -9,7 +9,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void InitializeMap_HeadNull_TailNull()
         {
-            var hq = new HashQueue<int, string>();
+            var hq = new HashQueueCollection<int, string>();
             Assert.IsNull(hq.Head);
             Assert.IsNull(hq.Tail);
             Assert.IsNotNull(hq.Map);
@@ -26,7 +26,7 @@ namespace System.Common.Tests
             const string value2 = "value 2";
             const string value3 = "value 3";
 
-            var hashQueue = new HashQueue<string, string>((key1, value1), (key2, value2), (key3, value3));
+            var hashQueue = new HashQueueCollection<string, string>((key1, value1), (key2, value2), (key3, value3));
 
             Assert.AreEqual(3, hashQueue.Map.Count);
 
@@ -58,7 +58,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void Throw_ArgumentException_GivenKeyDuplicates()
         {
-            Assert.ThrowsException<ArgumentException>(() => new HashQueue<string, string>(
+            Assert.ThrowsException<ArgumentException>(() => new HashQueueCollection<string, string>(
                 ("key1", "value 1"), ("key2", "value 2"),
                 ("key2", ""), ("key3", "value 3")));
         }

@@ -70,10 +70,12 @@ namespace System.Net.Pipes
             catch(AggregateException age)
             {
                 writer.Complete(age.GetBaseException());
+                throw;
             }
             catch(Exception exception)
             {
                 writer.Complete(exception);
+                throw;
             }
         }
 
@@ -113,10 +115,12 @@ namespace System.Net.Pipes
             catch(AggregateException age)
             {
                 reader.Complete(age.GetBaseException());
+                throw;
             }
             catch(Exception ex)
             {
                 reader.Complete(ex);
+                throw;
             }
         }
 

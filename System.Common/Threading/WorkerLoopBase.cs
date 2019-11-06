@@ -7,14 +7,14 @@ namespace System.Threading
     public abstract class WorkerLoopBase<T> : IDisposable
     {
         private readonly T state;
-        protected Func<T, CancellationToken, Task> AsyncWork;
+        private readonly Func<T, CancellationToken, Task> worker;
         private bool disposed;
         private Task processorTask;
         private CancellationTokenSource tokenSource;
 
-        protected WorkerLoopBase(Func<T, CancellationToken, Task> asyncWork, T state)
+        protected WorkerLoopBase(Func<T, CancellationToken, Task> worker, T state)
         {
-            AsyncWork = asyncWork ?? throw new ArgumentNullException(nameof(asyncWork));
+            this.worker = worker ?? throw new ArgumentNullException(nameof(worker));
             this.state = state;
         }
 
@@ -24,6 +24,11 @@ namespace System.Threading
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        protected Task DoWorkAsync(T state, CancellationToken cancellation)
+        {
+            return worker(state, cancellation);
         }
 
         public void Start()
@@ -62,9 +67,8 @@ namespace System.Threading
                 {
                     await task.ConfigureAwait(false);
                 }
-                catch
+                catch(OperationCanceledException)
                 {
-                    // ignored
                 }
             }
         }

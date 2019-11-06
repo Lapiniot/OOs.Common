@@ -3,14 +3,14 @@ using static System.Threading.LockRecursionPolicy;
 
 namespace System.Collections.Generic
 {
-    public sealed class HashQueue<TK, TV> : IDisposable, IEnumerable<TV>
+    public sealed class HashQueueCollection<TK, TV> : IEnumerable<TV>, IDisposable
     {
         private readonly ReaderWriterLockSlim lockSlim;
         private readonly Dictionary<TK, Node> map;
         private Node head;
         private Node tail;
 
-        public HashQueue(params (TK key, TV value)[] items) : this()
+        public HashQueueCollection(params (TK key, TV value)[] items) : this()
         {
             foreach(var (key, value) in items)
             {
@@ -18,7 +18,7 @@ namespace System.Collections.Generic
             }
         }
 
-        public HashQueue()
+        public HashQueueCollection()
         {
             map = new Dictionary<TK, Node>();
             lockSlim = new ReaderWriterLockSlim(NoRecursion);
@@ -67,6 +67,8 @@ namespace System.Collections.Generic
 
         public TV AddOrUpdate(TK key, TV addValue, Func<TK, TV, TV> updateValueFactory)
         {
+            if(updateValueFactory is null) throw new ArgumentNullException(nameof(updateValueFactory));
+
             using(lockSlim.WithWriteLock())
             {
                 return map.TryGetValue(key, out var node)

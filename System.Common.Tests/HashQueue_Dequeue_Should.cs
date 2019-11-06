@@ -6,15 +6,15 @@ namespace System.Common.Tests
     [TestClass]
     public class HashQueue_Dequeue_Should
     {
-        internal static HashQueue<string, string> CreateSampleHashQueue()
+        internal static HashQueueCollection<string, string> CreateSampleHashQueue()
         {
-            return new HashQueue<string, string>(("key1", "value 1"), ("key2", "value 2"), ("key3", "value 3"));
+            return new HashQueueCollection<string, string>(("key1", "value 1"), ("key2", "value 2"), ("key3", "value 3"));
         }
 
         [TestMethod]
         public void ReturnFalseAndDefaultValue_GivenEmptyQueue()
         {
-            var hq = new HashQueue<string, string>();
+            var hq = new HashQueueCollection<string, string>();
 
             var actual = hq.Dequeue(out _);
 

@@ -44,9 +44,8 @@ namespace System.Net
                 {
                     await processor.ConfigureAwait(false);
                 }
-                catch
+                catch(OperationCanceledException)
                 {
-                    // ignored
                 }
             }
         }
@@ -108,9 +107,14 @@ namespace System.Net
 
                 writer.Complete();
             }
+            catch(OperationCanceledException)
+            {
+                writer.Complete();
+            }
             catch(Exception exception)
             {
                 writer.Complete(exception);
+                throw;
             }
         }
 
@@ -142,9 +146,14 @@ namespace System.Net
 
                 reader.Complete();
             }
+            catch(OperationCanceledException)
+            {
+                reader.Complete();
+            }
             catch(Exception exception)
             {
                 reader.Complete(exception);
+                throw;
             }
         }
     }

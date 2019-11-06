@@ -31,14 +31,10 @@ namespace System.Threading
                 try
                 {
                     await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
-                    await AsyncWork(state, cancellationToken).ConfigureAwait(false);
+                    await DoWorkAsync(state, cancellationToken).ConfigureAwait(false);
                     iteration++;
                 }
-                catch(OperationCanceledException) {}
-                catch(Exception exception)
-                {
-                    Trace.TraceWarning(exception.Message);
-                }
+                catch(OperationCanceledException) { }
             }
         }
 

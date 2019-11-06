@@ -1,3 +1,4 @@
+using System.Globalization;
 using static System.Globalization.NumberStyles;
 
 namespace System.Converters
@@ -8,6 +9,8 @@ namespace System.Converters
 
         public static string ToHexString(this byte[] bytes)
         {
+            if(bytes is null) throw new ArgumentNullException(nameof(bytes));
+
             var buffer = new char[bytes.Length * 2];
 
             for(var i = 0; i < bytes.Length; i++)
@@ -24,6 +27,8 @@ namespace System.Converters
 
         public static byte[] FromHexString(string hexString)
         {
+            if(hexString is null) throw new ArgumentNullException(nameof(hexString));
+
             var bytes = new byte[hexString.Length >> 1];
 
             for(var i = 0; i < bytes.Length; i++)
@@ -46,25 +51,33 @@ namespace System.Converters
 
         public static bool TryParse(string s, out uint result)
         {
-            return s.StartsWith("0x") && uint.TryParse(s.Substring(2), HexNumber, null, out result) ||
+            if(s is null) throw new ArgumentNullException(nameof(s));
+
+            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && uint.TryParse(s.Substring(2), HexNumber, null, out result) ||
                    uint.TryParse(s, Integer & ~AllowLeadingSign, null, out result);
         }
 
         public static bool TryParse(string s, out int result)
         {
-            return s.StartsWith("0x") && int.TryParse(s.Substring(2), HexNumber, null, out result) ||
+            if(s is null) throw new ArgumentNullException(nameof(s));
+
+            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && int.TryParse(s.Substring(2), HexNumber, null, out result) ||
                    int.TryParse(s, Integer & ~AllowLeadingSign, null, out result);
         }
 
         public static bool TryParse(string s, out long result)
         {
-            return s.StartsWith("0x") && long.TryParse(s.Substring(2), HexNumber, null, out result) ||
+            if(s is null) throw new ArgumentNullException(nameof(s));
+
+            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && long.TryParse(s.Substring(2), HexNumber, null, out result) ||
                    long.TryParse(s, Integer & ~AllowLeadingSign, null, out result);
         }
 
         public static bool TryParse(string s, out ulong result)
         {
-            return s.StartsWith("0x") && ulong.TryParse(s.Substring(2), HexNumber, null, out result) ||
+            if(s is null) throw new ArgumentNullException(nameof(s));
+
+            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && ulong.TryParse(s.Substring(2), HexNumber, null, out result) ||
                    ulong.TryParse(s, Integer & ~AllowLeadingSign, null, out result);
         }
     }

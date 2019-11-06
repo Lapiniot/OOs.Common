@@ -22,6 +22,8 @@ namespace System.Policies
 
         public async Task<T> RetryAsync<T>(Func<CancellationToken, Task<T>> asyncFunc, CancellationToken cancellationToken)
         {
+            if(asyncFunc is null) throw new ArgumentNullException(nameof(asyncFunc));
+
             var attempt = 1;
             var delay = TimeSpan.Zero;
             var startedAt = DateTime.UtcNow;
