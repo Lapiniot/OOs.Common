@@ -14,16 +14,6 @@ namespace System.Net.Transports
             this.socket = socket;
         }
 
-        protected void SetWebSocket(TWebSocket socket)
-        {
-            this.socket = socket;
-        }
-
-        public override string ToString()
-        {
-            return $"{GetType().Name} (SubProtocol:'{socket?.SubProtocol}'; State: {socket?.State})";
-        }
-
         #region Implementation of IAsyncDisposable
 
         public async ValueTask DisposeAsync()
@@ -35,6 +25,16 @@ namespace System.Net.Transports
         }
 
         #endregion
+
+        protected void SetWebSocket(TWebSocket webSocket)
+        {
+            socket = webSocket;
+        }
+
+        public override string ToString()
+        {
+            return $"{GetType().Name} (SubProtocol:'{socket?.SubProtocol}'; State: {socket?.State})";
+        }
 
         #region Implementation of IConnectedObject
 

@@ -4,9 +4,9 @@ using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace System.Threading
 {
-    public abstract class WorkerLoopBase<T> : IDisposable
+    public abstract class WorkerLoopBase<T> : IDisposable, IAsyncDisposable
     {
-        private readonly T state;
+        private readonly T localState;
         private readonly Func<T, CancellationToken, Task> worker;
         private bool disposed;
         private Task processorTask;
@@ -15,10 +15,19 @@ namespace System.Threading
         protected WorkerLoopBase(Func<T, CancellationToken, Task> worker, T state)
         {
             this.worker = worker ?? throw new ArgumentNullException(nameof(worker));
-            this.state = state;
+            localState = state;
         }
 
         public bool Running => Volatile.Read(ref tokenSource) != null;
+
+        #region Implementation of IAsyncDisposable
+
+        public ValueTask DisposeAsync()
+        {
+            return StopAsync();
+        }
+
+        #endregion
 
         public void Dispose()
         {
@@ -41,10 +50,14 @@ namespace System.Threading
         private async Task StartAsync()
         {
             using var tcs = new CancellationTokenSource();
+
             if(Interlocked.CompareExchange(ref tokenSource, tcs, null) == null)
             {
-                processorTask = RunAsync(state, tcs.Token);
-                await processorTask.ConfigureAwait(false);
+                try
+                {
+                    await (processorTask = RunAsync(localState, tcs.Token)).ConfigureAwait(false);
+                }
+                catch(OperationCanceledException) {}
             }
         }
 
@@ -53,7 +66,7 @@ namespace System.Threading
             Interlocked.Exchange(ref tokenSource, null)?.Cancel();
         }
 
-        public async Task StopAsync()
+        public async ValueTask StopAsync()
         {
             var task = processorTask;
 
@@ -67,9 +80,7 @@ namespace System.Threading
                 {
                     await task.ConfigureAwait(false);
                 }
-                catch(OperationCanceledException)
-                {
-                }
+                catch(OperationCanceledException) {}
             }
         }
 

@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using static System.Threading.Tasks.Task;
 
 namespace System.Threading
 {
@@ -17,13 +17,8 @@ namespace System.Threading
         {
             while(!cancellationToken.IsCancellationRequested)
             {
-                try
-                {
-                    await DoWorkAsync(state, cancellationToken).ConfigureAwait(false);
-                }
-                catch(OperationCanceledException) {}
-
-                await Task.Delay(interval, cancellationToken).ConfigureAwait(false);
+                await DoWorkAsync(state, cancellationToken).ConfigureAwait(false);
+                await Delay(interval, cancellationToken).ConfigureAwait(false);
             }
         }
     }

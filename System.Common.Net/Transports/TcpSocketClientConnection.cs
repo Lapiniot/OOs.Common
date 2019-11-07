@@ -13,6 +13,7 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Net.Transports
 {
+    [Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public class TcpSocketClientConnection : NetworkConnection
     {
         private readonly string hostNameOrAddress;

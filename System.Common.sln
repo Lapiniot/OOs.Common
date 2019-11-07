@@ -1,9 +1,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1493FFC5-A023-4A7D-A8B4-4858EAEE81DD}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		common.props = common.props
 	EndProjectSection
 EndProject

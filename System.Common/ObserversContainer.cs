@@ -25,7 +25,7 @@ namespace System
             observers?.TryRemove(observer, out _);
         }
 
-        [SuppressMessage("Microsoft.Design", "CA1031")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
         public void Notify(T value)
         {
             Parallel.ForEach(observers, (pair, state) =>
@@ -41,7 +41,7 @@ namespace System
             });
         }
 
-        [SuppressMessage("Microsoft.Design", "CA1031")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
         public void NotifyError(Exception error)
         {
             Parallel.ForEach(observers, (pair, state) =>
@@ -57,7 +57,7 @@ namespace System
             });
         }
 
-        [SuppressMessage("Microsoft.Design", "CA1031")]
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
         public void NotifyCompleted()
         {
             Parallel.ForEach(observers, (pair, state) =>

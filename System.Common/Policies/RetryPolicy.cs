@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using static System.Threading.Tasks.Task;
 
 namespace System.Policies
 {
@@ -11,18 +12,18 @@ namespace System.Policies
 
         #region Implementation of IRetryPolicy
 
-        public Task RetryAsync(Func<CancellationToken, Task> asyncFunc, CancellationToken cancellationToken)
+        public Task RetryAsync(Func<CancellationToken, Task> worker, CancellationToken cancellationToken)
         {
             return RetryAsync(async c =>
             {
-                await asyncFunc(c).ConfigureAwait(false);
+                await worker(c).ConfigureAwait(false);
                 return true;
             }, cancellationToken);
         }
 
-        public async Task<T> RetryAsync<T>(Func<CancellationToken, Task<T>> asyncFunc, CancellationToken cancellationToken)
+        public async Task<T> RetryAsync<T>(Func<CancellationToken, Task<T>> worker, CancellationToken cancellationToken)
         {
-            if(asyncFunc is null) throw new ArgumentNullException(nameof(asyncFunc));
+            if(worker is null) throw new ArgumentNullException(nameof(worker));
 
             var attempt = 1;
             var delay = TimeSpan.Zero;
@@ -37,7 +38,7 @@ namespace System.Policies
                 try
                 {
                     token.ThrowIfCancellationRequested();
-                    return await asyncFunc(token)
+                    return await worker(token)
                         // This is a protection step for the operations that do not handle cancellation properly by themselves.
                         // In case of external cancellation, WaitAsync transits to Cancelled state, throwing OperationCancelled exception,
                         // and terminates retry loop. Original async operation may still be in progress, but we give up in order
@@ -58,7 +59,9 @@ namespace System.Policies
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+
+                await Delay(delay, cancellationToken).ConfigureAwait(false);
+
                 attempt++;
             }
         }

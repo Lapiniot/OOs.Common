@@ -34,27 +34,6 @@ namespace System.Net.Listeners
         public WebSocketListener(string[] prefixes, params string[] subProtocols) :
             this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize) {}
 
-        private string MatchSubProtocol(HttpListenerRequest request)
-        {
-            var header = request.Headers["Sec-WebSocket-Protocol"];
-
-            if(!shouldMatchSubProtocol) return header;
-
-            if(IsNullOrEmpty(header))
-            {
-                throw new ArgumentException(NoWsSubProtocol);
-            }
-
-            var headers = header.Split(new[] {' ', ','}, RemoveEmptyEntries);
-            var subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
-            if(subProtocol == null)
-            {
-                throw new ArgumentException(NotSupportedWsSubProtocol);
-            }
-
-            return subProtocol;
-        }
-
         protected override async IAsyncEnumerable<INetworkConnection> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var listener = new HttpListener();
@@ -69,26 +48,54 @@ namespace System.Net.Listeners
 
             while(!cancellationToken.IsCancellationRequested)
             {
-                HttpListenerContext context = null;
-                HttpListenerWebSocketContext socketContext = null;
+                var context = await listener.GetContextAsync().ConfigureAwait(false);
+
+                if(!context.Request.IsWebSocketRequest)
+                {
+                    Close(context.Response, WebSocketHandshakeExpected);
+                    continue;
+                }
+
+                var subProtocol = context.Request.Headers["Sec-WebSocket-Protocol"];
+
+                if(shouldMatchSubProtocol)
+                {
+                    if(IsNullOrEmpty(subProtocol))
+                    {
+                        Close(context.Response, NoWsSubProtocol);
+                        continue;
+                    }
+
+                    var headers = subProtocol.Split(new[] {' ', ','}, RemoveEmptyEntries);
+                    subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
+                    if(subProtocol is null)
+                    {
+                        Close(context.Response, NotSupportedWsSubProtocol);
+                        continue;
+                    }
+                }
+
+                HttpListenerWebSocketContext socketContext;
 
                 try
                 {
-                    context = await listener.GetContextAsync().ConfigureAwait(false);
-
-                    if(!context.Request.IsWebSocketRequest) throw new InvalidOperationException(WebSocketHandshakeExpected);
-
-                    var subProtocol = MatchSubProtocol(context.Request);
-
                     socketContext = await context.AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval).ConfigureAwait(false);
                 }
                 catch
                 {
-                    context?.Response.Close();
+                    Close(context.Response);
+                    throw;
                 }
 
-                if(socketContext != null) yield return new WebSocketServerConnection(socketContext.WebSocket, context.Request.RemoteEndPoint);
+                yield return new WebSocketServerConnection(socketContext.WebSocket, context.Request.RemoteEndPoint);
             }
+        }
+
+        private static void Close(HttpListenerResponse response, string statusDescription = "Bad request", int statusCode = 400)
+        {
+            response.StatusCode = statusCode;
+            response.StatusDescription = statusDescription;
+            response.Close();
         }
 
         public override string ToString()

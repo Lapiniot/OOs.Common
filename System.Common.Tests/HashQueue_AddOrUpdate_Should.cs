@@ -19,17 +19,10 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void Throw_NullReferenceException_GivenUpdateFactory_Null_ForExistingKey()
+        public void Throw_NullReferenceException_GivenUpdateFactory()
         {
             var hq = CreateSampleHashQueue();
-            Assert.ThrowsException<NullReferenceException>(() => hq.AddOrUpdate("key2", "value 2", (Func<string, string, string>)null));
-        }
-
-        [TestMethod]
-        public void NotThrow_NullReferenceException_GivenUpdateFactory_Null_ForNewKey()
-        {
-            var hq = CreateSampleHashQueue();
-            hq.AddOrUpdate("key5", "value 5", (Func<string, string, string>)null);
+            Assert.ThrowsException<ArgumentNullException>(() => hq.AddOrUpdate("key2", "value 2", (Func<string, string, string>)null));
         }
 
         [TestMethod]

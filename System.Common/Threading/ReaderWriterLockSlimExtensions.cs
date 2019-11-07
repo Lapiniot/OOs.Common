@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace System.Threading
+﻿namespace System.Threading
 {
     public static class ReaderWriterLockSlimExtensions
     {
@@ -125,7 +123,7 @@ namespace System.Threading
 
         public override bool Equals(object obj)
         {
-            return obj is WriteLockScope scope && this.lockSlim == scope.lockSlim;
+            return obj is WriteLockScope scope && lockSlim == scope.lockSlim;
         }
 
         public bool Equals(WriteLockScope other)

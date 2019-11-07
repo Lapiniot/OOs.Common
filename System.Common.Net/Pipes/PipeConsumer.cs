@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipelines;
 using System.Net.Properties;
 using System.Threading;
@@ -10,11 +11,12 @@ namespace System.Net.Pipes
     /// <summary>
     /// Provides base abstract class for pipe data consumer.
     /// </summary>
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public abstract class PipeConsumer : ConnectedObject
     {
         private readonly PipeReader reader;
+        private CancellationTokenSource cancellationTokenSource;
         private Task consumer;
-        private CancellationTokenSource processorCts;
 
         protected PipeConsumer(PipeReader reader)
         {
@@ -33,26 +35,20 @@ namespace System.Net.Pipes
 
         protected override Task OnConnectAsync(CancellationToken cancellationToken)
         {
-            processorCts = new CancellationTokenSource();
+            cancellationTokenSource = new CancellationTokenSource();
 
-            consumer = StartConsumerAsync(processorCts.Token);
+            consumer = StartConsumerAsync(cancellationTokenSource.Token);
 
             return CompletedTask;
         }
 
         protected override async Task OnDisconnectAsync()
         {
-            using(processorCts)
+            using(cancellationTokenSource)
             {
-                processorCts.Cancel();
+                cancellationTokenSource.Cancel();
 
-                try
-                {
-                    await consumer.ConfigureAwait(false);
-                }
-                catch(OperationCanceledException)
-                {
-                }
+                await consumer.ConfigureAwait(false);
             }
         }
 
@@ -63,6 +59,7 @@ namespace System.Net.Pipes
                 while(!token.IsCancellationRequested)
                 {
                     var rt = reader.ReadAsync(token);
+
                     var result = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
                     var buffer = result.Buffer;
@@ -91,17 +88,10 @@ namespace System.Net.Pipes
                 reader.Complete();
                 OnCompleted();
             }
-            catch(AggregateException age)
+            catch(Exception exception)
             {
-                var exception = age.GetBaseException();
                 reader.Complete(exception);
                 OnCompleted(exception);
-                throw;
-            }
-            catch(Exception ex)
-            {
-                reader.Complete(ex);
-                OnCompleted(ex);
                 throw;
             }
         }

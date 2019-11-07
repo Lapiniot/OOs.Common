@@ -12,6 +12,7 @@ namespace System.Net.Pipes
     /// arrival via <see cref="ReceiveAsync" /> and writes to the pipe.
     /// Consumer loop consumes data from the pipe via <see cref="Consume" />.
     /// </summary>
+    [Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public abstract class PipeProducerConsumer : ConnectedObject
     {
         private CancellationTokenSource cancellationTokenSource;
@@ -67,11 +68,6 @@ namespace System.Net.Pipes
             {
                 writer.Complete();
             }
-            catch(AggregateException age)
-            {
-                writer.Complete(age.GetBaseException());
-                throw;
-            }
             catch(Exception exception)
             {
                 writer.Complete(exception);
@@ -112,14 +108,9 @@ namespace System.Net.Pipes
             {
                 reader.Complete();
             }
-            catch(AggregateException age)
+            catch(Exception exception)
             {
-                reader.Complete(age.GetBaseException());
-                throw;
-            }
-            catch(Exception ex)
-            {
-                reader.Complete(ex);
+                reader.Complete(exception);
                 throw;
             }
         }

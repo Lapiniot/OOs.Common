@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipelines;
 using System.Net.Transports.Exceptions;
 using System.Threading;
@@ -7,12 +8,13 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Net
 {
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public abstract class NetworkStreamParser : ConnectedObject
     {
         private readonly INetworkConnection connection;
+        private CancellationTokenSource cancellationTokenSource;
         private Pipe pipe;
         private Task processor;
-        private CancellationTokenSource processorCts;
 
         protected NetworkStreamParser(INetworkConnection connection)
         {
@@ -25,64 +27,32 @@ namespace System.Net
         {
             pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
 
-            processorCts = new CancellationTokenSource();
+            cancellationTokenSource = new CancellationTokenSource();
 
-            var token = processorCts.Token;
+            var token = cancellationTokenSource.Token;
 
-            processor = WhenAll(StartNetworkReaderAsync(pipe.Writer, token), StartParserAsync(pipe.Reader, token));
+            processor = WhenAll(StartReaderAsync(pipe.Writer, token), StartParserAsync(pipe.Reader, token));
 
             return CompletedTask;
         }
 
         protected override async Task OnDisconnectAsync()
         {
-            using(processorCts)
+            using(cancellationTokenSource)
             {
-                processorCts.Cancel();
+                cancellationTokenSource.Cancel();
 
-                try
-                {
-                    await processor.ConfigureAwait(false);
-                }
-                catch(OperationCanceledException)
-                {
-                }
+                await processor.ConfigureAwait(false);
             }
         }
 
         protected abstract void ParseBuffer(in ReadOnlySequence<byte> buffer, out int consumed);
 
-        protected async Task<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            try
-            {
-                return await connection.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
-            }
-            catch(ConnectionAbortedException)
-            {
-                OnConnectionAborted();
-                throw;
-            }
-        }
-
-        protected async Task<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            try
-            {
-                return await connection.SendAsync(buffer, cancellationToken).ConfigureAwait(false);
-            }
-            catch(ConnectionAbortedException)
-            {
-                OnConnectionAborted();
-                throw;
-            }
-        }
-
         protected abstract void OnEndOfStream();
 
         protected abstract void OnConnectionAborted();
 
-        private async Task StartNetworkReaderAsync(PipeWriter writer, CancellationToken token)
+        private async Task StartReaderAsync(PipeWriter writer, CancellationToken token)
         {
             try
             {
@@ -90,7 +60,9 @@ namespace System.Net
                 {
                     var buffer = writer.GetMemory();
 
-                    var received = await ReceiveAsync(buffer, token).ConfigureAwait(false);
+                    var rt = connection.ReceiveAsync(buffer, token);
+
+                    var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
                     if(received == 0)
                     {
@@ -100,7 +72,9 @@ namespace System.Net
 
                     writer.Advance(received);
 
-                    var result = await writer.FlushAsync(token).ConfigureAwait(false);
+                    var ft = writer.FlushAsync(token);
+
+                    var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.AsTask().ConfigureAwait(false);
 
                     if(result.IsCompleted) break;
                 }
@@ -110,6 +84,12 @@ namespace System.Net
             catch(OperationCanceledException)
             {
                 writer.Complete();
+            }
+            catch(ConnectionAbortedException cae)
+            {
+                writer.Complete(cae);
+                OnConnectionAborted();
+                throw;
             }
             catch(Exception exception)
             {
@@ -124,7 +104,9 @@ namespace System.Net
             {
                 while(!token.IsCancellationRequested)
                 {
-                    var result = await reader.ReadAsync(token).ConfigureAwait(false);
+                    var rt = reader.ReadAsync(token);
+
+                    var result = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
                     var buffer = result.Buffer;
 
