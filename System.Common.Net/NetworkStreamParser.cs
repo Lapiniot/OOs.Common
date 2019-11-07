@@ -1,7 +1,8 @@
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipelines;
-using System.Net.Transports.Exceptions;
+using System.Net.Connections;
+using System.Net.Connections.Exceptions;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Threading.Tasks.Task;

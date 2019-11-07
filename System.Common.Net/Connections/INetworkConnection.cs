@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.Net
+namespace System.Net.Connections
 {
     public interface INetworkConnection : IConnectedObject, IAsyncDisposable
     {

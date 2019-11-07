@@ -1,9 +1,9 @@
-using System.Net.Transports.Exceptions;
+using System.Net.Connections.Exceptions;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.Net.Transports
+namespace System.Net.Connections
 {
     public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where TWebSocket : WebSocket
     {

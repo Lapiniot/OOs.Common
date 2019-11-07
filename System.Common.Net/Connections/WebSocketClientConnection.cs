@@ -1,13 +1,13 @@
 using System.Collections.Generic;
+using System.Net.Connections.Exceptions;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Net.Transports.Exceptions;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Properties.Strings;
 
-namespace System.Net.Transports
+namespace System.Net.Connections
 {
     public class WebSocketClientConnection : WebSocketConnection<ClientWebSocket>
     {

@@ -5,7 +5,7 @@ using static System.Net.Sockets.SocketFlags;
 using static System.Net.Sockets.SocketShutdown;
 using static System.Threading.Tasks.Task;
 
-namespace System.Net.Transports
+namespace System.Net.Connections
 {
     public class TcpSocketServerConnection : INetworkConnection
     {

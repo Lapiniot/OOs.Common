@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace System.Net.Transports.Exceptions
+namespace System.Net.Connections.Exceptions
 {
     public abstract class TransportException : Exception
     {

@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.Net.Transports
+namespace System.Net.Connections
 {
     public abstract class NetworkConnection : ConnectedObject, INetworkConnection
     {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.Transports;
+using System.Net.Connections;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Threading;

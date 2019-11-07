@@ -1,4 +1,4 @@
-namespace System.Net.Transports.Exceptions
+namespace System.Net.Connections.Exceptions
 {
     public class ServerUnavailableException : TransportException
     {
