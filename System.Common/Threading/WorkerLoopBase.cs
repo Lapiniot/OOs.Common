@@ -4,7 +4,7 @@ using static System.Threading.Tasks.TaskContinuationOptions;
 
 namespace System.Threading
 {
-    public abstract class WorkerLoopBase<T> : IDisposable, IAsyncDisposable
+    public abstract class WorkerLoopBase<T> : IAsyncDisposable
     {
         private readonly T localState;
         private readonly Func<T, CancellationToken, Task> worker;
@@ -22,18 +22,21 @@ namespace System.Threading
 
         #region Implementation of IAsyncDisposable
 
-        public ValueTask DisposeAsync()
+        public virtual async ValueTask DisposeAsync()
         {
-            return StopAsync();
+            if(disposed) return;
+
+            try
+            {
+                await StopAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                disposed = true;
+            }
         }
 
         #endregion
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
 
         protected Task DoWorkAsync(T state, CancellationToken cancellation)
         {
@@ -85,18 +88,6 @@ namespace System.Threading
         }
 
         protected abstract Task RunAsync(T state, CancellationToken cancellationToken);
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if(disposed) return;
-
-            if(disposing)
-            {
-                Stop();
-                processorTask.Dispose();
-                disposed = true;
-            }
-        }
 
         protected void CheckDisposed()
         {

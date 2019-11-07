@@ -37,14 +37,21 @@ namespace System.Threading
 
         public void ResetDelay()
         {
+            CheckDisposed();
             using var source = Interlocked.Exchange(ref resetSource, new CancellationTokenSource());
             source?.Cancel();
         }
 
-        protected override void Dispose(bool disposing)
+        #region Overrides of WorkerLoopBase<T>
+
+        public override async ValueTask DisposeAsync()
         {
-            base.Dispose(disposing);
-            resetSource.Dispose();
+            using(resetSource)
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
         }
+
+        #endregion
     }
 }
