@@ -5,45 +5,32 @@ using System.Threading.Tasks;
 
 namespace System.Net.Listeners
 {
-    public abstract class ConnectionListener : IConnectionListener, IDisposable
+    public abstract class ConnectionListener : IConnectionListener
     {
-        private CancellationTokenSource globalCts;
+        private const int Running = 1;
+        private const int Stopped = 0;
+        private int state;
 
-        public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken)
         {
-            using var tokenSource = new CancellationTokenSource();
-
-            if(Interlocked.CompareExchange(ref globalCts, tokenSource, null) != null)
+            if(Interlocked.CompareExchange(ref state, Running, Stopped) != Stopped)
             {
                 throw new ArgumentException("Enumeration is already in progress.");
             }
 
-            using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, tokenSource.Token);
-
             try
             {
-                await foreach(var transport in GetAsyncEnumerable(linkedSource.Token).ConfigureAwait(false))
+                await foreach(var transport in GetAsyncEnumerable(cancellationToken).ConfigureAwait(false))
                 {
                     yield return transport;
                 }
             }
             finally
             {
-                Interlocked.Exchange(ref globalCts, null);
+                Interlocked.Exchange(ref state, Stopped);
             }
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
         protected abstract IAsyncEnumerable<INetworkConnection> GetAsyncEnumerable(CancellationToken cancellationToken);
-
-        protected virtual void Dispose(bool disposing)
-        {
-            Volatile.Read(ref globalCts)?.Cancel();
-        }
     }
 }
