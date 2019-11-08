@@ -3,6 +3,7 @@ using System.Net.Connections;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Properties.Strings;
+using static System.Threading.LazyThreadSafetyMode;
 
 namespace System.Net.Pipes
 {
@@ -15,17 +16,15 @@ namespace System.Net.Pipes
     {
         private readonly INetworkConnection connection;
         private readonly PipeOptions pipeOptions;
-        private readonly SemaphoreSlim semaphore;
         private bool disposed;
+        private CancellationTokenSource globalTokenSource;
         private PipeReader pipeReader;
         private PipeWriter pipeWriter;
-        private CancellationTokenSource processorCts;
-        private Task producer;
+        private Lazy<Task> producer;
 
         public NetworkPipeProducer(INetworkConnection connection, PipeOptions pipeOptions = null)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
-            semaphore = new SemaphoreSlim(1);
             this.pipeOptions = pipeOptions ?? new PipeOptions(useSynchronizationContext: false);
         }
 
@@ -37,84 +36,54 @@ namespace System.Net.Pipes
 
             try
             {
-                await DisconnectAsync().ConfigureAwait(false);
+                await StopAsync().ConfigureAwait(false);
             }
             finally
             {
                 disposed = true;
-                semaphore.Dispose();
             }
         }
 
         #endregion
 
-        public bool IsConnected { get; private set; }
-
-        public async Task ConnectAsync(CancellationToken cancellationToken = default)
+        public void Start()
         {
             CheckDisposed();
 
-            if(!IsConnected)
+            if(Interlocked.CompareExchange(ref producer, new Lazy<Task>(StartAsync, ExecutionAndPublication), null) == null)
             {
-                await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                var _ = producer.Value;
+            }
+        }
 
+        public async ValueTask StopAsync()
+        {
+            var localProducer = producer;
+            var localSource = globalTokenSource;
+
+            if(localSource != null && localProducer != null)
+            {
                 try
                 {
-                    if(!IsConnected)
-                    {
-                        var pipe = new Pipe(pipeOptions);
-                        pipeReader = pipe.Reader;
-                        pipeWriter = pipe.Writer;
-
-                        processorCts = new CancellationTokenSource();
-
-                        var token = processorCts.Token;
-
-                        producer = StartProducerAsync(pipeWriter, token);
-
-                        IsConnected = true;
-                    }
+                    localSource.Cancel();
+                    await localProducer.Value.ConfigureAwait(false);
                 }
                 finally
                 {
-                    semaphore.Release();
+                    if(Interlocked.CompareExchange(ref producer, null, localProducer) == localProducer)
+                    {
+                        localSource.Dispose();
+                    }
                 }
             }
         }
 
-        public async Task DisconnectAsync()
+        private async Task StartAsync()
         {
-            CheckDisposed();
-
-            if(IsConnected)
-            {
-                await semaphore.WaitAsync().ConfigureAwait(false);
-
-                try
-                {
-                    if(IsConnected)
-                    {
-                        using (processorCts)
-                        {
-                            processorCts.Cancel();
-
-                            try
-                            {
-                                pipeReader = null;
-                                pipeWriter = null;
-
-                                await producer.ConfigureAwait(false);
-                            }
-                            catch(OperationCanceledException) {}
-                        }
-                    }
-                }
-                finally
-                {
-                    IsConnected = false;
-                    semaphore.Release();
-                }
-            }
+            var tokenSource = new CancellationTokenSource();
+            (pipeReader, pipeWriter) = new Pipe(pipeOptions);
+            globalTokenSource = tokenSource;
+            await StartProducerAsync(pipeWriter, tokenSource.Token).ConfigureAwait(false);
         }
 
         private void CheckDisposed()
@@ -149,17 +118,14 @@ namespace System.Net.Pipes
             {
                 writer.Complete();
             }
-            catch(AggregateException age)
-            {
-                writer.Complete(age.GetBaseException());
-                throw;
-            }
             catch(Exception exception)
             {
                 writer.Complete(exception);
                 throw;
             }
         }
+
+        #region Overrides of PipeReader
 
         public override void AdvanceTo(SequencePosition consumed)
         {
@@ -190,5 +156,7 @@ namespace System.Net.Pipes
         {
             return pipeReader.TryRead(out result);
         }
+
+        #endregion
     }
 }
