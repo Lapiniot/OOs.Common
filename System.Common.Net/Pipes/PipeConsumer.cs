@@ -59,25 +59,25 @@ namespace System.Net.Pipes
                 while(!token.IsCancellationRequested)
                 {
                     var rt = reader.ReadAsync(token);
-
                     var result = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
-
-                    if(result.IsCompleted || result.IsCanceled) break;
 
                     var buffer = result.Buffer;
 
-                    if(buffer.IsEmpty) continue;
-
-                    var consumed = Consume(buffer);
-
-                    if(consumed > 0)
+                    if(buffer.Length > 0)
                     {
-                        reader.AdvanceTo(buffer.GetPosition(consumed));
+                        var consumed = Consume(buffer);
+
+                        if(consumed > 0)
+                        {
+                            reader.AdvanceTo(buffer.GetPosition(consumed));
+                        }
+                        else
+                        {
+                            reader.AdvanceTo(buffer.Start, buffer.End);
+                        }
                     }
-                    else
-                    {
-                        reader.AdvanceTo(buffer.Start, buffer.End);
-                    }
+
+                    if(result.IsCompleted || result.IsCanceled) break;
                 }
 
                 reader.Complete();

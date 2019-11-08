@@ -86,17 +86,18 @@ namespace System.Net.Pipes
 
                     var buffer = result.Buffer;
 
-                    if(buffer.IsEmpty) continue;
-
-                    var consumed = Consume(buffer);
-
-                    if(consumed > 0)
+                    if(buffer.Length > 0)
                     {
-                        reader.AdvanceTo(buffer.GetPosition(consumed));
-                    }
-                    else
-                    {
-                        reader.AdvanceTo(buffer.Start, buffer.End);
+                        var consumed = Consume(buffer);
+
+                        if(consumed > 0)
+                        {
+                            reader.AdvanceTo(buffer.GetPosition(consumed));
+                        }
+                        else
+                        {
+                            reader.AdvanceTo(buffer.Start, buffer.End);
+                        }
                     }
 
                     if(result.IsCompleted || result.IsCanceled) break;
