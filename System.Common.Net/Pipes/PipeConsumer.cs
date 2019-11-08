@@ -62,6 +62,8 @@ namespace System.Net.Pipes
 
                     var result = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
 
+                    if(result.IsCompleted || result.IsCanceled) break;
+
                     var buffer = result.Buffer;
 
                     if(buffer.IsEmpty) continue;
@@ -76,8 +78,6 @@ namespace System.Net.Pipes
                     {
                         reader.AdvanceTo(buffer.Start, buffer.End);
                     }
-
-                    if(result.IsCompleted || result.IsCanceled) break;
                 }
 
                 reader.Complete();
