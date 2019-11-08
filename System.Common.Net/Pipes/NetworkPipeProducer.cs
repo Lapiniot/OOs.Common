@@ -11,11 +11,11 @@ namespace System.Net.Pipes
     /// on data arrival and writes it to the pipe. Reads by consumers are supported via
     /// implemented <seealso cref="System.IO.Pipelines.PipeReader" /> methods.
     /// </summary>
-    public sealed class NetworkPipeProducer : PipeReader, IConnectedObject, IAsyncDisposable, IDisposable
+    public sealed class NetworkPipeProducer : PipeReader, IConnectedObject, IAsyncDisposable
     {
+        private readonly INetworkConnection connection;
         private readonly PipeOptions pipeOptions;
         private readonly SemaphoreSlim semaphore;
-        private readonly INetworkConnection connection;
         private bool disposed;
         private PipeReader pipeReader;
         private PipeWriter pipeWriter;
@@ -28,6 +28,25 @@ namespace System.Net.Pipes
             semaphore = new SemaphoreSlim(1);
             this.pipeOptions = pipeOptions ?? new PipeOptions(useSynchronizationContext: false);
         }
+
+        #region Implementation of IAsyncDisposable
+
+        public async ValueTask DisposeAsync()
+        {
+            if(disposed) return;
+
+            try
+            {
+                await DisconnectAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                disposed = true;
+                semaphore.Dispose();
+            }
+        }
+
+        #endregion
 
         public bool IsConnected { get; private set; }
 
@@ -86,9 +105,7 @@ namespace System.Net.Pipes
 
                                 await producer.ConfigureAwait(false);
                             }
-                            catch(OperationCanceledException)
-                            {
-                            }
+                            catch(OperationCanceledException) {}
                         }
                     }
                 }
@@ -99,35 +116,6 @@ namespace System.Net.Pipes
                 }
             }
         }
-
-        #region Implementation of IAsyncDisposable
-
-        public async ValueTask DisposeAsync()
-        {
-            if (!disposed)
-            {
-                try
-                {
-                    await DisconnectAsync().ConfigureAwait(false);
-                }
-                finally
-                {
-                    disposed = true;
-                    semaphore.Dispose();
-                }
-            }
-        }
-
-        #endregion
-
-        #region Implementation of IDisposable
-
-        public void Dispose()
-        {
-            var _ = DisposeAsync();
-        }
-
-        #endregion
 
         private void CheckDisposed()
         {
