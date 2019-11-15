@@ -10,7 +10,7 @@ using static System.Threading.Tasks.Task;
 namespace System.Net
 {
     [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
-    public abstract class NetworkStreamParser : ConnectedObject
+    public abstract class NetworkStreamParser : ActivityObject
     {
         private readonly INetworkConnection connection;
         private CancellationTokenSource cancellationTokenSource;
@@ -24,7 +24,7 @@ namespace System.Net
 
         protected INetworkConnection Connection => connection;
 
-        protected override Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override Task StartingAsync(CancellationToken cancellationToken)
         {
             pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
 
@@ -37,7 +37,7 @@ namespace System.Net
             return CompletedTask;
         }
 
-        protected override async Task OnDisconnectAsync()
+        protected override async Task StoppingAsync()
         {
             using(cancellationTokenSource)
             {

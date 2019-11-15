@@ -15,12 +15,12 @@ namespace System.Net.Connections
             throw new NotImplementedException();
         }
 
-        protected override Task OnDisconnectAsync()
+        protected override Task StoppingAsync()
         {
             throw new NotImplementedException();
         }
 
-        protected override Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override Task StartingAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

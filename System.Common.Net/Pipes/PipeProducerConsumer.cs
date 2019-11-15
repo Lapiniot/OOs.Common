@@ -13,12 +13,12 @@ namespace System.Net.Pipes
     /// Consumer loop consumes data from the pipe via <see cref="Consume" />.
     /// </summary>
     [Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
-    public abstract class PipeProducerConsumer : ConnectedObject
+    public abstract class PipeProducerConsumer : ActivityObject
     {
         private CancellationTokenSource cancellationTokenSource;
         private Task processor;
 
-        protected override Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override Task StartingAsync(CancellationToken cancellationToken)
         {
             cancellationTokenSource = new CancellationTokenSource();
             var token = cancellationTokenSource.Token;
@@ -32,7 +32,7 @@ namespace System.Net.Pipes
             return CompletedTask;
         }
 
-        protected override async Task OnDisconnectAsync()
+        protected override async Task StoppingAsync()
         {
             using(cancellationTokenSource)
             {

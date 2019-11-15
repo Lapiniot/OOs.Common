@@ -12,7 +12,7 @@ namespace System.Net.Pipes
     /// Provides base abstract class for pipe data consumer.
     /// </summary>
     [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
-    public abstract class PipeConsumer : ConnectedObject
+    public abstract class PipeConsumer : ActivityObject
     {
         private readonly PipeReader reader;
         private CancellationTokenSource cancellationTokenSource;
@@ -27,13 +27,13 @@ namespace System.Net.Pipes
         {
             get
             {
-                if(!IsConnected) throw new InvalidOperationException(Strings.PipeNotStarted);
+                if(!IsRunning) throw new InvalidOperationException(Strings.PipeNotStarted);
 
                 return consumer;
             }
         }
 
-        protected override Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override Task StartingAsync(CancellationToken cancellationToken)
         {
             cancellationTokenSource = new CancellationTokenSource();
 
@@ -42,7 +42,7 @@ namespace System.Net.Pipes
             return CompletedTask;
         }
 
-        protected override async Task OnDisconnectAsync()
+        protected override async Task StoppingAsync()
         {
             using(cancellationTokenSource)
             {

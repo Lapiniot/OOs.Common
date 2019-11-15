@@ -37,7 +37,7 @@ namespace System.Net.Connections
 
         public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            CheckConnected();
+            CheckState(true);
             try
             {
                 var vt = socket.ReceiveAsync(buffer, None, cancellationToken);
@@ -47,14 +47,14 @@ namespace System.Net.Connections
                 se.SocketErrorCode == ConnectionAborted ||
                 se.SocketErrorCode == ConnectionReset)
             {
-                await DisconnectAsync().ConfigureAwait(false);
+                await StopActivityAsync().ConfigureAwait(false);
                 throw new ConnectionAbortedException(se);
             }
         }
 
         public override async ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            CheckConnected();
+            CheckState(true);
             try
             {
                 var vt = socket.SendAsync(buffer, None, cancellationToken);
@@ -64,12 +64,12 @@ namespace System.Net.Connections
                 se.SocketErrorCode == ConnectionAborted ||
                 se.SocketErrorCode == ConnectionReset)
             {
-                await DisconnectAsync().ConfigureAwait(false);
+                await StopActivityAsync().ConfigureAwait(false);
                 throw new ConnectionAbortedException(se);
             }
         }
 
-        protected override Task OnDisconnectAsync()
+        protected override Task StoppingAsync()
         {
             socket.Shutdown(Both);
 
@@ -80,7 +80,7 @@ namespace System.Net.Connections
             return CompletedTask;
         }
 
-        protected override async Task OnConnectAsync(CancellationToken cancellationToken)
+        protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
             try
             {
