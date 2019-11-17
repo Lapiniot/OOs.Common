@@ -100,14 +100,14 @@ namespace System.Net.Pipes
                     var buffer = writer.GetMemory();
 
                     var rt = connection.ReceiveAsync(buffer, token);
-                    var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
+                    var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
 
                     if(received == 0) break;
 
                     writer.Advance(received);
 
                     var ft = writer.FlushAsync(token);
-                    var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.AsTask().ConfigureAwait(false);
+                    var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.ConfigureAwait(false);
 
                     if(result.IsCompleted || result.IsCanceled) break;
                 }

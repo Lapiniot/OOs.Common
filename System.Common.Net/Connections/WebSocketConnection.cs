@@ -62,7 +62,7 @@ namespace System.Net.Connections
             {
                 var vt = socket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken);
 
-                if(!vt.IsCompletedSuccessfully) await vt.AsTask().ConfigureAwait(false);
+                if(!vt.IsCompletedSuccessfully) await vt.ConfigureAwait(false);
 
                 return buffer.Length;
             }
@@ -79,7 +79,7 @@ namespace System.Net.Connections
             {
                 var vt = socket.ReceiveAsync(buffer, cancellationToken);
 
-                var result = vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.AsTask().ConfigureAwait(false);
+                var result = vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.ConfigureAwait(false);
 
                 if(result.MessageType != WebSocketMessageType.Close) return result.Count;
 

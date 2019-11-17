@@ -41,7 +41,7 @@ namespace System.Net.Connections
             try
             {
                 var vt = socket.ReceiveAsync(buffer, None, cancellationToken);
-                return vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
+                return vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
             }
             catch(SocketException se) when(
                 se.SocketErrorCode == ConnectionAborted ||
@@ -58,7 +58,7 @@ namespace System.Net.Connections
             try
             {
                 var vt = socket.SendAsync(buffer, None, cancellationToken);
-                return vt.IsCompletedSuccessfully ? vt.Result : await vt.AsTask().ConfigureAwait(false);
+                return vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
             }
             catch(SocketException se) when(
                 se.SocketErrorCode == ConnectionAborted ||

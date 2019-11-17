@@ -50,14 +50,14 @@ namespace System.Net.Pipes
                     var buffer = writer.GetMemory();
 
                     var rt = ReceiveAsync(buffer, cancellationToken);
-                    var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
+                    var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
 
                     if(received == 0) break;
 
                     writer.Advance(received);
 
                     var ft = writer.FlushAsync(cancellationToken);
-                    var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.AsTask().ConfigureAwait(false);
+                    var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.ConfigureAwait(false);
 
                     if(result.IsCompleted || result.IsCanceled) break;
                 }
@@ -82,7 +82,7 @@ namespace System.Net.Pipes
                 while(!cancellationToken.IsCancellationRequested)
                 {
                     var rt = reader.ReadAsync(cancellationToken);
-                    var result = rt.IsCompletedSuccessfully ? rt.Result : await rt.AsTask().ConfigureAwait(false);
+                    var result = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
 
                     var buffer = result.Buffer;
 
