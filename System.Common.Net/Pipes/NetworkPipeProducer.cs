@@ -3,7 +3,6 @@ using System.Net.Connections;
 using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Properties.Strings;
-using static System.Threading.LazyThreadSafetyMode;
 
 namespace System.Net.Pipes
 {
@@ -14,13 +13,17 @@ namespace System.Net.Pipes
     /// </summary>
     public sealed class NetworkPipeProducer : PipeReader, IAsyncDisposable
     {
+        private const int Stopped = 0;
+        private const int Started = 1;
+        private const int Stopping = 2;
+        private int stateGuard;
         private readonly INetworkConnection connection;
         private readonly PipeOptions pipeOptions;
         private bool disposed;
         private CancellationTokenSource globalTokenSource;
         private PipeReader pipeReader;
         private PipeWriter pipeWriter;
-        private Lazy<Task> producer;
+        private Task producer;
 
         public NetworkPipeProducer(INetworkConnection connection, PipeOptions pipeOptions = null)
         {
@@ -50,40 +53,44 @@ namespace System.Net.Pipes
         {
             CheckDisposed();
 
-            if(Interlocked.CompareExchange(ref producer, new Lazy<Task>(StartAsync, ExecutionAndPublication), null) == null)
+            switch(Interlocked.CompareExchange(ref stateGuard, Started, Stopped))
             {
-                var _ = producer.Value;
+                case Stopped:
+                    var cts = new CancellationTokenSource();
+                    globalTokenSource = cts;
+                    (pipeReader, pipeWriter) = new Pipe(pipeOptions);
+                    producer = StartProducerAsync(pipeWriter, cts.Token);
+                    break;
+                case Stopping:
+                    throw new InvalidOperationException("Cannot start in this state, currently in stopping transition.");
             }
         }
 
         public async ValueTask StopAsync()
         {
-            var localProducer = producer;
-            var localSource = globalTokenSource;
+            var local = producer;
 
-            if(localSource != null && localProducer != null)
+            switch(Interlocked.CompareExchange(ref stateGuard, Stopping, Started))
             {
-                try
-                {
-                    localSource.Cancel();
-                    await localProducer.Value.ConfigureAwait(false);
-                }
-                finally
-                {
-                    if(Interlocked.CompareExchange(ref producer, null, localProducer) == localProducer)
+                case Started:
+                    // we are responsible for cancellation and cleanup
+                    globalTokenSource.Cancel();
+                    try
                     {
-                        localSource.Dispose();
+                        await local.ConfigureAwait(false);
                     }
-                }
-            }
-        }
+                    finally
+                    {
+                        globalTokenSource.Dispose();
+                        Interlocked.Exchange(ref stateGuard, Stopped);
+                    }
 
-        private async Task StartAsync()
-        {
-            var tokenSource = new CancellationTokenSource();
-            (pipeReader, pipeWriter) = new Pipe(pipeOptions);
-            globalTokenSource = tokenSource;
-            await StartProducerAsync(pipeWriter, tokenSource.Token).ConfigureAwait(false);
+                    break;
+                case Stopping:
+                    // stopping in progress already, wait for currently active task in flight
+                    await local.ConfigureAwait(false);
+                    break;
+            }
         }
 
         private void CheckDisposed()
