@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static System.Threading.Tasks.Task;
 
-namespace System.Net.Pipes
+namespace System.Net.Pipelines
 {
     /// <summary>
     /// Provides base abstract class for pipe data consumer.

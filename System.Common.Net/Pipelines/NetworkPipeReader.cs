@@ -4,19 +4,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using static System.Net.Properties.Strings;
 
-namespace System.Net.Pipes
+namespace System.Net.Pipelines
 {
     /// <summary>
     /// Provides generic pipe data producer which reads data from abstract <seealso cref="INetworkConnection" />
     /// on data arrival and writes it to the pipe. Reads by consumers are supported via
     /// implemented <seealso cref="System.IO.Pipelines.PipeReader" /> methods.
     /// </summary>
-    public sealed class NetworkPipeProducer : PipeReader, IAsyncDisposable
+    public sealed class NetworkPipeReader : PipeReader, IAsyncDisposable
     {
         private const int Stopped = 0;
         private const int Started = 1;
         private const int Stopping = 2;
-        private int stateGuard;
         private readonly INetworkConnection connection;
         private readonly PipeOptions pipeOptions;
         private bool disposed;
@@ -24,8 +23,9 @@ namespace System.Net.Pipes
         private PipeReader pipeReader;
         private PipeWriter pipeWriter;
         private Task producer;
+        private int stateGuard;
 
-        public NetworkPipeProducer(INetworkConnection connection, PipeOptions pipeOptions = null)
+        public NetworkPipeReader(INetworkConnection connection, PipeOptions pipeOptions = null)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
             this.pipeOptions = pipeOptions ?? new PipeOptions(useSynchronizationContext: false);

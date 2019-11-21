@@ -1,6 +1,6 @@
 ﻿using System.IO.Pipelines;
 
-namespace System.Net.Pipes
+namespace System.Net.Pipelines
 {
     public static class PipeExtensions
     {
