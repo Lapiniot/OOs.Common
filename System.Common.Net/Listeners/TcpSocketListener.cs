@@ -1,15 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Sockets.ProtocolType;
-using static System.Net.Sockets.SocketType;
 
 namespace System.Net.Listeners
 {
-    public sealed class TcpSocketListener : ConnectionListener
+    public sealed class TcpSocketListener : IAsyncEnumerable<INetworkConnection>
     {
         private readonly int backlog;
         private readonly IPEndPoint ipEndPoint;
@@ -20,23 +18,66 @@ namespace System.Net.Listeners
             this.backlog = backlog;
         }
 
-        protected override async IAsyncEnumerable<INetworkConnection> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken)
+        #region Implementation of IAsyncEnumerable<out INetworkConnection>
+
+        public IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            using var socket = new Socket(ipEndPoint.AddressFamily, Stream, Tcp);
-            await using var _ = cancellationToken.Register(socket.Close).ConfigureAwait(false);
-
-            socket.Bind(ipEndPoint);
-            socket.Listen(backlog);
-
-            while(!cancellationToken.IsCancellationRequested)
-            {
-                yield return new TcpSocketServerConnection(await socket.AcceptAsync().ConfigureAwait(false));
-            }
+            return new TcpSocketEnumerator(ipEndPoint, backlog, cancellationToken);
         }
+
+        #endregion
 
         public override string ToString()
         {
             return $"{nameof(TcpSocketListener)}: tcp://{ipEndPoint}";
+        }
+
+        [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Implements IAsyncDisposable instead")]
+        private class TcpSocketEnumerator : IAsyncEnumerator<INetworkConnection>
+        {
+            private readonly CancellationToken cancellationToken;
+            private readonly Socket socket;
+            private INetworkConnection current;
+
+            public TcpSocketEnumerator(IPEndPoint endPoint, in int backlog, CancellationToken cancellationToken)
+            {
+                if(endPoint == null) throw new ArgumentNullException(nameof(endPoint));
+                this.cancellationToken = cancellationToken;
+
+                socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                socket.Bind(endPoint);
+                socket.Listen(backlog);
+            }
+
+            #region Implementation of IAsyncDisposable
+
+            public ValueTask DisposeAsync()
+            {
+                socket.Close();
+                return default;
+            }
+
+            #endregion
+
+            #region Implementation of IAsyncEnumerator<out INetworkConnection>
+
+            public async ValueTask<bool> MoveNextAsync()
+            {
+                try
+                {
+                    var acceptedSocket = await socket.AcceptAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+                    current = new TcpSocketServerConnection(acceptedSocket);
+                    return true;
+                }
+                catch(OperationCanceledException)
+                {
+                    return false;
+                }
+            }
+
+            public INetworkConnection Current => current;
+
+            #endregion
         }
     }
 }
