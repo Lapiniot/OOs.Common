@@ -26,7 +26,8 @@ namespace System.Net.Listeners
         }
 
         public WebSocketListener(string[] prefixes, params string[] subProtocols) :
-            this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize) {}
+            this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
+        { }
 
         #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
@@ -51,7 +52,6 @@ namespace System.Net.Listeners
             private readonly int receiveBufferSize;
             private readonly bool shouldMatchSubProtocol;
             private readonly string[] subProtocols;
-            private INetworkConnection current;
 
             public WebSocketEnumerator(string[] prefixes, string[] subProtocols, in TimeSpan keepAliveInterval,
                 in int receiveBufferSize, CancellationToken cancellationToken)
@@ -73,7 +73,7 @@ namespace System.Net.Listeners
 
             public ValueTask DisposeAsync()
             {
-                listener.Abort();
+                listener.Close();
                 return default;
             }
 
@@ -125,7 +125,7 @@ namespace System.Net.Listeners
                         {
                             var socketContext = await context.AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval)
                                 .WaitAsync(cancellationToken).ConfigureAwait(false);
-                            current = new WebSocketServerConnection(socketContext.WebSocket, context.Request.RemoteEndPoint);
+                            Current = new WebSocketServerConnection(socketContext.WebSocket, context.Request.RemoteEndPoint);
                             return true;
                         }
                         catch
@@ -135,12 +135,15 @@ namespace System.Net.Listeners
                         }
                     }
                 }
-                catch(OperationCanceledException) {}
+                catch(OperationCanceledException)
+                {
+                    listener.Stop();
+                }
 
                 return false;
             }
 
-            public INetworkConnection Current => current;
+            public INetworkConnection Current { get; private set; }
 
             #endregion
         }
