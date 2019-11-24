@@ -2,6 +2,9 @@ using System.Net.Connections.Exceptions;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Net.WebSockets.WebSocketError;
+using static System.Net.WebSockets.WebSocketState;
+using static System.Net.WebSockets.WebSocketCloseStatus;
 
 namespace System.Net.Connections
 {
@@ -38,17 +41,16 @@ namespace System.Net.Connections
 
         #region Implementation of IConnectedObject
 
-        public bool IsConnected => socket?.State == WebSocketState.Open;
+        public bool IsConnected => socket?.State == Open;
 
         public abstract Task ConnectAsync(CancellationToken cancellationToken = default);
 
         public virtual async Task DisconnectAsync()
         {
             var state = socket.State;
-
-            if(state == WebSocketState.Open || state == WebSocketState.CloseReceived || state == WebSocketState.CloseSent)
+            if(state == Open || (state == CloseReceived && socket.CloseStatus == NormalClosure))
             {
-                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Good bye.", default).ConfigureAwait(false);
+                await socket.CloseAsync(NormalClosure, "Good bye.", default).ConfigureAwait(false);
             }
         }
 
@@ -66,9 +68,8 @@ namespace System.Net.Connections
 
                 return buffer.Length;
             }
-            catch(WebSocketException wse) when(wse.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+            catch(WebSocketException wse) when(wse.WebSocketErrorCode == ConnectionClosedPrematurely)
             {
-                await DisconnectAsync().ConfigureAwait(false);
                 throw new ConnectionAbortedException(wse);
             }
         }
@@ -79,7 +80,7 @@ namespace System.Net.Connections
             {
                 var vt = socket.ReceiveAsync(buffer, cancellationToken);
 
-                var result = vt.IsCompleted ? vt.GetAwaiter().GetResult() : await vt.ConfigureAwait(false);
+                var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
                 if(result.MessageType != WebSocketMessageType.Close) return result.Count;
 
@@ -87,9 +88,8 @@ namespace System.Net.Connections
 
                 return 0;
             }
-            catch(WebSocketException wse) when(wse.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+            catch(WebSocketException wse) when(wse.WebSocketErrorCode == ConnectionClosedPrematurely)
             {
-                await DisconnectAsync().ConfigureAwait(false);
                 throw new ConnectionAbortedException(wse);
             }
         }
