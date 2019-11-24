@@ -16,8 +16,11 @@ namespace System
 
         public IDisposable Subscribe(IObserver<T> observer)
         {
-            return observers?.GetOrAdd(observer, o => new Subscription(o, this)) ??
-                   throw new InvalidOperationException("Container doesn't support subscription in current state.");
+            return observers switch
+            {
+                { } => observers.GetOrAdd(observer, o => new Subscription(o, this)),
+                null => throw new InvalidOperationException("Container doesn't support subscription in the current state.")
+            };
         }
 
         private void Unsubscribe(IObserver<T> observer)
@@ -28,7 +31,7 @@ namespace System
         [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
         public void Notify(T value)
         {
-            Parallel.ForEach(observers, (pair, state) =>
+            Parallel.ForEach(observers, (pair, _) =>
             {
                 try
                 {
@@ -44,7 +47,7 @@ namespace System
         [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
         public void NotifyError(Exception error)
         {
-            Parallel.ForEach(observers, (pair, state) =>
+            Parallel.ForEach(observers, (pair, _) =>
             {
                 try
                 {
@@ -60,7 +63,7 @@ namespace System
         [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
         public void NotifyCompleted()
         {
-            Parallel.ForEach(observers, (pair, state) =>
+            Parallel.ForEach(observers, (pair, _) =>
             {
                 try
                 {
@@ -96,27 +99,34 @@ namespace System
 
         private bool disposed;
 
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
         protected virtual void Dispose(bool disposing)
         {
-            if(!disposed)
+            if(disposed) return;
+
+            if(disposing)
             {
-                if(disposing)
+                var cached = Interlocked.Exchange(ref observers, null);
+
+                if(cached != null)
                 {
-                    var cached = Interlocked.Exchange(ref observers, null);
-
-                    if(cached != null)
+                    Parallel.ForEach(cached, (p, _) =>
                     {
-                        foreach(var pair in cached)
+                        try
                         {
-                            pair.Key.OnCompleted();
+                            p.Key.OnCompleted();
                         }
+                        catch
+                        {
+                            // ignored
+                        }
+                    });
 
-                        cached.Clear();
-                    }
+                    cached.Clear();
                 }
-
-                disposed = true;
             }
+
+            disposed = true;
         }
 
         public void Dispose()
