@@ -3,21 +3,22 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Threading
 {
-    public class IntervalWorkerLoop<T> : WorkerLoopBase<T>
+    public sealed class IntervalWorkerLoop : WorkerBase
     {
+        private readonly Func<CancellationToken, Task> asyncWork;
         private readonly TimeSpan interval;
 
-        public IntervalWorkerLoop(Func<T, CancellationToken, Task> asyncWork, T state, TimeSpan interval) :
-            base(asyncWork, state)
+        public IntervalWorkerLoop(Func<CancellationToken, Task> asyncWork, TimeSpan interval)
         {
+            this.asyncWork = asyncWork ?? throw new ArgumentNullException(nameof(asyncWork));
             this.interval = interval;
         }
 
-        protected override async Task RunAsync(T state, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             while(!cancellationToken.IsCancellationRequested)
             {
-                await DoWorkAsync(state, cancellationToken).ConfigureAwait(false);
+                await asyncWork(cancellationToken).ConfigureAwait(false);
                 await Delay(interval, cancellationToken).ConfigureAwait(false);
             }
         }

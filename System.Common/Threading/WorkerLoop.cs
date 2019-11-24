@@ -2,17 +2,20 @@
 
 namespace System.Threading
 {
-    public class WorkerLoop<T> : WorkerLoopBase<T>
+    public sealed class WorkerLoop : WorkerBase
     {
-        public WorkerLoop(Func<T, CancellationToken, Task> asyncWork, T state) :
-            base(asyncWork, state) {}
+        private readonly Func<CancellationToken, Task> asyncWork;
 
+        public WorkerLoop(Func<CancellationToken, Task> asyncWork)
+        {
+            this.asyncWork = asyncWork ?? throw new ArgumentNullException(nameof(asyncWork));
+        }
 
-        protected override async Task RunAsync(T state, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             while(!cancellationToken.IsCancellationRequested)
             {
-                await DoWorkAsync(state, cancellationToken).ConfigureAwait(false);
+                await asyncWork(cancellationToken).ConfigureAwait(false);
             }
         }
     }

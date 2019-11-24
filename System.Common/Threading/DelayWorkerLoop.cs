@@ -3,23 +3,31 @@ using static System.Threading.CancellationTokenSource;
 
 namespace System.Threading
 {
-    public class DelayWorkerLoop<T> : WorkerLoopBase<T>
+    public sealed class DelayWorkerLoop : WorkerBase
     {
         public const int Infinite = -1;
+        private readonly Func<CancellationToken, Task> asyncWork;
         private readonly TimeSpan delay;
         private readonly int maxIterations;
         private int iteration;
         private CancellationTokenSource resetSource;
 
-        public DelayWorkerLoop(Func<T, CancellationToken, Task> asyncWork, T state,
-            TimeSpan delay, int maxIterations = Infinite) : base(asyncWork, state)
+        public DelayWorkerLoop(Func<CancellationToken, Task> asyncWork, TimeSpan delay, int maxIterations = Infinite)
         {
+            this.asyncWork = asyncWork ?? throw new ArgumentNullException(nameof(asyncWork));
             this.delay = delay;
             this.maxIterations = maxIterations;
         }
 
+        public void ResetDelay()
+        {
+            using var source = Interlocked.Exchange(ref resetSource, new CancellationTokenSource());
+            source?.Cancel();
+        }
 
-        protected override async Task RunAsync(T state, CancellationToken cancellationToken)
+        #region Overrides of WorkerBase
+
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             ResetDelay();
 
@@ -29,26 +37,9 @@ namespace System.Threading
                 using var linkedSource = CreateLinkedTokenSource(cancellationToken, resetSource.Token);
 
                 await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
-                await DoWorkAsync(state, cancellationToken).ConfigureAwait(false);
+                await asyncWork(cancellationToken).ConfigureAwait(false);
 
                 iteration++;
-            }
-        }
-
-        public void ResetDelay()
-        {
-            CheckDisposed();
-            using var source = Interlocked.Exchange(ref resetSource, new CancellationTokenSource());
-            source?.Cancel();
-        }
-
-        #region Overrides of WorkerLoopBase<T>
-
-        public override async ValueTask DisposeAsync()
-        {
-            using(resetSource)
-            {
-                await base.DisposeAsync().ConfigureAwait(false);
             }
         }
 
