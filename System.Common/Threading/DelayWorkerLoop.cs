@@ -36,10 +36,15 @@ namespace System.Threading
             {
                 using var linkedSource = CreateLinkedTokenSource(cancellationToken, resetSource.Token);
 
-                await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
-                await asyncWork(cancellationToken).ConfigureAwait(false);
-
-                iteration++;
+                try
+                {
+                    await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
+                    await asyncWork(cancellationToken).ConfigureAwait(false);
+                    iteration++;
+                }
+                catch(OperationCanceledException)
+                {
+                }
             }
         }
 
