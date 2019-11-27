@@ -1,4 +1,4 @@
-namespace System
+namespace System.Properties
 {
     internal static class Strings
     {

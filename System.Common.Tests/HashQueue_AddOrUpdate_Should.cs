@@ -30,7 +30,7 @@ namespace System.Common.Tests
         {
             var hashQueue = CreateSampleHashQueue();
 
-            var expected = "value 4";
+            const string expected = "value 4";
 
             var actual = hashQueue.AddOrUpdate("key4", expected, (k, v) => "");
 
@@ -114,7 +114,7 @@ namespace System.Common.Tests
         {
             var hashQueue = CreateSampleHashQueue();
 
-            var expected = "updated value";
+            const string expected = "updated value";
             var actual = hashQueue.AddOrUpdate("key2", "value 2-2", (k, v) => expected);
 
             Assert.AreEqual(expected, actual);
@@ -145,7 +145,7 @@ namespace System.Common.Tests
             const string value2 = "value 2";
             const string value3 = "value 3";
 
-            var expected = "updated value 2";
+            const string expected = "updated value 2";
 
             var actual = hashQueue.AddOrUpdate(key2, value2, (k, v) => expected);
 
@@ -175,7 +175,7 @@ namespace System.Common.Tests
             const string key2 = "key2";
             const string key3 = "key3";
 
-            var expected = "updated value 2";
+            const string expected = "updated value 2";
             var actual = hashQueue.AddOrUpdate(key2, "", (k, v) => expected);
 
             Assert.AreEqual(expected, actual);

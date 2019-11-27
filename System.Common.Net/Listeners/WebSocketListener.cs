@@ -26,8 +26,7 @@ namespace System.Net.Listeners
         }
 
         public WebSocketListener(string[] prefixes, params string[] subProtocols) :
-            this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
-        { }
+            this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize) {}
 
         #region Implementation of IAsyncEnumerable<out INetworkConnection>
 

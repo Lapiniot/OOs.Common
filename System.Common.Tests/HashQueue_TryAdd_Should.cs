@@ -9,7 +9,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnTrue_InitializeReferences_GivenFirstKey()
         {
-            var hq = new HashQueueCollection<int, string>();
+            using var hq = new HashQueueCollection<int, string>();
 
             var actual = hq.TryAdd(1, "value 1");
 
@@ -26,12 +26,12 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnTrue_AddNode_GivenNonExistingKey()
         {
-            var key1 = "1";
-            var value1 = "value 1";
-            var key2 = "2";
-            var value2 = "value 2";
+            const string key1 = "1";
+            const string value1 = "value 1";
+            const string key2 = "2";
+            const string value2 = "value 2";
 
-            var hq = new HashQueueCollection<string, string>();
+            using var hq = new HashQueueCollection<string, string>();
 
             var actual = hq.TryAdd(key1, value1);
 
@@ -51,8 +51,8 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnFalse_DoNotChangeNode_GivenExistingKey()
         {
-            var hq = new HashQueueCollection<int, string>();
-            var expectedValue = "old value";
+            using var hq = new HashQueueCollection<int, string>();
+            const string expectedValue = "old value";
             hq.TryAdd(1, expectedValue);
 
             var actual = hq.TryAdd(1, "new value");
@@ -65,7 +65,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnTrue_UpdateHeadAndTail_GivenNotFirstKeys()
         {
-            var hq = new HashQueueCollection<int, string>();
+            using var hq = new HashQueueCollection<int, string>();
             hq.TryAdd(1, "value 1");
             var node1 = hq.Map[1];
 
@@ -91,7 +91,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnFalse_DoNotUpdateHeadAndTail_GivenExistingKeys()
         {
-            var hq = new HashQueueCollection<int, string>();
+            using var hq = new HashQueueCollection<int, string>();
             hq.TryAdd(1, "value 1");
             var node1 = hq.Map[1];
 
@@ -105,7 +105,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnTrue_UpdateNodeReferences_GivenNotFirstKeys()
         {
-            var hq = new HashQueueCollection<int, string>();
+            using var hq = new HashQueueCollection<int, string>();
             hq.TryAdd(1, "value 1");
             var node1 = hq.Map[1];
 
@@ -135,7 +135,8 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnFalse_DoNotUpdateNodeReferences_GivenExistingKeys()
         {
-            var hq = new HashQueueCollection<int, string>();
+            using var hq = new HashQueueCollection<int, string>();
+
             hq.TryAdd(1, "value 1");
             var node1 = hq.Map[1];
             hq.TryAdd(2, "value 2");
@@ -153,15 +154,15 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnTrue_DoNotAffectExistingSlots_GivenNewPairs()
         {
-            var hq = new HashQueueCollection<string, string>();
+            using var hq = new HashQueueCollection<string, string>();
 
-            var value1 = "value 1";
-            var key1 = "1";
+            const string value1 = "value 1";
+            const string key1 = "1";
             hq.TryAdd(key1, value1);
             var node1 = hq.Map[key1];
 
-            var value2 = "value 2";
-            var key2 = "2";
+            const string value2 = "value 2";
+            const string key2 = "2";
             hq.TryAdd(key2, value2);
             var node2 = hq.Map[key2];
 
@@ -178,15 +179,15 @@ namespace System.Common.Tests
         [TestMethod]
         public void ReturnFalse_DoNotAffectExistingSlots_GivenExistingKeys()
         {
-            var hq = new HashQueueCollection<string, string>();
+            using var hq = new HashQueueCollection<string, string>();
 
-            var value1 = "value 1";
-            var key1 = "1";
+            const string value1 = "value 1";
+            const string key1 = "1";
             hq.TryAdd(key1, value1);
             var node1 = hq.Map[key1];
 
-            var value2 = "value 2";
-            var key2 = "2";
+            const string value2 = "value 2";
+            const string key2 = "2";
             hq.TryAdd(key2, value2);
             var node2 = hq.Map[key2];
 
@@ -203,7 +204,7 @@ namespace System.Common.Tests
         [TestMethod]
         public void Throw_ArgumentNullException_GivenKey_Null()
         {
-            var hq = new HashQueueCollection<string, string>();
+            using var hq = new HashQueueCollection<string, string>();
             Assert.ThrowsException<ArgumentNullException>(() => hq.TryAdd(null, "test value"));
         }
     }

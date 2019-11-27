@@ -16,11 +16,6 @@ namespace System.Net.Sockets
 
     public static class SocketFactory
     {
-        private sealed class UdpSocket : Socket
-        {
-            public UdpSocket(AddressFamily addressFamily = InterNetwork) : base(addressFamily, Dgram, ProtocolType.Udp) { }
-        }
-
         public static Socket CreateUdpBroadcast()
         {
             var socket = new UdpSocket();
@@ -45,15 +40,14 @@ namespace System.Net.Sockets
                                                                                    i.NetworkInterfaceType != GenericModem && i.NetworkInterfaceType != Tunnel);
             var interfaceProperties = @interface.GetIPProperties();
 
-            if(interfaceProperties != null && interfaceProperties.MulticastAddresses.Any())
-            {
-                var properties = interfaceProperties.GetIPv4Properties();
+            if(interfaceProperties == null || !interfaceProperties.MulticastAddresses.Any()) return udpSocket;
 
-                if(properties != null) udpSocket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
+            var properties = interfaceProperties.GetIPv4Properties();
 
-                udpSocket.SetSocketOption(IP, MulticastTimeToLive, 1);
-                udpSocket.SetSocketOption(IP, MulticastLoopback, 1);
-            }
+            if(properties != null) udpSocket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
+
+            udpSocket.SetSocketOption(IP, MulticastTimeToLive, 1);
+            udpSocket.SetSocketOption(IP, MulticastLoopback, 1);
 
             return udpSocket;
         }
@@ -62,7 +56,7 @@ namespace System.Net.Sockets
         {
             if(group is null) throw new ArgumentNullException(nameof(group));
 
-            var socket = new UdpSocket { ExclusiveAddressUse = false };
+            var socket = new UdpSocket {ExclusiveAddressUse = false};
 
             socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, true);
 
@@ -72,6 +66,11 @@ namespace System.Net.Sockets
             socket.SetSocketOption(IP, MulticastTimeToLive, 64);
 
             return socket;
+        }
+
+        private sealed class UdpSocket : Socket
+        {
+            public UdpSocket(AddressFamily addressFamily = InterNetwork) : base(addressFamily, Dgram, ProtocolType.Udp) {}
         }
     }
 }

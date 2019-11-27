@@ -4,16 +4,14 @@ namespace System.Net.Connections.Exceptions
     {
         protected internal const string HostNotFound = "Host not found.";
 
-        public HostNotFoundException() : base(HostNotFound) { }
+        public HostNotFoundException() : base(HostNotFound) {}
 
         public HostNotFoundException(string message, Exception innerException) :
-            base(message, innerException)
-        { }
+            base(message, innerException) {}
 
         public HostNotFoundException(Exception innerException) :
-            base(HostNotFound, innerException)
-        { }
+            base(HostNotFound, innerException) {}
 
-        public HostNotFoundException(string message) : base(message) { }
+        public HostNotFoundException(string message) : base(message) {}
     }
 }

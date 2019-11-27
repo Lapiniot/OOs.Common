@@ -9,6 +9,7 @@ namespace System.Threading
         private readonly Func<CancellationToken, Task> asyncWork;
         private readonly TimeSpan delay;
         private readonly int maxIterations;
+
         private int iteration;
         private CancellationTokenSource resetSource;
 
@@ -21,30 +22,46 @@ namespace System.Threading
 
         public void ResetDelay()
         {
-            using var source = Interlocked.Exchange(ref resetSource, new CancellationTokenSource());
-            source?.Cancel();
+            Volatile.Read(ref resetSource)?.Cancel();
         }
 
         #region Overrides of WorkerBase
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            ResetDelay();
+            ResetCancellationState(out var tokenSource, out var linkedSource);
 
-            while(!cancellationToken.IsCancellationRequested &&
-                  (maxIterations == Infinite || iteration < maxIterations))
+            try
             {
-                using var linkedSource = CreateLinkedTokenSource(cancellationToken, resetSource.Token);
+                while(!stoppingToken.IsCancellationRequested &&
+                      (maxIterations == Infinite || iteration < maxIterations))
+                {
+                    try
+                    {
+                        await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
+                        await asyncWork(stoppingToken).ConfigureAwait(false);
+                        iteration++;
+                    }
+                    catch(OperationCanceledException)
+                    {
+                        if(stoppingToken.IsCancellationRequested) break;
+                        linkedSource.Dispose();
+                        ResetCancellationState(out tokenSource, out linkedSource).Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref resetSource, null);
+                linkedSource.Dispose();
+                tokenSource.Dispose();
+            }
 
-                try
-                {
-                    await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
-                    await asyncWork(cancellationToken).ConfigureAwait(false);
-                    iteration++;
-                }
-                catch(OperationCanceledException)
-                {
-                }
+            CancellationTokenSource ResetCancellationState(out CancellationTokenSource resetTokenSource, out CancellationTokenSource linkedTokenSource)
+            {
+                resetTokenSource = new CancellationTokenSource();
+                linkedTokenSource = CreateLinkedTokenSource(stoppingToken, resetTokenSource.Token);
+                return Interlocked.Exchange(ref resetSource, resetTokenSource);
             }
         }
 

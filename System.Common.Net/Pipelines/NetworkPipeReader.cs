@@ -19,7 +19,7 @@ namespace System.Net.Pipelines
         private readonly INetworkConnection connection;
         private readonly PipeOptions pipeOptions;
         private bool disposed;
-        private CancellationTokenSource globalTokenSource;
+        private CancellationTokenSource globalCts;
         private PipeReader pipeReader;
         private PipeWriter pipeWriter;
         private Task producer;
@@ -57,7 +57,7 @@ namespace System.Net.Pipelines
             {
                 case Stopped:
                     var cts = new CancellationTokenSource();
-                    globalTokenSource = cts;
+                    globalCts = cts;
                     (pipeReader, pipeWriter) = new Pipe(pipeOptions);
                     producer = StartProducerAsync(pipeWriter, cts.Token);
                     break;
@@ -68,27 +68,28 @@ namespace System.Net.Pipelines
 
         public async ValueTask StopAsync()
         {
-            var local = producer;
+            var localWorker = producer;
+            var localCts = globalCts;
 
             switch(Interlocked.CompareExchange(ref stateGuard, Stopping, Started))
             {
                 case Started:
                     // we are responsible for cancellation and cleanup
-                    globalTokenSource.Cancel();
+                    localCts.Cancel();
                     try
                     {
-                        await local.ConfigureAwait(false);
+                        await localWorker.ConfigureAwait(false);
                     }
                     finally
                     {
-                        globalTokenSource.Dispose();
+                        localCts.Dispose();
                         Interlocked.Exchange(ref stateGuard, Stopped);
                     }
 
                     break;
                 case Stopping:
                     // stopping in progress already, wait for currently active task in flight
-                    await local.ConfigureAwait(false);
+                    await localWorker.ConfigureAwait(false);
                     break;
             }
         }

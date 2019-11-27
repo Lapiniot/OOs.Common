@@ -48,7 +48,7 @@ namespace System.Net.Connections
         public virtual async Task DisconnectAsync()
         {
             var state = socket.State;
-            if(state == Open || (state == CloseReceived && socket.CloseStatus == NormalClosure))
+            if(state == Open || state == CloseReceived && socket.CloseStatus == NormalClosure)
             {
                 await socket.CloseAsync(NormalClosure, "Good bye.", default).ConfigureAwait(false);
             }

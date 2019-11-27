@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 namespace System
 {
     /// <summary>
-    /// Implements async state management template for any type which runs some activity and may be in two states only (Running/Stopped, Connected/Disconnected e.g.).
+    /// Implements async state management template for any type which runs some activity and may be in two states only
+    /// (Running/Stopped, Connected/Disconnected e.g.).
     /// </summary>
     [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Method implements IAsyncDisposable instead")]
     public abstract class ActivityObject : IAsyncDisposable

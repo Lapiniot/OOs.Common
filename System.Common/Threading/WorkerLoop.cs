@@ -11,11 +11,11 @@ namespace System.Threading
             this.asyncWork = asyncWork ?? throw new ArgumentNullException(nameof(asyncWork));
         }
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while(!cancellationToken.IsCancellationRequested)
+            while(!stoppingToken.IsCancellationRequested)
             {
-                await asyncWork(cancellationToken).ConfigureAwait(false);
+                await asyncWork(stoppingToken).ConfigureAwait(false);
             }
         }
     }

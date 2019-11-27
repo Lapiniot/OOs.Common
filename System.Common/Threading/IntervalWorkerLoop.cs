@@ -14,12 +14,12 @@ namespace System.Threading
             this.interval = interval;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while(!cancellationToken.IsCancellationRequested)
+            while(!stoppingToken.IsCancellationRequested)
             {
-                await asyncWork(cancellationToken).ConfigureAwait(false);
-                await Delay(interval, cancellationToken).ConfigureAwait(false);
+                await asyncWork(stoppingToken).ConfigureAwait(false);
+                await Delay(interval, stoppingToken).ConfigureAwait(false);
             }
         }
     }

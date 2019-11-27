@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace System.Net.Pipelines
     /// arrival via <see cref="ReceiveAsync" /> and writes to the pipe.
     /// Consumer loop consumes data from the pipe via <see cref="Consume" />.
     /// </summary>
-    [Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public abstract class PipeProducerConsumer : ActivityObject
     {
         private CancellationTokenSource cancellationTokenSource;
@@ -23,10 +24,10 @@ namespace System.Net.Pipelines
             cancellationTokenSource = new CancellationTokenSource();
             var token = cancellationTokenSource.Token;
 
-            var pipe = new Pipe();
+            var (reader, writer) = new Pipe();
 
-            var producer = StartProducerAsync(pipe.Writer, token);
-            var consumer = StartConsumerAsync(pipe.Reader, token);
+            var producer = StartProducerAsync(writer, token);
+            var consumer = StartConsumerAsync(reader, token);
             processor = WhenAll(producer, consumer);
 
             return CompletedTask;

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections.Exceptions;
 using System.Net.Sockets;
 using System.Threading;
@@ -13,7 +14,7 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Net.Connections
 {
-    [Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
+    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public class TcpSocketClientConnection : NetworkConnection
     {
         private readonly string hostNameOrAddress;

@@ -149,7 +149,7 @@ namespace System.Common.Tests
         {
             var hashQueue = CreateSampleHashQueue();
 
-            var expected = "value 4";
+            const string expected = "value 4";
 
             var actual = hashQueue.GetOrAdd("key4", expected);
 

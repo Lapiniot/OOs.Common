@@ -18,8 +18,8 @@ namespace System
         {
             return observers switch
             {
-                { } => observers.GetOrAdd(observer, o => new Subscription(o, this)),
-                null => throw new InvalidOperationException("Container doesn't support subscription in the current state.")
+                null => throw new InvalidOperationException("Container doesn't support subscription in the current state."),
+                _ => observers.GetOrAdd(observer, o => new Subscription(o, this))
             };
         }
 

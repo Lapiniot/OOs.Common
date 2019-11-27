@@ -8,7 +8,7 @@ namespace System.Net.Connections.Exceptions
 
         public ServerUnavailableException(string message) : base(message) {}
 
-        public ServerUnavailableException(Exception innerException) : 
+        public ServerUnavailableException(Exception innerException) :
             this(ServerUnavailable, innerException) {}
 
         public ServerUnavailableException(string message, Exception innerException) :

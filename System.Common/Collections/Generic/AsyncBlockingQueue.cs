@@ -45,11 +45,9 @@ namespace System.Collections.Generic
 
         public void Dispose()
         {
-            if(!disposed)
-            {
-                semaphore.Dispose();
-                disposed = true;
-            }
+            if(disposed) return;
+            semaphore.Dispose();
+            disposed = true;
         }
 
         #endregion
