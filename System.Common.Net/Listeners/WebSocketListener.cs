@@ -42,7 +42,7 @@ namespace System.Net.Listeners
             return $"{nameof(WebSocketListener)}: {string.Join(", ", prefixes)} ({string.Join(", ", subProtocols)})";
         }
 
-        [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Implements IAsyncDisposable instead")]
+        [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type Implements IAsyncDisposable instead")]
         private class WebSocketEnumerator : IAsyncEnumerator<INetworkConnection>
         {
             private readonly CancellationToken cancellationToken;
