@@ -4,8 +4,7 @@ using static System.Net.IPAddress;
 using static System.Net.NetworkInformation.NetworkInterfaceType;
 using static System.Net.NetworkInformation.OperationalStatus;
 using static System.Net.Sockets.AddressFamily;
-using static System.Net.Sockets.SocketOptionLevel;
-using static System.Net.Sockets.SocketOptionName;
+using static System.Net.Sockets.ProtocolType;
 using static System.Net.Sockets.SocketType;
 
 namespace System.Net.Sockets
@@ -16,61 +15,80 @@ namespace System.Net.Sockets
 
     public static class SocketFactory
     {
-        public static Socket CreateUdpBroadcast()
+        public static Socket CreateUdpBroadcast(AddressFamily addressFamily = InterNetwork)
         {
-            var socket = new UdpSocket();
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
-            return socket;
+            return new Socket(addressFamily, Dgram, Udp) { EnableBroadcast = true };
         }
 
         public static Socket CreateUdpConnected(IPEndPoint endpoint)
         {
-            var socket = new UdpSocket();
+            if(endpoint is null) throw new ArgumentNullException(nameof(endpoint));
+
+            var socket = new Socket(endpoint.AddressFamily, Dgram, Udp);
             socket.Connect(endpoint);
+
             return socket;
         }
 
-        public static Socket CreateUdpMulticastSender()
+        public static Socket CreateUdpIPv4MulticastSender()
         {
-            var udpSocket = new UdpSocket();
+            var socket = new Socket(InterNetwork, Dgram, Udp);
 
-            var @interface = NetworkInterface.GetAllNetworkInterfaces().First(i => i.SupportsMulticast && i.OperationalStatus == Up &&
-                                                                                   i.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
-                                                                                   i.NetworkInterfaceType != Ppp &&
-                                                                                   i.NetworkInterfaceType != GenericModem && i.NetworkInterfaceType != Tunnel);
-            var interfaceProperties = @interface.GetIPProperties();
+            var ipv4Properties = FindBestMulticastInterface().GetIPv4Properties() ??
+                throw new InvalidOperationException("Cannot get interface IPv4 configuration data.");
 
-            if(interfaceProperties == null || !interfaceProperties.MulticastAddresses.Any()) return udpSocket;
+            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, HostToNetworkOrder(ipv4Properties.Index));
+            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 1);
+            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastLoopback, 1);
 
-            var properties = interfaceProperties.GetIPv4Properties();
+            return socket;
+        }
 
-            if(properties != null) udpSocket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
+        public static Socket CreateUdpIPv6MulticastSender()
+        {
+            var socket = new Socket(InterNetworkV6, Dgram, Udp);
 
-            udpSocket.SetSocketOption(IP, MulticastTimeToLive, 1);
-            udpSocket.SetSocketOption(IP, MulticastLoopback, 1);
+            var ipv6Properties = FindBestMulticastInterface().GetIPv6Properties() ??
+                throw new InvalidOperationException("Cannot get interface IPv6 configuration data.");
 
-            return udpSocket;
+            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface, ipv6Properties.Index);
+            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastTimeToLive, 1);
+
+            return socket;
         }
 
         public static Socket CreateUdpMulticastListener(IPEndPoint group)
         {
             if(group is null) throw new ArgumentNullException(nameof(group));
 
-            var socket = new UdpSocket {ExclusiveAddressUse = false};
+            var socket = new Socket(group.AddressFamily, Dgram, Udp) { ExclusiveAddressUse = false };
 
-            socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
             socket.Bind(new IPEndPoint(Any, group.Port));
 
-            socket.SetSocketOption(IP, AddMembership, new MulticastOption(group.Address));
-            socket.SetSocketOption(IP, MulticastTimeToLive, 64);
+            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(group.Address));
+            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 64);
 
             return socket;
         }
 
-        private sealed class UdpSocket : Socket
+        private static bool IsActiveMulticastEthernet(NetworkInterface networkInterface)
         {
-            public UdpSocket(AddressFamily addressFamily = InterNetwork) : base(addressFamily, Dgram, ProtocolType.Udp) {}
+            return networkInterface.SupportsMulticast &&
+                    networkInterface.OperationalStatus == Up &&
+                    networkInterface.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                    networkInterface.NetworkInterfaceType != Ppp &&
+                    networkInterface.NetworkInterfaceType != GenericModem &&
+                    networkInterface.NetworkInterfaceType != Tunnel;
+        }
+
+        private static IPInterfaceProperties FindBestMulticastInterface()
+        {
+            var iface = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(IsActiveMulticastEthernet) ??
+                            throw new InvalidOperationException("No valid network interface with multicast support found.");
+            return iface.GetIPProperties() ??
+                            throw new InvalidOperationException("Cannot get interface IP configuration properties.");
         }
     }
 }
