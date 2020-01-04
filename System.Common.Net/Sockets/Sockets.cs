@@ -39,7 +39,7 @@ namespace System.Net.Sockets
 
             socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, HostToNetworkOrder(ipv4Properties.Index));
             socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 1);
-            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastLoopback, 1);
+            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastLoopback, true);
 
             return socket;
         }
@@ -61,14 +61,22 @@ namespace System.Net.Sockets
         {
             if(group is null) throw new ArgumentNullException(nameof(group));
 
-            var socket = new Socket(group.AddressFamily, Dgram, Udp) { ExclusiveAddressUse = false };
+            var socket = new Socket(group.AddressFamily, Dgram, Udp);
 
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
-            socket.Bind(new IPEndPoint(Any, group.Port));
-
-            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(group.Address));
-            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 64);
+            if(group.AddressFamily == InterNetwork)
+            {
+                socket.Bind(new IPEndPoint(Any, group.Port));
+                socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(group.Address));
+                socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 64);
+            }
+            else
+            {
+                socket.Bind(new IPEndPoint(IPv6Any, group.Port));
+                socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new IPv6MulticastOption(group.Address));
+                socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastTimeToLive, 64);
+            }
 
             return socket;
         }
