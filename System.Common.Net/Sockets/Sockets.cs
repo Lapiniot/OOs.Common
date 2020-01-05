@@ -83,12 +83,9 @@ namespace System.Net.Sockets
 
         private static bool IsActiveMulticastEthernet(NetworkInterface networkInterface)
         {
-            return networkInterface.SupportsMulticast &&
-                    networkInterface.OperationalStatus == Up &&
-                    networkInterface.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
-                    networkInterface.NetworkInterfaceType != Ppp &&
-                    networkInterface.NetworkInterfaceType != GenericModem &&
-                    networkInterface.NetworkInterfaceType != Tunnel;
+            return networkInterface.GetIPProperties().GatewayAddresses.Count > 0 &&
+                    networkInterface.SupportsMulticast &&
+                    networkInterface.OperationalStatus == Up;
         }
 
         private static IPInterfaceProperties FindBestMulticastInterface()
