@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Net.NetworkInformation;
 using static System.Net.IPAddress;
-using static System.Net.NetworkInformation.NetworkInterfaceType;
+using static System.Net.NetworkInformation.NetworkInterface;
 using static System.Net.NetworkInformation.OperationalStatus;
 using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.ProtocolType;
@@ -15,9 +15,19 @@ namespace System.Net.Sockets
 
     public static class SocketFactory
     {
-        public static Socket CreateUdpBroadcast(AddressFamily addressFamily = InterNetwork)
+        public static Socket CreateUdpBroadcast(AddressFamily addressFamily)
         {
-            return new Socket(addressFamily, Dgram, Udp) { EnableBroadcast = true };
+            return new Socket(addressFamily, Dgram, Udp) {EnableBroadcast = true};
+        }
+
+        public static Socket CreateIPv4UdpBroadcast()
+        {
+            return CreateUdpBroadcast(InterNetwork);
+        }
+
+        public static Socket CreateIPv6UdpBroadcast()
+        {
+            return CreateUdpBroadcast(InterNetworkV6);
         }
 
         public static Socket CreateUdpConnected(IPEndPoint endpoint)
@@ -30,12 +40,12 @@ namespace System.Net.Sockets
             return socket;
         }
 
-        public static Socket CreateUdpIPv4MulticastSender()
+        public static Socket CreateIPv4UdpMulticastSender()
         {
             var socket = new Socket(InterNetwork, Dgram, Udp);
 
             var ipv4Properties = FindBestMulticastInterface().GetIPv4Properties() ??
-                throw new InvalidOperationException("Cannot get interface IPv4 configuration data.");
+                                 throw new InvalidOperationException("Cannot get interface IPv4 configuration data.");
 
             socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, HostToNetworkOrder(ipv4Properties.Index));
             socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 1);
@@ -44,12 +54,12 @@ namespace System.Net.Sockets
             return socket;
         }
 
-        public static Socket CreateUdpIPv6MulticastSender()
+        public static Socket CreateIPv6UdpMulticastSender()
         {
             var socket = new Socket(InterNetworkV6, Dgram, Udp);
 
             var ipv6Properties = FindBestMulticastInterface().GetIPv6Properties() ??
-                throw new InvalidOperationException("Cannot get interface IPv6 configuration data.");
+                                 throw new InvalidOperationException("Cannot get interface IPv6 configuration data.");
 
             socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface, ipv6Properties.Index);
             socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastTimeToLive, 1);
@@ -84,16 +94,16 @@ namespace System.Net.Sockets
         private static bool IsActiveMulticastEthernet(NetworkInterface networkInterface)
         {
             return networkInterface.GetIPProperties().GatewayAddresses.Count > 0 &&
-                    networkInterface.SupportsMulticast &&
-                    networkInterface.OperationalStatus == Up;
+                   networkInterface.SupportsMulticast &&
+                   networkInterface.OperationalStatus == Up;
         }
 
         private static IPInterfaceProperties FindBestMulticastInterface()
         {
-            var iface = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(IsActiveMulticastEthernet) ??
-                            throw new InvalidOperationException("No valid network interface with multicast support found.");
-            return iface.GetIPProperties() ??
-                            throw new InvalidOperationException("Cannot get interface IP configuration properties.");
+            var networkInterface = GetAllNetworkInterfaces().FirstOrDefault(IsActiveMulticastEthernet) ??
+                                   throw new InvalidOperationException("No valid network interface with multicast support found.");
+            return networkInterface.GetIPProperties() ??
+                   throw new InvalidOperationException("Cannot get interface IP configuration properties.");
         }
     }
 }
