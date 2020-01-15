@@ -7,15 +7,13 @@ namespace System.Converters
     {
         private const string ErrorMessage = "Invalid character in hex string";
 
-        public static string ToHexString(this byte[] bytes)
+        public static string ToHexString(this ReadOnlySpan<byte> span)
         {
-            if(bytes is null) throw new ArgumentNullException(nameof(bytes));
+            var buffer = new char[span.Length * 2];
 
-            var buffer = new char[bytes.Length * 2];
-
-            for(var i = 0; i < bytes.Length; i++)
+            for(var i = 0; i < span.Length; i++)
             {
-                var b = bytes[i];
+                var b = span[i];
                 var high = b >> 4;
                 var low = b & 0x0f;
                 buffer[i << 1] = (char)(high < 0x0a ? 0x30 + high : 0x57 + high);
@@ -53,7 +51,7 @@ namespace System.Converters
         {
             if(s is null) throw new ArgumentNullException(nameof(s));
 
-            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && uint.TryParse(s.Substring(2), HexNumber, null, out result) ||
+            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && uint.TryParse(s[2..], HexNumber, null, out result) ||
                    uint.TryParse(s, Integer & ~AllowLeadingSign, null, out result);
         }
 
@@ -61,7 +59,7 @@ namespace System.Converters
         {
             if(s is null) throw new ArgumentNullException(nameof(s));
 
-            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && int.TryParse(s.Substring(2), HexNumber, null, out result) ||
+            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && int.TryParse(s[2..], HexNumber, null, out result) ||
                    int.TryParse(s, Integer & ~AllowLeadingSign, null, out result);
         }
 
@@ -69,7 +67,7 @@ namespace System.Converters
         {
             if(s is null) throw new ArgumentNullException(nameof(s));
 
-            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && long.TryParse(s.Substring(2), HexNumber, null, out result) ||
+            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && long.TryParse(s[2..], HexNumber, null, out result) ||
                    long.TryParse(s, Integer & ~AllowLeadingSign, null, out result);
         }
 
@@ -77,7 +75,7 @@ namespace System.Converters
         {
             if(s is null) throw new ArgumentNullException(nameof(s));
 
-            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && ulong.TryParse(s.Substring(2), HexNumber, null, out result) ||
+            return s.StartsWith("0x", false, CultureInfo.InvariantCulture) && ulong.TryParse(s[2..], HexNumber, null, out result) ||
                    ulong.TryParse(s, Integer & ~AllowLeadingSign, null, out result);
         }
     }

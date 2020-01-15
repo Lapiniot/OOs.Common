@@ -21,7 +21,7 @@ namespace System.Configuration
 
             value = null;
 
-            return key.StartsWith("args:", false, CultureInfo.InvariantCulture) && base.TryGet(key.Substring(5), out value);
+            return key.StartsWith("args:", false, CultureInfo.InvariantCulture) && base.TryGet(key[5..], out value);
         }
 
         public override void Load()

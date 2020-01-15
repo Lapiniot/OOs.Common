@@ -50,7 +50,7 @@ namespace System.Threading
             worker = Interlocked.CompareExchange(ref stateSentinel, 1, 0) switch
             {
                 0 => StartWorkerAsync(default),
-                _ => throw new InvalidOperationException(AlreadyRunningMessage),
+                _ => throw new InvalidOperationException(AlreadyRunningMessage)
             };
         }
 

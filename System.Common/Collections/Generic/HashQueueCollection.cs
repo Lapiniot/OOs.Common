@@ -3,14 +3,14 @@ using static System.Threading.LockRecursionPolicy;
 
 namespace System.Collections.Generic
 {
-    public sealed class HashQueueCollection<TK, TV> : IEnumerable<TV>, IDisposable
+    public sealed class HashQueueCollection<TKey, TValue> : IEnumerable<TValue>, IDisposable
     {
         private readonly ReaderWriterLockSlim lockSlim;
-        private readonly Dictionary<TK, Node> map;
+        private readonly Dictionary<TKey, Node> map;
         private Node head;
         private Node tail;
 
-        public HashQueueCollection(params (TK key, TV value)[] items) : this()
+        public HashQueueCollection(params (TKey key, TValue value)[] items) : this()
         {
             foreach(var (key, value) in items)
             {
@@ -20,7 +20,7 @@ namespace System.Collections.Generic
 
         public HashQueueCollection()
         {
-            map = new Dictionary<TK, Node>();
+            map = new Dictionary<TKey, Node>();
             lockSlim = new ReaderWriterLockSlim(NoRecursion);
         }
 
@@ -36,7 +36,7 @@ namespace System.Collections.Generic
             set => tail = value;
         }
 
-        internal Dictionary<TK, Node> Map => map;
+        internal Dictionary<TKey, Node> Map => map;
 
         #region Implementation of IDisposable
 
@@ -47,7 +47,7 @@ namespace System.Collections.Generic
 
         #endregion
 
-        public IEnumerator<TV> GetEnumerator()
+        public IEnumerator<TValue> GetEnumerator()
         {
             using(lockSlim.WithReadLock())
             {
@@ -65,7 +65,7 @@ namespace System.Collections.Generic
             return GetEnumerator();
         }
 
-        public TV AddOrUpdate(TK key, TV addValue, Func<TK, TV, TV> updateValueFactory)
+        public TValue AddOrUpdate(TKey key, TValue addValue, Func<TKey, TValue, TValue> updateValueFactory)
         {
             if(updateValueFactory is null) throw new ArgumentNullException(nameof(updateValueFactory));
 
@@ -77,7 +77,7 @@ namespace System.Collections.Generic
             }
         }
 
-        public TV AddOrUpdate(TK key, TV addValue, TV updateValue)
+        public TValue AddOrUpdate(TKey key, TValue addValue, TValue updateValue)
         {
             using(lockSlim.WithWriteLock())
             {
@@ -87,7 +87,7 @@ namespace System.Collections.Generic
             }
         }
 
-        public TV GetOrAdd(TK key, TV value)
+        public TValue GetOrAdd(TKey key, TValue value)
         {
             using(lockSlim.WithUpgradeableReadLock())
             {
@@ -103,7 +103,7 @@ namespace System.Collections.Generic
             }
         }
 
-        public bool TryAdd(TK key, TV value)
+        public bool TryAdd(TKey key, TValue value)
         {
             using(lockSlim.WithUpgradeableReadLock())
             {
@@ -118,7 +118,7 @@ namespace System.Collections.Generic
             return true;
         }
 
-        public bool TryGet(TK key, out TV value)
+        public bool TryGet(TKey key, out TValue value)
         {
             using(lockSlim.WithReadLock())
             {
@@ -133,7 +133,7 @@ namespace System.Collections.Generic
             }
         }
 
-        public bool Dequeue(out TV value)
+        public bool Dequeue(out TValue value)
         {
             if(head == null)
             {
@@ -151,7 +151,7 @@ namespace System.Collections.Generic
             }
         }
 
-        public bool TryRemove(TK key, out TV value)
+        public bool TryRemove(TKey key, out TValue value)
         {
             using(lockSlim.WithUpgradeableReadLock())
             {
@@ -182,7 +182,7 @@ namespace System.Collections.Generic
             }
         }
 
-        private Node AddNodeInternal(TK key, TV value)
+        private Node AddNodeInternal(TKey key, TValue value)
         {
             var node = new Node(key, value, tail, null);
 
@@ -199,7 +199,7 @@ namespace System.Collections.Generic
 
         internal sealed class Node
         {
-            public Node(TK key, TV value, Node prev, Node next)
+            public Node(TKey key, TValue value, Node prev, Node next)
             {
                 Key = key;
                 Value = value;
@@ -207,8 +207,8 @@ namespace System.Collections.Generic
                 Next = next;
             }
 
-            public TK Key { get; }
-            public TV Value { get; set; }
+            public TKey Key { get; }
+            public TValue Value { get; set; }
             public Node Prev { get; set; }
             public Node Next { get; set; }
         }

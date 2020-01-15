@@ -14,25 +14,23 @@ namespace System.Common.Tests
             hashQueue.TryAdd(4, "Value 4");
             hashQueue.TryAdd(3, "Value 3");
 
-            using(var enumerator = hashQueue.GetEnumerator())
-            {
-                Assert.IsTrue(enumerator.MoveNext());
-                Assert.AreEqual("Value 0", enumerator.Current);
+            using var enumerator = hashQueue.GetEnumerator();
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("Value 0", enumerator.Current);
 
-                Assert.IsTrue(enumerator.MoveNext());
-                Assert.AreEqual("Value 1", enumerator.Current);
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("Value 1", enumerator.Current);
 
-                Assert.IsTrue(enumerator.MoveNext());
-                Assert.AreEqual("Value 2", enumerator.Current);
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("Value 2", enumerator.Current);
 
-                Assert.IsTrue(enumerator.MoveNext());
-                Assert.AreEqual("Value 4", enumerator.Current);
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("Value 4", enumerator.Current);
 
-                Assert.IsTrue(enumerator.MoveNext());
-                Assert.AreEqual("Value 3", enumerator.Current);
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual("Value 3", enumerator.Current);
 
-                Assert.IsFalse(enumerator.MoveNext());
-            }
+            Assert.IsFalse(enumerator.MoveNext());
         }
     }
 }

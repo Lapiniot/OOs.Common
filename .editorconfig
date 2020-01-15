@@ -1,5 +1,3 @@
-root=true
-
 [*.cs]
 # Suggest more modern language features when available
 dotnet_style_object_initializer=true:suggestion
@@ -14,6 +12,9 @@ csharp_space_before_open_square_brackets=false
 csharp_space_between_square_brackets=false
 csharp_space_within_empty_braces=false
 csharp_space_within_single_line_array_initializer_braces=false
+
+# CA1303: Do not pass literals as localized parameters
+dotnet_diagnostic.CA1303.severity=none
 
 [*.proto]
 indent_style=tab
@@ -49,10 +50,3 @@ dotnet_style_qualification_for_property=false:hint
 dotnet_style_require_accessibility_modifiers=for_non_interface_members:hint
 
 # Code analysis rules to ignore
-
-# CA1303: Do not pass literals as localized parameters
-dotnet_diagnostic.CA1303.severity=none
-
-[JsonExtensions.cs]
-# CA1308: Normalize strings to uppercase
-dotnet_diagnostic.ca1308.severity=none

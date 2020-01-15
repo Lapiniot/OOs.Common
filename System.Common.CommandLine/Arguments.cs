@@ -37,7 +37,7 @@ namespace System.Common.CommandLine
             out Dictionary<string, object> arguments,
             out List<string> extras)
         {
-            int CompareByLength(string x, string y)
+            static int CompareByLength(string x, string y)
             {
                 var d = y.Length - x.Length;
 
@@ -98,11 +98,11 @@ namespace System.Common.CommandLine
 
                 if(arg.StartsWith("--", false, CultureInfo.InvariantCulture))
                 {
-                    AddBySynonym(arg.Substring(2), smap, arguments);
+                    AddBySynonym(arg[2..], smap, arguments);
                 }
                 else if(arg[0] == '-' || arg[0] == '/')
                 {
-                    AddByName(arg.Substring(1), queue, nmap, arguments);
+                    AddByName(arg[1..], queue, nmap, arguments);
                 }
                 else
                 {
@@ -111,9 +111,7 @@ namespace System.Common.CommandLine
             }
         }
 
-        private static void AddByName(string arg, Queue<string> queue,
-            IDictionary<string, ArgumentAttribute> nmap,
-            Dictionary<string, object> arguments)
+        private static void AddByName(string arg, Queue<string> queue, IDictionary<string, ArgumentAttribute> nmap, IDictionary<string, object> arguments)
         {
             if(nmap.TryGetValue(arg, out var def))
             {
@@ -153,38 +151,32 @@ namespace System.Common.CommandLine
             }
         }
 
-        private static bool TryParseAsJointKeyValuePair(string arg,
-            IDictionary<string, ArgumentAttribute> nmap, Dictionary<string, object> arguments)
+        private static bool TryParseAsJointKeyValuePair(string arg, IDictionary<string, ArgumentAttribute> nmap, IDictionary<string, object> arguments)
         {
-            foreach(var item in nmap)
+            foreach(var (key, def) in nmap)
             {
-                var def = item.Value;
                 var type = def.Type;
-                var key = item.Key;
 
-                if(arg.StartsWith(key, false, CultureInfo.InvariantCulture))
+                if(!arg.StartsWith(key, false, CultureInfo.InvariantCulture)) continue;
+
+                if(type != typeof(bool))
                 {
-                    if(type != typeof(bool))
-                    {
-                        arguments[key] = Convert.ChangeType(arg.Substring(key.Length), type, CultureInfo.InvariantCulture);
+                    arguments[key] = Convert.ChangeType(arg[key.Length..], type, CultureInfo.InvariantCulture);
 
-                        return true;
-                    }
-
-                    if(TryParseBoolean(arg.Substring(key.Length), out var b))
-                    {
-                        arguments[arg] = b;
-
-                        return true;
-                    }
+                    return true;
                 }
+
+                if(!TryParseBoolean(arg[key.Length..], out var b)) continue;
+
+                arguments[key] = b;
+
+                return true;
             }
 
             return false;
         }
 
-        private static bool TryParseJointSwitchesArgument(string arg,
-            IDictionary<string, ArgumentAttribute> nmap, Dictionary<string, object> arguments)
+        private static bool TryParseJointSwitchesArgument(string arg, IDictionary<string, ArgumentAttribute> nmap, IDictionary<string, object> arguments)
         {
             var keys = new HashSet<string>();
 
@@ -193,22 +185,17 @@ namespace System.Common.CommandLine
             {
                 match = false;
 
-                foreach(var item in nmap)
+                foreach(var (key, value) in nmap)
                 {
-                    if(item.Value.Type != typeof(bool)) continue;
+                    if(value.Type != typeof(bool)) continue;
 
-                    var key = item.Key;
+                    if(!arg.StartsWith(key, false, CultureInfo.InvariantCulture)) continue;
 
-                    if(arg.StartsWith(key, false, CultureInfo.InvariantCulture))
-                    {
-                        keys.Add(key);
+                    keys.Add(key);
+                    arg = arg[key.Length..];
+                    match = true;
 
-                        arg = arg.Substring(key.Length);
-
-                        match = true;
-
-                        if(arg.Length == 0) break;
-                    }
+                    if(arg.Length == 0) break;
                 }
             } while(match && arg.Length > 0);
 
@@ -222,42 +209,38 @@ namespace System.Common.CommandLine
             return true;
         }
 
-        private static void AddBySynonym(string arg,
-            IDictionary<string, ArgumentAttribute> smap,
-            Dictionary<string, object> arguments)
+        private static void AddBySynonym(string arg, IDictionary<string, ArgumentAttribute> smap, IDictionary<string, object> arguments)
         {
             var pair = arg.Split(new[] {'='}, 2);
 
-            if(smap.TryGetValue(pair[0], out var def))
-            {
-                var key = def.Name;
+            if(!smap.TryGetValue(pair[0], out var def)) return;
 
-                if(def.Type == typeof(bool))
+            var key = def.Name;
+
+            if(def.Type == typeof(bool))
+            {
+                if(pair.Length == 1)
                 {
-                    if(pair.Length == 1)
-                    {
-                        arguments[key] = true;
-                    }
-                    else if(TryParseBoolean(pair[1], out var b))
-                    {
-                        arguments[key] = b;
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Invalid value for binary switch argument " + key +
-                                                    " Should be one of [True, False, true, false, 1, 0]");
-                    }
+                    arguments[key] = true;
+                }
+                else if(TryParseBoolean(pair[1], out var b))
+                {
+                    arguments[key] = b;
                 }
                 else
                 {
-                    if(pair.Length == 2)
-                    {
-                        arguments[key] = Convert.ChangeType(pair[1], def.Type, CultureInfo.InvariantCulture);
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Missing value for non-switch parameter " + key);
-                    }
+                    throw new ArgumentException($"Invalid value for binary switch argument {key} Should be one of [True, False, true, false, 1, 0]");
+                }
+            }
+            else
+            {
+                if(pair.Length == 2)
+                {
+                    arguments[key] = Convert.ChangeType(pair[1], def.Type, CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    throw new ArgumentException($"Missing value for non-switch parameter {key}");
                 }
             }
         }
@@ -268,15 +251,16 @@ namespace System.Common.CommandLine
 
             if(IsNullOrWhiteSpace(str)) return false;
 
-            if(str == "True" || str == "true" || str == "1")
+            return str switch
             {
-                value = true;
-                return true;
-            }
-
-            if(str == "False" || str == "false" || str == "0") return true;
-
-            return false;
+                "True" => (value = true),
+                "true" => (value = true),
+                "1" => (value = true),
+                "False" => true,
+                "false" => true,
+                "0" => true,
+                _ => false
+            };
         }
     }
 }
