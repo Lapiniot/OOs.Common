@@ -4,8 +4,9 @@ using static System.Net.IPAddress;
 using static System.Net.NetworkInformation.NetworkInterface;
 using static System.Net.NetworkInformation.OperationalStatus;
 using static System.Net.Sockets.AddressFamily;
-using static System.Net.Sockets.ProtocolType;
 using static System.Net.Sockets.SocketType;
+using static System.Net.Sockets.SocketOptionName;
+using static System.Net.Sockets.SocketOptionLevel;
 
 namespace System.Net.Sockets
 {
@@ -15,9 +16,19 @@ namespace System.Net.Sockets
 
     public static class SocketFactory
     {
+        public static IPEndPoint GetIPv4MulticastGroup(int port)
+        {
+            return new IPEndPoint(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
+        }
+
+        public static IPEndPoint GetIPv4SsdpGroup()
+        {
+            return new IPEndPoint(new IPAddress(0xfaffffef /* 239.255.255.250 */), 1900);
+        }
+
         public static Socket CreateUdpBroadcast(AddressFamily addressFamily)
         {
-            return new Socket(addressFamily, Dgram, Udp) {EnableBroadcast = true};
+            return new Socket(addressFamily, Dgram, ProtocolType.Udp) { EnableBroadcast = true };
         }
 
         public static Socket CreateIPv4UdpBroadcast()
@@ -34,7 +45,7 @@ namespace System.Net.Sockets
         {
             if(endpoint is null) throw new ArgumentNullException(nameof(endpoint));
 
-            var socket = new Socket(endpoint.AddressFamily, Dgram, Udp);
+            var socket = new Socket(endpoint.AddressFamily, Dgram, ProtocolType.Udp);
             socket.Connect(endpoint);
 
             return socket;
@@ -42,27 +53,51 @@ namespace System.Net.Sockets
 
         public static Socket CreateIPv4UdpMulticastSender()
         {
-            var socket = new Socket(InterNetwork, Dgram, Udp);
+            var socket = new Socket(InterNetwork, Dgram, ProtocolType.Udp);
 
             var ipv4Properties = FindBestMulticastInterface().GetIPv4Properties() ??
                                  throw new InvalidOperationException("Cannot get interface IPv4 configuration data.");
 
-            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, HostToNetworkOrder(ipv4Properties.Index));
-            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 1);
-            socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastLoopback, true);
+            socket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(ipv4Properties.Index));
+            socket.SetSocketOption(IP, MulticastTimeToLive, 1);
+            socket.SetSocketOption(IP, MulticastLoopback, true);
+
+            return socket;
+        }
+
+        public static Socket CreateIPv4UdpMulticastSender(IPEndPoint groupToJoin)
+        {
+            if(groupToJoin is null) throw new ArgumentNullException(nameof(groupToJoin));
+
+            var socket = CreateIPv4UdpMulticastSender();
+
+            socket.Bind(new IPEndPoint(Any, groupToJoin.Port));
+            socket.SetSocketOption(IP, AddMembership, new MulticastOption(groupToJoin.Address));
 
             return socket;
         }
 
         public static Socket CreateIPv6UdpMulticastSender()
         {
-            var socket = new Socket(InterNetworkV6, Dgram, Udp);
+            var socket = new Socket(InterNetworkV6, Dgram, ProtocolType.Udp);
 
             var ipv6Properties = FindBestMulticastInterface().GetIPv6Properties() ??
                                  throw new InvalidOperationException("Cannot get interface IPv6 configuration data.");
 
-            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface, ipv6Properties.Index);
-            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastTimeToLive, 1);
+            socket.SetSocketOption(IPv6, MulticastInterface, ipv6Properties.Index);
+            socket.SetSocketOption(IPv6, MulticastTimeToLive, 1);
+
+            return socket;
+        }
+
+        public static Socket CreateIPv6UdpMulticastSender(IPEndPoint groupToJoin)
+        {
+            if(groupToJoin is null) throw new ArgumentNullException(nameof(groupToJoin));
+
+            var socket = CreateIPv6UdpMulticastSender();
+
+            socket.Bind(new IPEndPoint(IPv6Any, groupToJoin.Port));
+            socket.SetSocketOption(IPv6, AddMembership, new IPv6MulticastOption(groupToJoin.Address));
 
             return socket;
         }
@@ -71,21 +106,21 @@ namespace System.Net.Sockets
         {
             if(group is null) throw new ArgumentNullException(nameof(group));
 
-            var socket = new Socket(group.AddressFamily, Dgram, Udp);
+            var socket = new Socket(group.AddressFamily, Dgram, ProtocolType.Udp);
 
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, true);
 
             if(group.AddressFamily == InterNetwork)
             {
                 socket.Bind(new IPEndPoint(Any, group.Port));
-                socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(group.Address));
-                socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 64);
+                socket.SetSocketOption(IP, AddMembership, new MulticastOption(group.Address));
+                socket.SetSocketOption(IP, MulticastTimeToLive, 1);
             }
             else
             {
                 socket.Bind(new IPEndPoint(IPv6Any, group.Port));
-                socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new IPv6MulticastOption(group.Address));
-                socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastTimeToLive, 64);
+                socket.SetSocketOption(IPv6, AddMembership, new IPv6MulticastOption(group.Address));
+                socket.SetSocketOption(IPv6, MulticastTimeToLive, 1);
             }
 
             return socket;
