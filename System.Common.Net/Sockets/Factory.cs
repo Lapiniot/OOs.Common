@@ -10,11 +10,9 @@ using static System.Net.Sockets.SocketOptionLevel;
 
 namespace System.Net.Sockets
 {
-    public delegate Socket CreateSocketFactory();
+    public delegate Socket CreateSocketFactory(IPEndPoint remoteEndPoint);
 
-    public delegate Socket CreateConnectedSocketFactory(IPEndPoint remoteEndPoint);
-
-    public static class SocketFactory
+    public static class Factory
     {
         public static IPEndPoint GetIPv4MulticastGroup(int port)
         {
@@ -31,16 +29,6 @@ namespace System.Net.Sockets
             return new Socket(addressFamily, Dgram, ProtocolType.Udp) {EnableBroadcast = true};
         }
 
-        public static Socket CreateIPv4UdpBroadcast()
-        {
-            return CreateUdpBroadcast(InterNetwork);
-        }
-
-        public static Socket CreateIPv6UdpBroadcast()
-        {
-            return CreateUdpBroadcast(InterNetworkV6);
-        }
-
         public static Socket CreateUdpConnected(IPEndPoint endpoint)
         {
             if(endpoint is null) throw new ArgumentNullException(nameof(endpoint));
@@ -51,14 +39,34 @@ namespace System.Net.Sockets
             return socket;
         }
 
+        public static Socket CreateUdpMulticastSender(IPEndPoint groupToJoin)
+        {
+            return groupToJoin?.AddressFamily switch
+            {
+                InterNetwork => CreateIPv4UdpMulticastSender(groupToJoin),
+                InterNetworkV6 => CreateIPv6UdpMulticastSender(groupToJoin),
+                _ => throw new NotSupportedException("Unsupported address family")
+            };
+        }
+
+        public static Socket CreateUdpMulticastSender(AddressFamily addressFamily)
+        {
+            return addressFamily switch
+            {
+                InterNetwork => CreateIPv4UdpMulticastSender(),
+                InterNetworkV6 => CreateIPv6UdpMulticastSender(),
+                _ => throw new NotSupportedException("Unsupported address family")
+            };
+        }
+
         public static Socket CreateIPv4UdpMulticastSender()
         {
             var socket = new Socket(InterNetwork, Dgram, ProtocolType.Udp);
 
-            var ipv4Properties = FindBestMulticastInterface().GetIPv4Properties() ??
-                                 throw new InvalidOperationException("Cannot get interface IPv4 configuration data.");
+            var properties = FindBestMulticastInterface().GetIPv4Properties()
+                             ?? throw new InvalidOperationException("Cannot get interface IPv4 configuration data.");
 
-            socket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(ipv4Properties.Index));
+            socket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
             socket.SetSocketOption(IP, MulticastTimeToLive, 1);
             socket.SetSocketOption(IP, MulticastLoopback, true);
 
@@ -81,10 +89,10 @@ namespace System.Net.Sockets
         {
             var socket = new Socket(InterNetworkV6, Dgram, ProtocolType.Udp);
 
-            var ipv6Properties = FindBestMulticastInterface().GetIPv6Properties() ??
-                                 throw new InvalidOperationException("Cannot get interface IPv6 configuration data.");
+            var properties = FindBestMulticastInterface().GetIPv6Properties() ??
+                             throw new InvalidOperationException("Cannot get interface IPv6 configuration data.");
 
-            socket.SetSocketOption(IPv6, MulticastInterface, ipv6Properties.Index);
+            socket.SetSocketOption(IPv6, MulticastInterface, properties.Index);
             socket.SetSocketOption(IPv6, MulticastTimeToLive, 1);
 
             return socket;
