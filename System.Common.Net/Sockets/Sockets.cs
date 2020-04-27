@@ -21,14 +21,14 @@ namespace System.Net.Sockets
             return new IPEndPoint(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
         }
 
-        public static IPEndPoint GetIPv4SsdpGroup()
+        public static IPEndPoint GetIPv4SSDPGroup()
         {
-            return new IPEndPoint(new IPAddress(0xfaffffef /* 239.255.255.250 */), 1900);
+            return GetIPv4MulticastGroup(1900);
         }
 
         public static Socket CreateUdpBroadcast(AddressFamily addressFamily)
         {
-            return new Socket(addressFamily, Dgram, ProtocolType.Udp) { EnableBroadcast = true };
+            return new Socket(addressFamily, Dgram, ProtocolType.Udp) {EnableBroadcast = true};
         }
 
         public static Socket CreateIPv4UdpBroadcast()
