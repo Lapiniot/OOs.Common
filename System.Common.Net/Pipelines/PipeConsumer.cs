@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipelines;
 using System.Net.Properties;
 using System.Threading;
@@ -11,7 +10,6 @@ namespace System.Net.Pipelines
     /// <summary>
     /// Provides base abstract class for pipe data consumer.
     /// </summary>
-    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public abstract class PipeConsumer : ActivityObject
     {
         private readonly PipeReader reader;
@@ -80,17 +78,17 @@ namespace System.Net.Pipelines
                     if(result.IsCompleted || result.IsCanceled) break;
                 }
 
-                reader.Complete();
+                await reader.CompleteAsync().ConfigureAwait(false);
                 OnCompleted();
             }
             catch(OperationCanceledException)
             {
-                reader.Complete();
+                await reader.CompleteAsync().ConfigureAwait(false);
                 OnCompleted();
             }
             catch(Exception exception)
             {
-                reader.Complete(exception);
+                await reader.CompleteAsync(exception).ConfigureAwait(false);
                 OnCompleted(exception);
                 throw;
             }

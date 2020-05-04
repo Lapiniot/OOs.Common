@@ -120,15 +120,15 @@ namespace System.Net.Pipelines
                     if(result.IsCompleted || result.IsCanceled) break;
                 }
 
-                writer.Complete();
+                await writer.CompleteAsync().ConfigureAwait(false);
             }
             catch(OperationCanceledException)
             {
-                writer.Complete();
+                await writer.CompleteAsync().ConfigureAwait(false);
             }
             catch(Exception exception)
             {
-                writer.Complete(exception);
+                await writer.CompleteAsync(exception).ConfigureAwait(false);
                 throw;
             }
         }

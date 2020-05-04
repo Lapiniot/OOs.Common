@@ -186,7 +186,7 @@ namespace System.Collections.Generic
         {
             var node = new Node(key, value, tail, null);
 
-            if(head == null) head = node;
+            head ??= node;
 
             if(tail != null) tail.Next = node;
 

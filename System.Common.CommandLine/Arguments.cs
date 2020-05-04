@@ -59,14 +59,14 @@ namespace System.Common.CommandLine
             var nmap = new SortedDictionary<string, ArgumentAttribute>(comparer);
 
             var schema = Assembly.GetEntryAssembly()?
-                             .GetCustomAttributes<ArgumentAttribute>()
-                             .Distinct(argumentByNameComparer)
-                             .ToArray() ?? Array.Empty<ArgumentAttribute>();
+                .GetCustomAttributes<ArgumentAttribute>()
+                .Distinct(argumentByNameComparer)
+                .ToArray() ?? Array.Empty<ArgumentAttribute>();
 
             var commands = Assembly.GetEntryAssembly()?
-                               .GetCustomAttributes<CommandAttribute>()
-                               .Distinct(commandByNameComparer)
-                               .ToArray() ?? Array.Empty<CommandAttribute>();
+                .GetCustomAttributes<CommandAttribute>()
+                .Distinct(commandByNameComparer)
+                .ToArray() ?? Array.Empty<CommandAttribute>();
 
             foreach(var item in schema)
             {
@@ -253,9 +253,9 @@ namespace System.Common.CommandLine
 
             return str switch
             {
-                "True" => (value = true),
-                "true" => (value = true),
-                "1" => (value = true),
+                "True" => value = true,
+                "true" => value = true,
+                "1" => value = true,
                 "False" => true,
                 "false" => true,
                 "0" => true,

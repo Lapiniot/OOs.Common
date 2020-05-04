@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipelines;
 using System.Net.Connections;
 using System.Net.Connections.Exceptions;
@@ -9,7 +8,6 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Net
 {
-    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public abstract class NetworkStreamParser : ActivityObject
     {
         private readonly INetworkConnection connection;
@@ -80,21 +78,21 @@ namespace System.Net
                     if(result.IsCompleted) break;
                 }
 
-                writer.Complete();
+                await writer.CompleteAsync().ConfigureAwait(false);
             }
             catch(OperationCanceledException)
             {
-                writer.Complete();
+                await writer.CompleteAsync().ConfigureAwait(false);
             }
             catch(ConnectionAbortedException cae)
             {
-                writer.Complete(cae);
+                await writer.CompleteAsync(cae).ConfigureAwait(false);
                 OnConnectionAborted();
                 throw;
             }
             catch(Exception exception)
             {
-                writer.Complete(exception);
+                await writer.CompleteAsync(exception).ConfigureAwait(false);
                 throw;
             }
         }
@@ -127,15 +125,15 @@ namespace System.Net
                     if(result.IsCompleted) break;
                 }
 
-                reader.Complete();
+                await reader.CompleteAsync().ConfigureAwait(false);
             }
             catch(OperationCanceledException)
             {
-                reader.Complete();
+                await reader.CompleteAsync().ConfigureAwait(false);
             }
             catch(Exception exception)
             {
-                reader.Complete(exception);
+                await reader.CompleteAsync(exception).ConfigureAwait(false);
                 throw;
             }
         }

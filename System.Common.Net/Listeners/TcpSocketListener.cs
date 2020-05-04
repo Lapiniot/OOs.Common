@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections;
 using System.Net.Sockets;
 using System.Threading;
@@ -32,7 +31,6 @@ namespace System.Net.Listeners
             return $"{nameof(TcpSocketListener)}: tcp://{ipEndPoint}";
         }
 
-        [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type Implements IAsyncDisposable instead")]
         private class TcpSocketEnumerator : IAsyncEnumerator<INetworkConnection>
         {
             private readonly CancellationToken cancellationToken;

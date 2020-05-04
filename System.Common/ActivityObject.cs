@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,7 +8,6 @@ namespace System
     /// Implements async state management template for any type which runs some activity and may be in two states only
     /// (Running/Stopped, Connected/Disconnected e.g.).
     /// </summary>
-    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public abstract class ActivityObject : IAsyncDisposable
     {
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);

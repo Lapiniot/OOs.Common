@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ namespace System.Net.Pipelines
     /// arrival via <see cref="ReceiveAsync" /> and writes to the pipe.
     /// Consumer loop consumes data from the pipe via <see cref="Consume" />.
     /// </summary>
-    [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Type implements IAsyncDisposable instead")]
     public abstract class PipeProducerConsumer : ActivityObject
     {
         private CancellationTokenSource cancellationTokenSource;
@@ -63,15 +61,15 @@ namespace System.Net.Pipelines
                     if(result.IsCompleted || result.IsCanceled) break;
                 }
 
-                writer.Complete();
+                await writer.CompleteAsync().ConfigureAwait(false);
             }
             catch(OperationCanceledException)
             {
-                writer.Complete();
+                await writer.CompleteAsync().ConfigureAwait(false);
             }
             catch(Exception exception)
             {
-                writer.Complete(exception);
+                await writer.CompleteAsync(exception).ConfigureAwait(false);
                 throw;
             }
         }
@@ -104,15 +102,15 @@ namespace System.Net.Pipelines
                     if(result.IsCompleted || result.IsCanceled) break;
                 }
 
-                reader.Complete();
+                await reader.CompleteAsync().ConfigureAwait(false);
             }
             catch(OperationCanceledException)
             {
-                reader.Complete();
+                await reader.CompleteAsync().ConfigureAwait(false);
             }
             catch(Exception exception)
             {
-                reader.Complete(exception);
+                await reader.CompleteAsync(exception).ConfigureAwait(false);
                 throw;
             }
         }
