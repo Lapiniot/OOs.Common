@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using static System.Net.IPAddress;
 using static System.Net.NetworkInformation.NetworkInterface;
 using static System.Net.NetworkInformation.OperationalStatus;
@@ -7,6 +8,7 @@ using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.SocketType;
 using static System.Net.Sockets.SocketOptionName;
 using static System.Net.Sockets.SocketOptionLevel;
+using static System.Runtime.InteropServices.RuntimeInformation;
 
 namespace System.Net.Sockets
 {
@@ -79,7 +81,8 @@ namespace System.Net.Sockets
 
             var socket = CreateIPv4UdpMulticastSender();
 
-            socket.Bind(new IPEndPoint(Any, groupToJoin.Port));
+            socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, 1);
+            socket.Bind(IsOSPlatform(OSPlatform.Windows) ? new IPEndPoint(Any, groupToJoin.Port) : groupToJoin);
             socket.SetSocketOption(IP, AddMembership, new MulticastOption(groupToJoin.Address));
 
             return socket;
