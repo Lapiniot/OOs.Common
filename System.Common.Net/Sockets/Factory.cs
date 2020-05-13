@@ -12,10 +12,19 @@ using static System.Runtime.InteropServices.RuntimeInformation;
 
 namespace System.Net.Sockets
 {
+
     public delegate Socket CreateSocketFactory(IPEndPoint remoteEndPoint);
 
     public static class Factory
     {
+        [DllImport("libc", EntryPoint = "setsockopt")]
+        private static extern int macos_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
+
+        [DllImport("libc.so.6", EntryPoint = "setsockopt")]
+        private static extern int linux_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
+
+        private const int IP_MULTICAST_ALL = 49;
+
         public static IPEndPoint GetIPv4MulticastGroup(int port)
         {
             return new IPEndPoint(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
@@ -81,9 +90,23 @@ namespace System.Net.Sockets
 
             var socket = CreateIPv4UdpMulticastSender();
 
-            socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, 1);
-            socket.Bind(IsOSPlatform(OSPlatform.Windows) ? new IPEndPoint(Any, groupToJoin.Port) : groupToJoin);
+            socket.Bind(new IPEndPoint(Any, groupToJoin.Port));
             socket.SetSocketOption(IP, AddMembership, new MulticastOption(groupToJoin.Address));
+
+            if(IsOSPlatform(OSPlatform.Linux))
+            {
+                IntPtr ptr = Marshal.AllocHGlobal(sizeof(int));
+                Marshal.WriteInt64(ptr, 0, 0);
+
+                try
+                {
+                    linux_setsockopt(socket.Handle, 0, IP_MULTICAST_ALL, ptr, sizeof(int));
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(ptr);
+                }
+            }
 
             return socket;
         }
