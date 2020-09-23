@@ -2,13 +2,13 @@
 
 namespace System.Threading
 {
-    public class CancellationScope : IAsyncDisposable
+    public class CancelableScope : IAsyncDisposable
     {
         private readonly CancellationTokenSource jointCts;
         private readonly CancellationTokenSource localCts;
         private readonly Task task;
 
-        public CancellationScope(Func<CancellationToken, Task> taskFactory, CancellationToken externalToken)
+        private CancelableScope(Func<CancellationToken, Task> taskFactory, CancellationToken externalToken)
         {
             if(taskFactory == null) throw new ArgumentNullException(nameof(taskFactory));
 
@@ -17,6 +17,13 @@ namespace System.Threading
 
             task = taskFactory(jointCts.Token);
         }
+
+        public static CancelableScope StartInScope(Func<CancellationToken, Task> taskFactory, CancellationToken externalToken = default)
+        {
+            return new CancelableScope(taskFactory, externalToken);
+        }
+
+        public Task Completion => task;
 
         #region Implementation of IAsyncDisposable
 
