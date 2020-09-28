@@ -12,18 +12,17 @@ using static System.Runtime.InteropServices.RuntimeInformation;
 
 namespace System.Net.Sockets
 {
-
     public delegate Socket CreateSocketFactory(IPEndPoint remoteEndPoint);
 
     public static class Factory
     {
+        private const int IpMulticastAll = 49;
+
         [DllImport("libc", EntryPoint = "setsockopt")]
-        private static extern int macos_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
+        internal static extern int macos_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
 
         [DllImport("libc.so.6", EntryPoint = "setsockopt")]
-        private static extern int linux_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
-
-        private const int IP_MULTICAST_ALL = 49;
+        internal static extern int linux_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
 
         public static IPEndPoint GetIPv4MulticastGroup(int port)
         {
@@ -93,19 +92,18 @@ namespace System.Net.Sockets
             socket.Bind(new IPEndPoint(Any, groupToJoin.Port));
             socket.SetSocketOption(IP, AddMembership, new MulticastOption(groupToJoin.Address));
 
-            if(IsOSPlatform(OSPlatform.Linux))
-            {
-                IntPtr ptr = Marshal.AllocHGlobal(sizeof(int));
-                Marshal.WriteInt64(ptr, 0, 0);
+            if(!IsOSPlatform(OSPlatform.Linux)) return socket;
 
-                try
-                {
-                    linux_setsockopt(socket.Handle, 0, IP_MULTICAST_ALL, ptr, sizeof(int));
-                }
-                finally
-                {
-                    Marshal.FreeHGlobal(ptr);
-                }
+            var ptr = Marshal.AllocHGlobal(sizeof(int));
+            Marshal.WriteInt64(ptr, 0, 0);
+
+            try
+            {
+                _ = linux_setsockopt(socket.Handle, 0, IpMulticastAll, ptr, sizeof(int));
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
             }
 
             return socket;
