@@ -2,80 +2,58 @@
 using System.Net.Connections;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace System.Net.Listeners
 {
     public sealed class TcpSocketListener : IAsyncEnumerable<INetworkConnection>
     {
         private readonly int backlog;
-        private readonly IPEndPoint ipEndPoint;
+        private readonly IPEndPoint endPoint;
 
-        public TcpSocketListener(IPEndPoint ipEndPoint, int backlog = 100)
+        public TcpSocketListener(IPEndPoint endPoint, int backlog = 100)
         {
-            this.ipEndPoint = ipEndPoint;
+            this.endPoint = endPoint ?? throw new ArgumentNullException(nameof(endPoint));
             this.backlog = backlog;
         }
 
         #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
-        public IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+#pragma warning disable 8425
+        public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+#pragma warning restore 8425
         {
-            return new TcpSocketEnumerator(ipEndPoint, backlog, cancellationToken);
+            using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.Bind(endPoint);
+            socket.Listen(backlog);
+
+            while(!cancellationToken.IsCancellationRequested)
+            {
+                Socket acceptedSocket = null;
+
+                try
+                {
+                    acceptedSocket = await socket.AcceptAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch(OperationCanceledException)
+                {
+                    acceptedSocket?.Dispose();
+                    yield break;
+                }
+                catch
+                {
+                    acceptedSocket?.Dispose();
+                    throw;
+                }
+
+                yield return new TcpSocketServerConnection(acceptedSocket);
+            }
         }
 
         #endregion
 
         public override string ToString()
         {
-            return $"{nameof(TcpSocketListener)}: tcp://{ipEndPoint}";
-        }
-
-        private class TcpSocketEnumerator : IAsyncEnumerator<INetworkConnection>
-        {
-            private readonly CancellationToken cancellationToken;
-            private readonly Socket socket;
-            private INetworkConnection current;
-
-            public TcpSocketEnumerator(IPEndPoint endPoint, in int backlog, CancellationToken cancellationToken)
-            {
-                if(endPoint == null) throw new ArgumentNullException(nameof(endPoint));
-                this.cancellationToken = cancellationToken;
-
-                socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                socket.Bind(endPoint);
-                socket.Listen(backlog);
-            }
-
-            #region Implementation of IAsyncDisposable
-
-            public ValueTask DisposeAsync()
-            {
-                socket.Close();
-                return default;
-            }
-
-            #endregion
-
-            #region Implementation of IAsyncEnumerator<out INetworkConnection>
-
-            public async ValueTask<bool> MoveNextAsync()
-            {
-                try
-                {
-                    var acceptedSocket = await socket.AcceptAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
-                    current = new TcpSocketServerConnection(acceptedSocket);
-                    return true;
-                }
-                catch(OperationCanceledException)
-                {
-                    return false;
-                }
-            }
-
-            public INetworkConnection Current => current;
-
-            #endregion
+            return $"{nameof(TcpSocketListener)}: tcp://{endPoint}";
         }
     }
 }
