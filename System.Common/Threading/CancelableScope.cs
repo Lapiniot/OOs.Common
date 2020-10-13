@@ -2,7 +2,7 @@
 
 namespace System.Threading
 {
-    public class CancelableScope : IAsyncDisposable
+    public class CancelableScope : IAsyncCancelable
     {
         private readonly CancellationTokenSource jointCts;
         private readonly CancellationTokenSource localCts;
@@ -23,9 +23,13 @@ namespace System.Threading
             return new CancelableScope(taskFactory, externalToken);
         }
 
-        public Task Completion => task;
+        #region Implementation of IAsyncCancelable
 
-        #region Implementation of IAsyncDisposable
+        public bool IsCompleted => task.IsCompleted;
+
+        public bool IsCanceled => task.IsCanceled;
+
+        public Exception Exception => task.Exception;
 
         public async ValueTask DisposeAsync()
         {
