@@ -1,14 +1,14 @@
-﻿namespace System.Policies
+﻿using System.Collections.Generic;
+
+namespace System.Policies
 {
-    public delegate bool RetryConditionHandler(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
+    public delegate bool RetryCondition(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
 
     public class ConditionalRetryPolicy : RetryPolicy
     {
-        private readonly RetryConditionHandler[] conditions;
+        private readonly IEnumerable<RetryCondition> conditions;
 
-        public ConditionalRetryPolicy() {}
-
-        public ConditionalRetryPolicy(params RetryConditionHandler[] conditions)
+        public ConditionalRetryPolicy(IEnumerable<RetryCondition> conditions)
         {
             this.conditions = conditions;
         }

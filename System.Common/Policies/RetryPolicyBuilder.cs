@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
-using static System.TimeSpan;
+﻿using System.Collections.Immutable;
+using System.Linq;
 
 namespace System.Policies
 {
-    public class RetryPolicyBuilder
+    public readonly struct RetryPolicyBuilder : IEquatable<RetryPolicyBuilder>
     {
-        private readonly List<RetryConditionHandler> conditions;
-        private TimeSpan timeout = FromMilliseconds(-1);
+        private ImmutableList<RetryCondition> conditions { get; }
 
-        public RetryPolicyBuilder()
+        private RetryPolicyBuilder(ImmutableList<RetryCondition> conditions)
         {
-            conditions = new List<RetryConditionHandler>();
+            this.conditions = conditions;
         }
 
         /// <summary>
@@ -19,39 +18,37 @@ namespace System.Policies
         /// <returns>New instance of the policy</returns>
         public IRetryPolicy Build()
         {
-            return new ConditionalRetryPolicy(conditions.ToArray()) {Timeout = timeout};
+            return new ConditionalRetryPolicy((conditions ?? ImmutableList<RetryCondition>.Empty).ToArray());
         }
 
         /// <summary>
         /// Appends custom retry condition handler to the current instance of the builder
         /// </summary>
         /// <param name="condition">Condition to add</param>
-        /// <returns>Current instance of the builder</returns>
-        public RetryPolicyBuilder WithCondition(RetryConditionHandler condition)
+        /// <returns>New instance of the builder</returns>
+        public RetryPolicyBuilder WithCondition(RetryCondition condition)
         {
-            conditions.Add(condition);
-
-            return this;
+            return new RetryPolicyBuilder((conditions ?? ImmutableList<RetryCondition>.Empty).Add(condition));
         }
 
         /// <summary>
         /// Appends retry threshold condition to the current instance of the builder
         /// </summary>
         /// <param name="maxRetries">Max retry attempts count</param>
-        /// <returns>Current instance of the builder</returns>
+        /// <returns>New instance of the builder</returns>
         public RetryPolicyBuilder WithThreshold(int maxRetries)
         {
-            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) => attempt <= maxRetries);
+            return WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan delay) => attempt <= maxRetries);
         }
 
         /// <summary>
         /// Appends handler which sets retry delay to a fixed amount of time
         /// </summary>
         /// <param name="retryDelay">Retry delay</param>
-        /// <returns>Current instance of the builder</returns>
+        /// <returns>New instance of the builder</returns>
         public RetryPolicyBuilder WithDelay(TimeSpan retryDelay)
         {
-            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) =>
+            return WithCondition((Exception _, int _, TimeSpan _, ref TimeSpan delay) =>
             {
                 delay = retryDelay;
                 return true;
@@ -59,25 +56,17 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Appends handler which sets retry delay to a fixed amount of time
-        /// </summary>
-        /// <param name="retryDelayMilliseconds">Retry delay in milliseconds</param>
-        /// <returns>Current instance of the builder</returns>
-        public RetryPolicyBuilder WithDelay(int retryDelayMilliseconds)
-        {
-            return WithDelay(FromMilliseconds(retryDelayMilliseconds));
-        }
-
-        /// <summary>
         /// Appends handler which sets delay according to exponential function where retry attempt is exponent
         /// </summary>
-        /// <param name="baseMilliseconds">Base value of exponential function in milliseconds</param>
-        /// <returns>Current instance of the builder</returns>
-        public RetryPolicyBuilder WithExponentialDelay(double baseMilliseconds = 2000)
+        /// <param name="baseSeconds">Base value of exponential function in milliseconds</param>
+        /// <param name="baseSeconds">Top limit value in milliseconds</param>
+        /// <returns>New instance of the builder</returns>
+        public RetryPolicyBuilder WithExponentialDelay(double baseSeconds, double limitSeconds)
         {
-            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) =>
+            if(baseSeconds <= 1) throw new ArgumentException("Value must be greater then 1.0", nameof(baseSeconds));
+            return WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan delay) =>
             {
-                delay = FromMilliseconds(Math.Pow(baseMilliseconds, attempt));
+                delay = TimeSpan.FromSeconds(Math.Min(Math.Pow(baseSeconds, attempt), limitSeconds));
                 return true;
             });
         }
@@ -87,37 +76,54 @@ namespace System.Policies
         /// </summary>
         /// <param name="minMilliseconds">Minimal amount of milliseconds to add</param>
         /// <param name="maxMilliseconds">Maximum amount of milliseconds to add</param>
-        /// <returns>Current instance of the builder</returns>
+        /// <returns>New instance of the builder</returns>
         public RetryPolicyBuilder WithJitter(int minMilliseconds = 500, int maxMilliseconds = 10000)
         {
-            var random = new Random();
-
-            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) =>
+            return WithCondition((Exception _, int _, TimeSpan _, ref TimeSpan delay) =>
             {
-                delay = delay.Add(FromMilliseconds(random.Next(minMilliseconds, maxMilliseconds)));
+                delay = delay.Add(TimeSpan.FromMilliseconds(new Random().Next(minMilliseconds, maxMilliseconds)));
                 return true;
             });
         }
 
         /// <summary>
-        /// Sets overall retry operations overallTimeout
-        /// </summary>
-        /// <param name="overallTimeout">Timeout</param>
-        /// <returns>Current instance of the builder</returns>
-        public RetryPolicyBuilder WithTimeout(TimeSpan overallTimeout)
-        {
-            timeout = overallTimeout;
-            return this;
-        }
-
-        /// <summary>
-        /// Appends handler that checks whether operation exception is transient
+        /// Appends handler that checks whether operation exception should breake retry loop
         /// </summary>
         /// <typeparam name="T">Exception type</typeparam>
-        /// <returns>Current instance of the builder</returns>
-        public RetryPolicyBuilder WithTransient<T>() where T : Exception
+        /// <returns>New instance of the builder</returns>
+        public RetryPolicyBuilder WithBreakingException<T>() where T : Exception
         {
-            return WithCondition((Exception e, int attempt, TimeSpan time, ref TimeSpan delay) => e is T);
+            return WithCondition((Exception exception, int _, TimeSpan _, ref TimeSpan _) => exception is not T);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is RetryPolicyBuilder { conditions: { } c } && c == conditions;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return nameof(RetryPolicyBuilder);
+        }
+
+        public bool Equals(RetryPolicyBuilder other)
+        {
+            return other.conditions == conditions;
+        }
+
+        public static bool operator ==(RetryPolicyBuilder b1, RetryPolicyBuilder b2)
+        {
+            return b1.Equals(b2);
+        }
+
+        public static bool operator !=(RetryPolicyBuilder b1, RetryPolicyBuilder b2)
+        {
+            return !b1.Equals(b2);
         }
     }
 }
