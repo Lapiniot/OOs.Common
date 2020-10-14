@@ -3,11 +3,11 @@ using System.Linq;
 
 namespace System.Policies
 {
-    public readonly struct RetryPolicyBuilder : IEquatable<RetryPolicyBuilder>
+    public readonly struct RepeatPolicyBuilder : IEquatable<RepeatPolicyBuilder>
     {
-        private ImmutableList<RetryCondition> conditions { get; }
+        private ImmutableList<RepeatCondition> conditions { get; }
 
-        private RetryPolicyBuilder(ImmutableList<RetryCondition> conditions)
+        private RepeatPolicyBuilder(ImmutableList<RepeatCondition> conditions)
         {
             this.conditions = conditions;
         }
@@ -16,9 +16,9 @@ namespace System.Policies
         /// Creates new instance of the retry policy
         /// </summary>
         /// <returns>New instance of the policy</returns>
-        public IRetryPolicy Build()
+        public IRepeatPolicy Build()
         {
-            return new ConditionalRetryPolicy((conditions ?? ImmutableList<RetryCondition>.Empty).ToArray());
+            return new ConditionalRepeatPolicy((conditions ?? ImmutableList<RepeatCondition>.Empty).ToArray());
         }
 
         /// <summary>
@@ -26,9 +26,9 @@ namespace System.Policies
         /// </summary>
         /// <param name="condition">Condition to add</param>
         /// <returns>New instance of the builder</returns>
-        public RetryPolicyBuilder WithCondition(RetryCondition condition)
+        public RepeatPolicyBuilder WithCondition(RepeatCondition condition)
         {
-            return new RetryPolicyBuilder((conditions ?? ImmutableList<RetryCondition>.Empty).Add(condition));
+            return new RepeatPolicyBuilder((conditions ?? ImmutableList<RepeatCondition>.Empty).Add(condition));
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace System.Policies
         /// </summary>
         /// <param name="maxRetries">Max retry attempts count</param>
         /// <returns>New instance of the builder</returns>
-        public RetryPolicyBuilder WithThreshold(int maxRetries)
+        public RepeatPolicyBuilder WithThreshold(int maxRetries)
         {
             return WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan delay) => attempt <= maxRetries);
         }
@@ -46,7 +46,7 @@ namespace System.Policies
         /// </summary>
         /// <param name="retryDelay">Retry delay</param>
         /// <returns>New instance of the builder</returns>
-        public RetryPolicyBuilder WithDelay(TimeSpan retryDelay)
+        public RepeatPolicyBuilder WithDelay(TimeSpan retryDelay)
         {
             return WithCondition((Exception _, int _, TimeSpan _, ref TimeSpan delay) =>
             {
@@ -61,7 +61,7 @@ namespace System.Policies
         /// <param name="baseSeconds">Base value of exponential function in milliseconds</param>
         /// <param name="baseSeconds">Top limit value in milliseconds</param>
         /// <returns>New instance of the builder</returns>
-        public RetryPolicyBuilder WithExponentialDelay(double baseSeconds, double limitSeconds)
+        public RepeatPolicyBuilder WithExponentialDelay(double baseSeconds, double limitSeconds)
         {
             if(baseSeconds <= 1) throw new ArgumentException("Value must be greater then 1.0", nameof(baseSeconds));
             return WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan delay) =>
@@ -77,7 +77,7 @@ namespace System.Policies
         /// <param name="minMilliseconds">Minimal amount of milliseconds to add</param>
         /// <param name="maxMilliseconds">Maximum amount of milliseconds to add</param>
         /// <returns>New instance of the builder</returns>
-        public RetryPolicyBuilder WithJitter(int minMilliseconds = 500, int maxMilliseconds = 10000)
+        public RepeatPolicyBuilder WithJitter(int minMilliseconds = 500, int maxMilliseconds = 10000)
         {
             return WithCondition((Exception _, int _, TimeSpan _, ref TimeSpan delay) =>
             {
@@ -91,14 +91,14 @@ namespace System.Policies
         /// </summary>
         /// <typeparam name="T">Exception type</typeparam>
         /// <returns>New instance of the builder</returns>
-        public RetryPolicyBuilder WithBreakingException<T>() where T : Exception
+        public RepeatPolicyBuilder WithBreakingException<T>() where T : Exception
         {
             return WithCondition((Exception exception, int _, TimeSpan _, ref TimeSpan _) => exception is not T);
         }
 
         public override bool Equals(object obj)
         {
-            return obj is RetryPolicyBuilder { conditions: { } c } && c == conditions;
+            return obj is RepeatPolicyBuilder { conditions: { } c } && c == conditions;
         }
 
         public override int GetHashCode()
@@ -108,20 +108,20 @@ namespace System.Policies
 
         public override string ToString()
         {
-            return nameof(RetryPolicyBuilder);
+            return nameof(RepeatPolicyBuilder);
         }
 
-        public bool Equals(RetryPolicyBuilder other)
+        public bool Equals(RepeatPolicyBuilder other)
         {
             return other.conditions == conditions;
         }
 
-        public static bool operator ==(RetryPolicyBuilder b1, RetryPolicyBuilder b2)
+        public static bool operator ==(RepeatPolicyBuilder b1, RepeatPolicyBuilder b2)
         {
             return b1.Equals(b2);
         }
 
-        public static bool operator !=(RetryPolicyBuilder b1, RetryPolicyBuilder b2)
+        public static bool operator !=(RepeatPolicyBuilder b1, RepeatPolicyBuilder b2)
         {
             return !b1.Equals(b2);
         }

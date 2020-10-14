@@ -4,15 +4,15 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Policies
 {
-    public abstract class RetryPolicy : IRetryPolicy
+    public abstract class RepeatPolicy : IRepeatPolicy
     {
-        protected abstract bool ShouldRetry(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
+        protected abstract bool ShouldRepeat(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
 
         #region Implementation of IRetryPolicy
 
-        public async Task RetryAsync(Func<CancellationToken, Task> worker, CancellationToken cancellationToken)
+        public async Task RepeatAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken)
         {
-            if(worker is null) throw new ArgumentNullException(nameof(worker));
+            if(operation is null) throw new ArgumentNullException(nameof(operation));
 
             var attempt = 1;
             var delay = TimeSpan.Zero;
@@ -24,7 +24,7 @@ namespace System.Policies
                 {
                     try
                     {
-                        await worker(cancellationToken)
+                        await operation(cancellationToken)
                             // This is a protection step for the operations that do not handle cancellation properly by themselves.
                             // In case of external cancellation, WaitAsync transits to Cancelled state, throwing OperationCancelled exception,
                             // and terminates retry loop. Original async operation may still be in progress, but we give up in order
@@ -32,7 +32,7 @@ namespace System.Policies
                             .WaitAsync(cancellationToken)
                             .ConfigureAwait(false);
 
-                        if(!ShouldRetry(null, attempt, DateTime.UtcNow - startedAt, ref delay))
+                        if(!ShouldRepeat(null, attempt, DateTime.UtcNow - startedAt, ref delay))
                         {
                             break;
                         }
@@ -43,7 +43,7 @@ namespace System.Policies
                     }
                     catch(Exception e)
                     {
-                        if(!ShouldRetry(e, attempt, DateTime.UtcNow - startedAt, ref delay))
+                        if(!ShouldRepeat(e, attempt, DateTime.UtcNow - startedAt, ref delay))
                         {
                             throw;
                         }
