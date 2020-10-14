@@ -13,7 +13,7 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Creates new instance of the retry policy
+        /// Creates new instance of the repeat policy
         /// </summary>
         /// <returns>New instance of the policy</returns>
         public IRepeatPolicy Build()
@@ -22,7 +22,7 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Appends custom retry condition handler to the current instance of the builder
+        /// Appends custom repeat condition handler to the current instance of the builder
         /// </summary>
         /// <param name="condition">Condition to add</param>
         /// <returns>New instance of the builder</returns>
@@ -32,9 +32,9 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Appends retry threshold condition to the current instance of the builder
+        /// Appends repeat threshold condition to the current instance of the builder
         /// </summary>
-        /// <param name="maxRetries">Max retry attempts count</param>
+        /// <param name="maxRetries">Max repeat attempts count</param>
         /// <returns>New instance of the builder</returns>
         public RepeatPolicyBuilder WithThreshold(int maxRetries)
         {
@@ -42,26 +42,26 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Appends handler which sets retry delay to a fixed amount of time
+        /// Appends handler which sets repeat delay to a fixed amount of time
         /// </summary>
-        /// <param name="retryDelay">Retry delay</param>
+        /// <param name="interval">repeat delay</param>
         /// <returns>New instance of the builder</returns>
-        public RepeatPolicyBuilder WithDelay(TimeSpan retryDelay)
+        public RepeatPolicyBuilder WithInterval(TimeSpan interval)
         {
             return WithCondition((Exception _, int _, TimeSpan _, ref TimeSpan delay) =>
             {
-                delay = retryDelay;
+                delay = interval;
                 return true;
             });
         }
 
         /// <summary>
-        /// Appends handler which sets delay according to exponential function where retry attempt is exponent
+        /// Appends handler which sets delay according to exponential function where repeat attempt is exponent
         /// </summary>
-        /// <param name="baseSeconds">Base value of exponential function in milliseconds</param>
-        /// <param name="baseSeconds">Top limit value in milliseconds</param>
+        /// <param name="baseSeconds">Base value of exponential function in seconds</param>
+        /// <param name="baseSeconds">Top limit value in seconds</param>
         /// <returns>New instance of the builder</returns>
-        public RepeatPolicyBuilder WithExponentialDelay(double baseSeconds, double limitSeconds)
+        public RepeatPolicyBuilder WithExponentialInterval(double baseSeconds, double limitSeconds)
         {
             if(baseSeconds <= 1) throw new ArgumentException("Value must be greater then 1.0", nameof(baseSeconds));
             return WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan delay) =>
@@ -72,7 +72,7 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Appends handler to add random jitter time to the current delay value
+        /// Appends handler to add random jitter time to the current interval value
         /// </summary>
         /// <param name="minMilliseconds">Minimal amount of milliseconds to add</param>
         /// <param name="maxMilliseconds">Maximum amount of milliseconds to add</param>
@@ -87,7 +87,7 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Appends handler that checks whether operation exception should breake retry loop
+        /// Appends handler that checks whether operation exception should breake repeat loop
         /// </summary>
         /// <typeparam name="T">Exception type</typeparam>
         /// <returns>New instance of the builder</returns>
