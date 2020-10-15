@@ -2,34 +2,38 @@
 
 namespace System.Threading
 {
-    public class CancelableScope : IAsyncCancelable
+    public class CancelableOperationScope : IAsyncCancelable
     {
         private readonly CancellationTokenSource jointCts;
         private readonly CancellationTokenSource localCts;
-        private readonly Task task;
 
-        private CancelableScope(Func<CancellationToken, Task> taskFactory, CancellationToken externalToken)
+        private CancelableOperationScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken)
         {
-            if(taskFactory == null) throw new ArgumentNullException(nameof(taskFactory));
+            if(operation == null) throw new ArgumentNullException(nameof(operation));
 
             localCts = new CancellationTokenSource();
-            jointCts = CancellationTokenSource.CreateLinkedTokenSource(localCts.Token, externalToken);
 
-            task = taskFactory(jointCts.Token);
+            var token = stoppingToken != default
+                ? (jointCts = CancellationTokenSource.CreateLinkedTokenSource(localCts.Token, stoppingToken)).Token
+                : localCts.Token;
+
+            Completion = operation(token);
         }
 
-        public static CancelableScope StartInScope(Func<CancellationToken, Task> taskFactory, CancellationToken externalToken = default)
+        public static CancelableOperationScope StartInScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default)
         {
-            return new CancelableScope(taskFactory, externalToken);
+            return new CancelableOperationScope(operation, stoppingToken);
         }
 
         #region Implementation of IAsyncCancelable
 
-        public bool IsCompleted => task.IsCompleted;
+        bool IAsyncCancelable.IsCompleted => Completion.IsCompleted;
 
-        public bool IsCanceled => task.IsCanceled;
+        bool IAsyncCancelable.IsCanceled => Completion.IsCanceled;
 
-        public Exception Exception => task.Exception;
+        Exception IAsyncCancelable.Exception => Completion.Exception;
+
+        public Task Completion { get; }
 
         public async ValueTask DisposeAsync()
         {
@@ -38,7 +42,13 @@ namespace System.Threading
             using(jointCts)
             using(localCts)
             {
-                await task.ConfigureAwait(false);
+                try
+                {
+                    await Completion.ConfigureAwait(false);
+                }
+                catch(OperationCanceledException)
+                {
+                }
             }
         }
 

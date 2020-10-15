@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using static System.Properties.Strings;
 
 namespace System.Threading
 {
@@ -9,11 +8,8 @@ namespace System.Threading
     public abstract class WorkerBase : IAsyncDisposable
     {
         private bool disposed;
-        private CancellationTokenSource globalCts;
-        private int stateSentinel;
-        private Task worker;
-
-        public bool IsRunning => Volatile.Read(ref stateSentinel) == 1;
+        private SemaphoreSlim semaphore = new SemaphoreSlim(1);
+        private CancelableOperationScope cancelableOperation;
 
         #region Implementation of IAsyncDisposable
 
@@ -28,6 +24,7 @@ namespace System.Threading
             finally
             {
                 disposed = true;
+                semaphore.Dispose();
             }
         }
 
@@ -41,33 +38,26 @@ namespace System.Threading
         protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
 
         /// <summary>
-        /// Starts synchronously and continues to run work asynchronously on the background
-        /// </summary>
-        public void Start()
-        {
-            if(disposed) throw new ObjectDisposedException(GetType().Name);
-
-            worker = Interlocked.CompareExchange(ref stateSentinel, 1, 0) switch
-            {
-                0 => StartWorkerAsync(default),
-                _ => throw new InvalidOperationException(AlreadyRunningMessage)
-            };
-        }
-
-        /// <summary>
         /// Starts work and returns task that represent running asynchronous work
         /// </summary>
         /// <param name="stoppingToken"><see cref="CancellationToken" /> that signals about external cancellation</param>
         /// <returns>Awaitable task that represents currently running operation</returns>
-        public Task RunAsync(CancellationToken stoppingToken)
+        public async Task RunAsync(CancellationToken stoppingToken)
         {
-            if(disposed) throw new ObjectDisposedException(GetType().Name);
+            await semaphore.WaitAsync(stoppingToken).ConfigureAwait(false);
 
-            return Interlocked.CompareExchange(ref stateSentinel, 1, 0) switch
+            CancelableOperationScope captured = null;
+
+            try
             {
-                0 => worker = StartWorkerAsync(stoppingToken),
-                _ => throw new InvalidOperationException(AlreadyRunningMessage)
-            };
+                captured = (cancelableOperation ??= CancelableOperationScope.StartInScope(ct => ExecuteAsync(ct), stoppingToken));
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+
+            await captured.Completion.ConfigureAwait(false);
         }
 
         /// <summary>
@@ -76,39 +66,21 @@ namespace System.Threading
         /// <returns>Awaitable task which represents result of background work completion</returns>
         public async Task StopAsync()
         {
-            var localWorker = worker;
-            var localCts = globalCts;
+            await semaphore.WaitAsync().ConfigureAwait(false);
 
-            switch(Interlocked.CompareExchange(ref stateSentinel, 2, 1))
-            {
-                case 1:
-                    using(localCts)
-                    {
-                        localCts.Cancel();
-                        await localWorker.ConfigureAwait(false);
-                    }
-
-                    break;
-                case 2:
-                    await localWorker.ConfigureAwait(false);
-                    break;
-            }
-        }
-
-        private async Task StartWorkerAsync(CancellationToken stoppingToken)
-        {
-            var cts = new CancellationTokenSource();
-            var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
             try
             {
-                globalCts = cts;
-                await ExecuteAsync(linkedCts.Token).ConfigureAwait(false);
+                if(cancelableOperation is not null)
+                {
+                    await using(cancelableOperation)
+                    {
+                        cancelableOperation = null;
+                    }
+                }
             }
-            catch(OperationCanceledException) {}
             finally
             {
-                linkedCts.Dispose();
-                if(Interlocked.Exchange(ref stateSentinel, 0) == 1) cts.Dispose();
+                semaphore.Release();
             }
         }
     }
