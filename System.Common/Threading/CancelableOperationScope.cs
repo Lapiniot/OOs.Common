@@ -17,7 +17,15 @@ namespace System.Threading
                 ? (jointCts = CancellationTokenSource.CreateLinkedTokenSource(localCts.Token, stoppingToken)).Token
                 : localCts.Token;
 
-            Completion = operation(token);
+            try
+            {
+                Completion = operation(token);
+            }
+            catch
+            {
+                using(localCts) using(jointCts) { };
+                throw;
+            }
         }
 
         public static CancelableOperationScope StartInScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default)
@@ -39,8 +47,7 @@ namespace System.Threading
         {
             localCts.Cancel();
 
-            using(jointCts)
-            using(localCts)
+            using(localCts) using(jointCts)
             {
                 try
                 {
