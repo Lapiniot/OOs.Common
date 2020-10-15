@@ -6,6 +6,7 @@ namespace System.Threading
     {
         private readonly CancellationTokenSource jointCts;
         private readonly CancellationTokenSource localCts;
+        private long disposed;
 
         private CancelableOperationScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken)
         {
@@ -45,12 +46,13 @@ namespace System.Threading
 
         public async ValueTask DisposeAsync()
         {
-            localCts.Cancel();
+            if(Interlocked.Exchange(ref disposed, 1) != 0) return;
 
             using(localCts) using(jointCts)
             {
                 try
                 {
+                    localCts.Cancel();
                     await Completion.ConfigureAwait(false);
                 }
                 catch(OperationCanceledException)
