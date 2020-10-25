@@ -89,21 +89,25 @@ namespace System.Net.Sockets
 
             var socket = CreateIPv4UdpMulticastSender();
 
+            socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, ExclusiveAddressUse, false);
+
             socket.Bind(new IPEndPoint(Any, groupToJoin.Port));
+
             socket.SetSocketOption(IP, AddMembership, new MulticastOption(groupToJoin.Address));
 
-            if(!IsOSPlatform(OSPlatform.Linux)) return socket;
-
-            var ptr = Marshal.AllocHGlobal(sizeof(int));
-            Marshal.WriteInt64(ptr, 0, 0);
-
-            try
+            if(IsOSPlatform(OSPlatform.Linux))
             {
-                _ = linux_setsockopt(socket.Handle, 0, IpMulticastAll, ptr, sizeof(int));
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(ptr);
+                var ptr = Marshal.AllocHGlobal(sizeof(int));
+                Marshal.WriteInt64(ptr, 0, 0);
+                try
+                {
+                    _ = linux_setsockopt(socket.Handle, 0, IpMulticastAll, ptr, sizeof(int));
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(ptr);
+                }
             }
 
             return socket;
