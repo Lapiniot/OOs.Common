@@ -19,10 +19,10 @@ namespace System.Net.Sockets
         private const int IpMulticastAll = 49;
 
         [DllImport("libc", EntryPoint = "setsockopt")]
-        internal static extern int macos_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
+        internal static extern int MacOS_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
 
         [DllImport("libc.so.6", EntryPoint = "setsockopt")]
-        internal static extern int linux_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
+        internal static extern int Linux_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
 
         public static IPEndPoint GetIPv4MulticastGroup(int port)
         {
@@ -96,18 +96,17 @@ namespace System.Net.Sockets
 
             socket.SetSocketOption(IP, AddMembership, new MulticastOption(groupToJoin.Address));
 
-            if(IsOSPlatform(OSPlatform.Linux))
+            if(!IsOSPlatform(OSPlatform.Linux)) return socket;
+
+            var ptr = Marshal.AllocHGlobal(sizeof(int));
+            Marshal.WriteInt32(ptr, 0, 0);
+            try
             {
-                var ptr = Marshal.AllocHGlobal(sizeof(int));
-                Marshal.WriteInt64(ptr, 0, 0);
-                try
-                {
-                    _ = linux_setsockopt(socket.Handle, 0, IpMulticastAll, ptr, sizeof(int));
-                }
-                finally
-                {
-                    Marshal.FreeHGlobal(ptr);
-                }
+                _ = Linux_setsockopt(socket.Handle, 0, IpMulticastAll, ptr, sizeof(int));
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
             }
 
             return socket;

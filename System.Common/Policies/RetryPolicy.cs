@@ -6,8 +6,6 @@ namespace System.Policies
 {
     public abstract class RetryPolicy : IRetryPolicy
     {
-        protected abstract bool ShouldRetry(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
-
         #region Implementation of IRetryPolicy
 
         public async Task<T> RetryAsync<T>(Func<CancellationToken, Task<T>> operation, CancellationToken cancellationToken)
@@ -49,5 +47,7 @@ namespace System.Policies
         }
 
         #endregion
+
+        protected abstract bool ShouldRetry(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
     }
 }

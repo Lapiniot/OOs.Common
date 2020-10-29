@@ -6,8 +6,6 @@ namespace System.Policies
 {
     public abstract class RepeatPolicy : IRepeatPolicy
     {
-        protected abstract bool ShouldRepeat(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
-
         #region Implementation of IRetryPolicy
 
         public async Task RepeatAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken)
@@ -53,12 +51,12 @@ namespace System.Policies
 
                     attempt++;
                 }
-                catch(OperationCanceledException)
-                {
-                }
+                catch(OperationCanceledException) {}
             }
         }
 
         #endregion
+
+        protected abstract bool ShouldRepeat(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
     }
 }

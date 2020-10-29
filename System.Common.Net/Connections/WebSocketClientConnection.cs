@@ -9,7 +9,7 @@ using static System.Net.Properties.Strings;
 
 namespace System.Net.Connections
 {
-    public class WebSocketClientConnection : WebSocketConnection<ClientWebSocket>
+    public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSocket>
     {
         private readonly string[] subProtocols;
 
@@ -40,10 +40,8 @@ namespace System.Net.Connections
                 await socket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
                 SetWebSocket(socket);
             }
-            catch(WebSocketException wse) when(
-                wse.InnerException is HttpRequestException hre &&
-                hre.InnerException is SocketException se &&
-                se.SocketErrorCode == SocketError.HostNotFound)
+            catch(WebSocketException wse) when(wse.InnerException is HttpRequestException
+                {InnerException: SocketException {SocketErrorCode: SocketError.HostNotFound}})
             {
                 throw new HostNotFoundException(wse);
             }

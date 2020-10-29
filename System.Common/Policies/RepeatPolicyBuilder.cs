@@ -5,11 +5,11 @@ namespace System.Policies
 {
     public readonly struct RepeatPolicyBuilder : IEquatable<RepeatPolicyBuilder>
     {
-        private ImmutableList<RepeatCondition> conditions { get; }
+        private ImmutableList<RepeatCondition> Conditions { get; }
 
         private RepeatPolicyBuilder(ImmutableList<RepeatCondition> conditions)
         {
-            this.conditions = conditions;
+            Conditions = conditions;
         }
 
         /// <summary>
@@ -18,7 +18,7 @@ namespace System.Policies
         /// <returns>New instance of the policy</returns>
         public IRepeatPolicy Build()
         {
-            return new ConditionalRepeatPolicy((conditions ?? ImmutableList<RepeatCondition>.Empty).ToArray());
+            return new ConditionalRepeatPolicy((Conditions ?? ImmutableList<RepeatCondition>.Empty).ToArray());
         }
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace System.Policies
         /// <returns>New instance of the builder</returns>
         public RepeatPolicyBuilder WithCondition(RepeatCondition condition)
         {
-            return new RepeatPolicyBuilder((conditions ?? ImmutableList<RepeatCondition>.Empty).Add(condition));
+            return new RepeatPolicyBuilder((Conditions ?? ImmutableList<RepeatCondition>.Empty).Add(condition));
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace System.Policies
         /// <returns>New instance of the builder</returns>
         public RepeatPolicyBuilder WithThreshold(int maxRetries)
         {
-            return WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan delay) => attempt <= maxRetries);
+            return WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan _) => attempt <= maxRetries);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace System.Policies
         /// Appends handler which sets delay according to exponential function where repeat attempt is exponent
         /// </summary>
         /// <param name="baseSeconds">Base value of exponential function in seconds</param>
-        /// <param name="baseSeconds">Top limit value in seconds</param>
+        /// <param name="limitSeconds">Top limit value in seconds</param>
         /// <returns>New instance of the builder</returns>
         public RepeatPolicyBuilder WithExponentialInterval(double baseSeconds, double limitSeconds)
         {
@@ -87,7 +87,7 @@ namespace System.Policies
         }
 
         /// <summary>
-        /// Appends handler that checks whether operation exception should breake repeat loop
+        /// Appends handler that checks whether operation exception should break repeat loop
         /// </summary>
         /// <typeparam name="T">Exception type</typeparam>
         /// <returns>New instance of the builder</returns>
@@ -98,7 +98,7 @@ namespace System.Policies
 
         public override bool Equals(object obj)
         {
-            return obj is RepeatPolicyBuilder { conditions: { } c } && c == conditions;
+            return obj is RepeatPolicyBuilder {Conditions: {} c} && c == Conditions;
         }
 
         public override int GetHashCode()
@@ -113,7 +113,7 @@ namespace System.Policies
 
         public bool Equals(RepeatPolicyBuilder other)
         {
-            return other.conditions == conditions;
+            return other.Conditions == Conditions;
         }
 
         public static bool operator ==(RepeatPolicyBuilder b1, RepeatPolicyBuilder b2)

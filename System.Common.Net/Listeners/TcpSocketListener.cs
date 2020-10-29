@@ -18,9 +18,7 @@ namespace System.Net.Listeners
 
         #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
-#pragma warning disable 8425
         public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-#pragma warning restore 8425
         {
             using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             socket.Bind(endPoint);

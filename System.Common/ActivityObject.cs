@@ -11,8 +11,28 @@ namespace System
     public abstract class ActivityObject : IAsyncDisposable
     {
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
+        private long disposed;
 
         protected bool IsRunning { get; private set; }
+
+        #region Implementation of IAsyncDisposable
+
+        public virtual async ValueTask DisposeAsync()
+        {
+            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
+            try
+            {
+                GC.SuppressFinalize(this);
+                await StopActivityAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                semaphore.Dispose();
+            }
+        }
+
+        #endregion
 
         protected abstract Task StartingAsync(CancellationToken cancellationToken);
 
@@ -25,7 +45,7 @@ namespace System
 
         protected void CheckDisposed()
         {
-            if(disposed) throw new InvalidOperationException("Cannot use this instance - has been already disposed.");
+            if(Interlocked.Read(ref disposed) == 1) throw new InvalidOperationException("Cannot use this instance - has been already disposed.");
         }
 
         protected async Task StartActivityAsync(CancellationToken cancellationToken = default)
@@ -74,27 +94,5 @@ namespace System
                 }
             }
         }
-
-        #region Implementation of IAsyncDisposable
-
-        private bool disposed;
-
-        public virtual async ValueTask DisposeAsync()
-        {
-            if(!disposed)
-            {
-                try
-                {
-                    await StopActivityAsync().ConfigureAwait(false);
-                }
-                finally
-                {
-                    semaphore.Dispose();
-                    disposed = true;
-                }
-            }
-        }
-
-        #endregion
     }
 }

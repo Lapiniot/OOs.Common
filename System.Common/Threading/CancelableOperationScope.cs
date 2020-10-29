@@ -2,7 +2,7 @@
 
 namespace System.Threading
 {
-    public class CancelableOperationScope : IAsyncCancelable
+    public sealed class CancelableOperationScope : IAsyncCancelable
     {
         private readonly CancellationTokenSource jointCts;
         private readonly CancellationTokenSource localCts;
@@ -24,7 +24,9 @@ namespace System.Threading
             }
             catch
             {
-                using(localCts) using(jointCts) { };
+                using(localCts)
+                using(jointCts) {}
+
                 throw;
             }
         }
@@ -46,18 +48,17 @@ namespace System.Threading
 
         public async ValueTask DisposeAsync()
         {
-            if(Interlocked.Exchange(ref disposed, 1) != 0) return;
+            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
 
-            using(localCts) using(jointCts)
+            using(localCts)
+            using(jointCts)
             {
                 try
                 {
                     localCts.Cancel();
                     await Completion.ConfigureAwait(false);
                 }
-                catch(OperationCanceledException)
-                {
-                }
+                catch(OperationCanceledException) {}
             }
         }
 

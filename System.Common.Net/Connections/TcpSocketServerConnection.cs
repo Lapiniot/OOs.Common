@@ -7,9 +7,10 @@ using static System.Threading.Tasks.Task;
 
 namespace System.Net.Connections
 {
-    public class TcpSocketServerConnection : INetworkConnection
+    public sealed class TcpSocketServerConnection : INetworkConnection
     {
         private readonly Socket socket;
+        private int disposed;
 
         public TcpSocketServerConnection(Socket acceptedSocket)
         {
@@ -28,6 +29,8 @@ namespace System.Net.Connections
 
         public async ValueTask DisposeAsync()
         {
+            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
             using(socket)
             {
                 await DisconnectAsync().ConfigureAwait(false);

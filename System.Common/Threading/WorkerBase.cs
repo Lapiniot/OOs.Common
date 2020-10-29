@@ -7,23 +7,22 @@ namespace System.Threading
     /// </summary>
     public abstract class WorkerBase : IAsyncDisposable
     {
-        private bool disposed;
-        private SemaphoreSlim semaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
         private CancelableOperationScope cancelableOperation;
+        private int disposed;
 
         #region Implementation of IAsyncDisposable
 
         public virtual async ValueTask DisposeAsync()
         {
-            if(disposed) return;
-
+            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
             try
             {
+                GC.SuppressFinalize(this);
                 await StopAsync().ConfigureAwait(false);
             }
             finally
             {
-                disposed = true;
                 semaphore.Dispose();
             }
         }
@@ -46,11 +45,11 @@ namespace System.Threading
         {
             await semaphore.WaitAsync(stoppingToken).ConfigureAwait(false);
 
-            CancelableOperationScope captured = null;
+            CancelableOperationScope captured;
 
             try
             {
-                captured = (cancelableOperation ??= CancelableOperationScope.StartInScope(ct => ExecuteAsync(ct), stoppingToken));
+                captured = cancelableOperation ??= CancelableOperationScope.StartInScope(ct => ExecuteAsync(ct), stoppingToken);
             }
             finally
             {

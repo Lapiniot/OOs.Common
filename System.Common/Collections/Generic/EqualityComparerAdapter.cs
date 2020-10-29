@@ -16,7 +16,7 @@ namespace System.Collections.Generic
 
         public override int GetHashCode(T obj)
         {
-            return obj != null ? obj.GetHashCode() : 0;
+            return obj.GetHashCode();
         }
     }
 }

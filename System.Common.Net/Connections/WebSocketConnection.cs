@@ -10,6 +10,7 @@ namespace System.Net.Connections
 {
     public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where TWebSocket : WebSocket
     {
+        private int disposed;
         private TWebSocket socket;
 
         protected WebSocketConnection(TWebSocket socket)
@@ -19,10 +20,13 @@ namespace System.Net.Connections
 
         #region Implementation of IAsyncDisposable
 
-        public async ValueTask DisposeAsync()
+        public virtual async ValueTask DisposeAsync()
         {
+            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
             using(socket)
             {
+                GC.SuppressFinalize(this);
                 await DisconnectAsync().ConfigureAwait(false);
             }
         }
