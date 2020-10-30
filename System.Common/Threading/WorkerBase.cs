@@ -13,6 +13,8 @@ namespace System.Threading
 
         #region Implementation of IAsyncDisposable
 
+        public bool IsRunning => Volatile.Read(ref cancelableOperation) != null;
+
         public virtual async ValueTask DisposeAsync()
         {
             if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
