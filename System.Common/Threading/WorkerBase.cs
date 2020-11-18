@@ -11,26 +11,6 @@ namespace System.Threading
         private CancelableOperationScope cancelableOperation;
         private int disposed;
 
-        #region Implementation of IAsyncDisposable
-
-        public bool IsRunning => Volatile.Read(ref cancelableOperation) != null;
-
-        public virtual async ValueTask DisposeAsync()
-        {
-            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
-            try
-            {
-                GC.SuppressFinalize(this);
-                await StopAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                semaphore.Dispose();
-            }
-        }
-
-        #endregion
-
         /// <summary>
         /// Must be implemented by derived type and represents actual asynchronous operation to be run on background
         /// </summary>
@@ -84,5 +64,25 @@ namespace System.Threading
                 semaphore.Release();
             }
         }
+
+        #region Implementation of IAsyncDisposable
+
+        public bool IsRunning => Volatile.Read(ref cancelableOperation) != null;
+
+        public virtual async ValueTask DisposeAsync()
+        {
+            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+            try
+            {
+                GC.SuppressFinalize(this);
+                await StopAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                semaphore.Dispose();
+            }
+        }
+
+        #endregion
     }
 }

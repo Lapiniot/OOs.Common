@@ -15,7 +15,7 @@ namespace System.Common.Tests
         public void Throw_ArgumentNullException_GivenKey_Null()
         {
             var hq = new HashQueueCollection<string, string>();
-            Assert.ThrowsException<ArgumentNullException>(() => hq.AddOrUpdate(null, "value 2", (k, v) => ""));
+            Assert.ThrowsException<ArgumentNullException>(() => hq.AddOrUpdate(null, "value 2", (_, _) => ""));
         }
 
         [TestMethod]
@@ -32,7 +32,7 @@ namespace System.Common.Tests
 
             const string expected = "value 4";
 
-            var actual = hashQueue.AddOrUpdate("key4", expected, (k, v) => "");
+            var actual = hashQueue.AddOrUpdate("key4", expected, (_, _) => "");
 
             Assert.AreSame(expected, actual);
         }
@@ -51,7 +51,7 @@ namespace System.Common.Tests
             const string value3 = "value 3";
             const string value4 = "value 4";
 
-            var actual = hashQueue.AddOrUpdate(key4, value4, (k, v) => "");
+            var actual = hashQueue.AddOrUpdate(key4, value4, (_, _) => "");
 
             Assert.AreEqual(value4, actual);
 
@@ -84,7 +84,7 @@ namespace System.Common.Tests
             const string key4 = "key4";
             const string value4 = "value 4";
 
-            var actual = hashQueue.AddOrUpdate(key4, value4, (k, v) => "");
+            var actual = hashQueue.AddOrUpdate(key4, value4, (_, _) => "");
 
             Assert.AreEqual(value4, actual);
 
@@ -115,7 +115,7 @@ namespace System.Common.Tests
             var hashQueue = CreateSampleHashQueue();
 
             const string expected = "updated value";
-            var actual = hashQueue.AddOrUpdate("key2", "value 2-2", (k, v) => expected);
+            var actual = hashQueue.AddOrUpdate("key2", "value 2-2", (_, _) => expected);
 
             Assert.AreEqual(expected, actual);
         }
@@ -147,7 +147,7 @@ namespace System.Common.Tests
 
             const string expected = "updated value 2";
 
-            var actual = hashQueue.AddOrUpdate(key2, value2, (k, v) => expected);
+            var actual = hashQueue.AddOrUpdate(key2, value2, (_, _) => expected);
 
             Assert.AreEqual(expected, actual);
 
@@ -176,7 +176,7 @@ namespace System.Common.Tests
             const string key3 = "key3";
 
             const string expected = "updated value 2";
-            var actual = hashQueue.AddOrUpdate(key2, "", (k, v) => expected);
+            var actual = hashQueue.AddOrUpdate(key2, "", (_, _) => expected);
 
             Assert.AreEqual(expected, actual);
 
