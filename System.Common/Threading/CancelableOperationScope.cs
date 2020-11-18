@@ -33,7 +33,7 @@ namespace System.Threading
 
         public static CancelableOperationScope StartInScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default)
         {
-            return new CancelableOperationScope(operation, stoppingToken);
+            return new(operation, stoppingToken);
         }
 
         #region Implementation of IAsyncCancelable

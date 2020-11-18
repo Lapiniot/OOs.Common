@@ -8,7 +8,7 @@ namespace System.Common.Tests
     {
         internal static HashQueueCollection<string, string> CreateSampleHashQueue()
         {
-            return new HashQueueCollection<string, string>(("key1", "value 1"), ("key2", "value 2"), ("key3", "value 3"));
+            return new(("key1", "value 1"), ("key2", "value 2"), ("key3", "value 3"));
         }
 
         [TestMethod]

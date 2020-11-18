@@ -10,7 +10,7 @@ namespace System
     /// </summary>
     public abstract class ActivityObject : IAsyncDisposable
     {
-        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim semaphore = new(1);
         private bool disposed;
         private long disposeState;
 

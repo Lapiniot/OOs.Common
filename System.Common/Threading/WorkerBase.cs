@@ -7,7 +7,7 @@ namespace System.Threading
     /// </summary>
     public abstract class WorkerBase : IAsyncDisposable
     {
-        private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim semaphore = new(1);
         private CancelableOperationScope cancelableOperation;
         private int disposed;
 

@@ -28,7 +28,7 @@ namespace System.Policies
         /// <returns>New instance of the builder</returns>
         public RepeatPolicyBuilder WithCondition(RepeatCondition condition)
         {
-            return new RepeatPolicyBuilder((Conditions ?? ImmutableList<RepeatCondition>.Empty).Add(condition));
+            return new((Conditions ?? ImmutableList<RepeatCondition>.Empty).Add(condition));
         }
 
         /// <summary>

@@ -26,7 +26,7 @@ namespace System.Net.Sockets
 
         public static IPEndPoint GetIPv4MulticastGroup(int port)
         {
-            return new IPEndPoint(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
+            return new(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
         }
 
         public static IPEndPoint GetIPv4SSDPGroup()
@@ -36,7 +36,7 @@ namespace System.Net.Sockets
 
         public static Socket CreateUdpBroadcast(AddressFamily addressFamily)
         {
-            return new Socket(addressFamily, Dgram, ProtocolType.Udp) {EnableBroadcast = true};
+            return new(addressFamily, Dgram, ProtocolType.Udp) {EnableBroadcast = true};
         }
 
         public static Socket CreateUdpConnected(IPEndPoint endpoint)

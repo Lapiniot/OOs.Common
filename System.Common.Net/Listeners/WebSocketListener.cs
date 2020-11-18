@@ -29,7 +29,7 @@ namespace System.Net.Listeners
 
         #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
-        public IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
+        public IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             return new WebSocketEnumerator(prefixes, subProtocols, keepAliveInterval, receiveBufferSize, cancellationToken);
         }
