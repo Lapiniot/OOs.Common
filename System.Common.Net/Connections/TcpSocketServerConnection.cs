@@ -38,6 +38,7 @@ namespace System.Net.Connections
         }
 
         public bool IsConnected => socket.Connected;
+        public Socket Socket => socket;
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)
         {

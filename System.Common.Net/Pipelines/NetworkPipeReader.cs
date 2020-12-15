@@ -17,7 +17,6 @@ namespace System.Net.Pipelines
         private const int Started = 1;
         private const int Stopping = 2;
         private readonly INetworkConnection connection;
-        private readonly PipeOptions pipeOptions;
         private bool disposed;
         private CancellationTokenSource globalCts;
         private PipeReader pipeReader;
@@ -28,7 +27,7 @@ namespace System.Net.Pipelines
         public NetworkPipeReader(INetworkConnection connection, PipeOptions pipeOptions = null)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
-            this.pipeOptions = pipeOptions ?? new PipeOptions(useSynchronizationContext: false);
+            (pipeReader, pipeWriter) = new Pipe(pipeOptions ?? new PipeOptions(useSynchronizationContext: false));
         }
 
         #region Implementation of IAsyncDisposable
@@ -58,7 +57,6 @@ namespace System.Net.Pipelines
                 case Stopped:
                     var cts = new CancellationTokenSource();
                     globalCts = cts;
-                    (pipeReader, pipeWriter) = new Pipe(pipeOptions);
                     producer = StartProducerAsync(pipeWriter, cts.Token);
                     break;
                 case Stopping:
