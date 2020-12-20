@@ -10,5 +10,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
+    <PackageReference Include="System.IO.Pipelines" Version="5.0.1" />
   </ItemGroup>
 </Project>
