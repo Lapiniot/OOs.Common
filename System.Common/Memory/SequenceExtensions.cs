@@ -6,30 +6,49 @@ namespace System.Memory
     {
         public const byte CR = (byte)'\r';
         public const byte LF = (byte)'\n';
+        private static byte[] NewLine = new byte[] { 0x0d, 0x0a };
 
-        public static bool TryGetLine(this ReadOnlySequence<byte> buffer, out ReadOnlyMemory<byte> line)
+        public static bool TryReadLine(this ReadOnlySequence<byte> sequence, out ReadOnlyMemory<byte> line)
         {
             line = default;
 
-            if(buffer.IsSingleSegment)
+            if(sequence.IsSingleSegment)
             {
-                var span = buffer.First.Span;
+                var span = sequence.First.Span;
                 var index = span.IndexOf(CR);
                 if(index <= 0 || index >= span.Length - 1 || span[index + 1] != LF) return false;
 
-                line = buffer.First.Slice(0, index);
+                line = sequence.First.Slice(0, index);
                 return true;
             }
 
-            var pos = buffer.PositionOf(CR);
+            var pos = sequence.PositionOf(CR);
             if(pos == null) return false;
-            var position = buffer.GetPosition(1, pos.Value);
-            if(!buffer.TryGet(ref position, out var mem) || mem.Length <= 0 || mem.Span[0] != LF) return false;
+            var position = sequence.GetPosition(1, pos.Value);
+            if(!sequence.TryGet(ref position, out var mem) || mem.Length <= 0 || mem.Span[0] != LF) return false;
 
-            var slice = buffer.Slice(0, pos.Value);
+            var slice = sequence.Slice(0, pos.Value);
 
             line = slice.First.Length == slice.Length ? slice.First : slice.ToArray();
             return true;
+        }
+
+        public static bool TryReadLine(this ref SequenceReader<byte> sequenceReader, out ReadOnlySequence<byte> line, bool strict = true)
+        {
+            if(sequenceReader.TryReadToAny(out line, NewLine))
+            {
+                sequenceReader.AdvancePastAny(0x0d, 0x0a);
+                return true;
+            }
+            else if(!strict)
+            {
+                line = sequenceReader.Sequence.Slice(sequenceReader.Position);
+                sequenceReader.Advance(sequenceReader.Remaining);
+                return true;
+            }
+
+            line = default;
+            return false;
         }
     }
 }
