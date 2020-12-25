@@ -35,7 +35,7 @@ namespace System.IO.Pipelines
                 if(buffer.Length > 0)
                 {
                     var consumed = 0L;
-                    foreach(var (count, data, completed) in Parse(buffer))
+                    foreach(var (count, data, completed) in Parse(result))
                     {
                         consumed += count;
                         if(count > 0) yield return data;
@@ -64,7 +64,7 @@ namespace System.IO.Pipelines
             }
         }
 
-        protected abstract IEnumerable<ByteSequenceParser<T>.ParseResult> Parse(ReadOnlySequence<byte> buffer);
+        protected abstract IEnumerable<ByteSequenceParser<T>.ParseResult> Parse(ReadResult readResult);
 
         protected record ParseResult(long Consumed, T Result, bool IsCompleted);
     }
