@@ -74,7 +74,7 @@ namespace System.Common.CommandLine
 
                 nmap.Add(item.Name, item);
 
-                if(item.Synonym != null) smap.Add(item.Synonym, item);
+                if(item.ShortName != null) smap.Add(item.ShortName, item);
             }
 
             command = commands.SingleOrDefault(c => c.Default)?.Name;
@@ -98,11 +98,11 @@ namespace System.Common.CommandLine
 
                 if(arg.StartsWith("--", false, CultureInfo.InvariantCulture))
                 {
-                    AddBySynonym(arg[2..], smap, arguments);
+                    AddByName(arg[2..], nmap, arguments);
                 }
                 else if(arg[0] == '-' || arg[0] == '/')
                 {
-                    AddByName(arg[1..], queue, nmap, arguments);
+                    AddByShortName(arg[1..], queue, smap, arguments);
                 }
                 else
                 {
@@ -111,7 +111,7 @@ namespace System.Common.CommandLine
             }
         }
 
-        private static void AddByName(string arg, Queue<string> queue, IDictionary<string, ArgumentAttribute> nmap, IDictionary<string, object> arguments)
+        private static void AddByShortName(string arg, Queue<string> queue, IDictionary<string, ArgumentAttribute> nmap, IDictionary<string, object> arguments)
         {
             if(nmap.TryGetValue(arg, out var def))
             {
@@ -209,7 +209,7 @@ namespace System.Common.CommandLine
             return true;
         }
 
-        private static void AddBySynonym(string arg, IDictionary<string, ArgumentAttribute> smap, IDictionary<string, object> arguments)
+        private static void AddByName(string arg, IDictionary<string, ArgumentAttribute> smap, IDictionary<string, object> arguments)
         {
             var pair = arg.Split(new[] {'='}, 2);
 
