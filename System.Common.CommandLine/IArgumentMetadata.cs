@@ -5,8 +5,6 @@ namespace System.Common.CommandLine
         string Name { get; }
         string ShortName { get; }
         Type Type { get; }
-        object DefaultValue { get; }
-        bool Optional { get; }
         string Description { get; }
     }
 }

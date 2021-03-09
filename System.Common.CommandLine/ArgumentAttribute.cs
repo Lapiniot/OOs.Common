@@ -20,10 +20,6 @@ namespace System.Common.CommandLine
 
         public Type Type { get; set; }
 
-        public object DefaultValue { get; set; }
-
-        public bool Optional { get; set; }
-
         public string ShortName { get; set; }
 
         public string Description { get; set; }
