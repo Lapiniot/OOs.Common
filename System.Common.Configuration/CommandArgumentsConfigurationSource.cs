@@ -13,7 +13,7 @@ namespace System.Configuration
 
         public IConfigurationProvider Build(IConfigurationBuilder builder)
         {
-            return new CommandArgumentsConfigurationProvider(args);
+            return new CommandArgumentsConfigurationProvider(args, "args");
         }
     }
 }
