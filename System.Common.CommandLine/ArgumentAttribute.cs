@@ -1,7 +1,7 @@
 namespace System.Common.CommandLine
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public class ArgumentAttribute : Attribute
+    public class ArgumentAttribute : Attribute, IArgumentMetadata
     {
         public ArgumentAttribute(string name, Type type)
         {

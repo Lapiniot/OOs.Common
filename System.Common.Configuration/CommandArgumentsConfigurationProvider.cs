@@ -28,8 +28,7 @@ namespace System.Configuration
         {
             var arguments = Arguments.Parse(args);
 
-            Data = arguments.AllArguments.ToDictionary(a => a.Key, a => a.Value?.ToString());
-
+            Data = arguments.ProvidedValues.ToDictionary(a => a.Key, a => a.Value?.ToString());
             Data["Command"] = arguments.Command;
         }
     }
