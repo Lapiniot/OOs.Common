@@ -14,12 +14,6 @@ namespace System.Net.Sockets
     {
         private const int IpMulticastAll = 49;
 
-        [DllImport("libc", EntryPoint = "setsockopt")]
-        internal static extern int MacOS_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
-
-        [DllImport("libc.so.6", EntryPoint = "setsockopt")]
-        internal static extern int Linux_setsockopt(IntPtr socket, int level, int optname, IntPtr optval, uint optlen);
-
         public static IPEndPoint GetIPv4MulticastGroup(int port)
         {
             return new(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
@@ -94,16 +88,9 @@ namespace System.Net.Sockets
 
             if(!IsOSPlatform(OSPlatform.Linux)) return socket;
 
-            var ptr = Marshal.AllocHGlobal(sizeof(int));
-            Marshal.WriteInt32(ptr, 0, 0);
-            try
-            {
-                _ = Linux_setsockopt(socket.Handle, 0, IpMulticastAll, ptr, sizeof(int));
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(ptr);
-            }
+            Span<int> value = stackalloc int[1];
+            value[0] = 0;
+            socket.SetRawSocketOption(0, IpMulticastAll, MemoryMarshal.AsBytes(value));
 
             return socket;
         }
