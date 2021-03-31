@@ -68,7 +68,7 @@ namespace System.Net.Sockets
 
             socket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
             socket.SetSocketOption(IP, MulticastTimeToLive, 1);
-            socket.SetSocketOption(IP, MulticastLoopback, true);
+            socket.SetSocketOption(IP, MulticastLoopback, false);
 
             return socket;
         }
