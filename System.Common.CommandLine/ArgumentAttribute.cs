@@ -1,7 +1,9 @@
+using System.Collections.Generic;
+
 namespace System.Common.CommandLine
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public class ArgumentAttribute : Attribute, IArgumentMetadata
+    public sealed class ArgumentAttribute : Attribute, IArgumentMetadata
     {
         public ArgumentAttribute(string name, Type type)
         {
@@ -16,12 +18,28 @@ namespace System.Common.CommandLine
             ShortName = shortName;
         }
 
-        public string Name { get; set; }
+        public string Name { get; }
 
-        public Type Type { get; set; }
+        public Type Type { get; }
 
-        public string ShortName { get; set; }
+        public string ShortName { get; }
 
         public string Description { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ArgumentAttribute attribute &&
+                   base.Equals(obj) &&
+                   EqualityComparer<object>.Default.Equals(TypeId, attribute.TypeId) &&
+                   Name == attribute.Name &&
+                   EqualityComparer<Type>.Default.Equals(Type, attribute.Type) &&
+                   ShortName == attribute.ShortName &&
+                   Description == attribute.Description;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(base.GetHashCode(), TypeId, Name, Type, ShortName, Description);
+        }
     }
 }

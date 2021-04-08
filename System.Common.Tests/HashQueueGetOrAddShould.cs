@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace System.Common.Tests
 {
     [TestClass]
-    public class HashQueue_AddOrUpdate_Should
+    public class HashQueueGetOrAddShould
     {
         internal static HashQueueCollection<string, string> CreateSampleHashQueue()
         {
@@ -12,35 +12,27 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void Throw_ArgumentNullException_GivenKey_Null()
+        public void ThrowArgumentNullExceptionGivenKeyNull()
         {
-            var hq = new HashQueueCollection<string, string>();
-            Assert.ThrowsException<ArgumentNullException>(() => hq.AddOrUpdate(null, "value 2", (_, _) => ""));
+            using var hq = new HashQueueCollection<string, string>();
+
+            Assert.ThrowsException<ArgumentNullException>(() => hq.GetOrAdd(null, "value 1"));
         }
 
         [TestMethod]
-        public void Throw_NullReferenceException_GivenUpdateFactory()
+        public void ReturnExistingValueGivenExistingKey()
         {
-            var hq = CreateSampleHashQueue();
-            Assert.ThrowsException<ArgumentNullException>(() => hq.AddOrUpdate("key2", "value 2", (Func<string, string, string>)null));
+            using var hashQueue = CreateSampleHashQueue();
+
+            var actual = hashQueue.GetOrAdd("key2", "value 2-2");
+
+            Assert.AreEqual("value 2", actual);
         }
 
         [TestMethod]
-        public void ReturnNewValue_GivenNewKey()
+        public void AddNewNodeToMapGivenNewKey()
         {
-            var hashQueue = CreateSampleHashQueue();
-
-            const string expected = "value 4";
-
-            var actual = hashQueue.AddOrUpdate("key4", expected, (_, _) => "");
-
-            Assert.AreSame(expected, actual);
-        }
-
-        [TestMethod]
-        public void AddNewNodeToMap_GivenNewKey()
-        {
-            var hashQueue = CreateSampleHashQueue();
+            using var hashQueue = CreateSampleHashQueue();
 
             const string key1 = "key1";
             const string key2 = "key2";
@@ -51,7 +43,7 @@ namespace System.Common.Tests
             const string value3 = "value 3";
             const string value4 = "value 4";
 
-            var actual = hashQueue.AddOrUpdate(key4, value4, (_, _) => "");
+            var actual = hashQueue.GetOrAdd(key4, value4);
 
             Assert.AreEqual(value4, actual);
 
@@ -74,9 +66,9 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void UpdateReferences_GivenNewKey()
+        public void UpdateReferencesGivenNewKey()
         {
-            var hashQueue = CreateSampleHashQueue();
+            using var hashQueue = CreateSampleHashQueue();
 
             const string key1 = "key1";
             const string key2 = "key2";
@@ -84,7 +76,7 @@ namespace System.Common.Tests
             const string key4 = "key4";
             const string value4 = "value 4";
 
-            var actual = hashQueue.AddOrUpdate(key4, value4, (_, _) => "");
+            var actual = hashQueue.GetOrAdd(key4, value4);
 
             Assert.AreEqual(value4, actual);
 
@@ -110,33 +102,9 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void ReturnUpdatedValue_GivenExistingKey()
+        public void NotAffectInternalDataGivenExistingKey()
         {
-            var hashQueue = CreateSampleHashQueue();
-
-            const string expected = "updated value";
-            var actual = hashQueue.AddOrUpdate("key2", "value 2-2", (_, _) => expected);
-
-            Assert.AreEqual(expected, actual);
-        }
-
-        [TestMethod]
-        public void PassCorrectKeyAndValue_ToUpdateFactory_GivenExistingKey()
-        {
-            var hashQueue = CreateSampleHashQueue();
-
-            hashQueue.AddOrUpdate("key2", "value 2-2", (key, value) =>
-            {
-                Assert.AreEqual("key2", key);
-                Assert.AreEqual("value 2", value);
-                return "";
-            });
-        }
-
-        [TestMethod]
-        public void UpdateOnlyNodeValue_GivenExistingKey()
-        {
-            var hashQueue = CreateSampleHashQueue();
+            using var hashQueue = CreateSampleHashQueue();
 
             const string key1 = "key1";
             const string key2 = "key2";
@@ -145,11 +113,9 @@ namespace System.Common.Tests
             const string value2 = "value 2";
             const string value3 = "value 3";
 
-            const string expected = "updated value 2";
+            var actual = hashQueue.GetOrAdd(key2, "value 2-2");
 
-            var actual = hashQueue.AddOrUpdate(key2, value2, (_, _) => expected);
-
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual(value2, actual);
 
             Assert.AreEqual(3, hashQueue.Map.Count);
 
@@ -162,27 +128,8 @@ namespace System.Common.Tests
             Assert.AreEqual(key3, node3.Key);
 
             Assert.AreEqual(value1, node1.Value);
-            Assert.AreEqual(expected, node2.Value);
+            Assert.AreEqual(value2, node2.Value);
             Assert.AreEqual(value3, node3.Value);
-        }
-
-        [TestMethod]
-        public void NotAffectReferences_GivenExistingKey()
-        {
-            var hashQueue = CreateSampleHashQueue();
-
-            const string key1 = "key1";
-            const string key2 = "key2";
-            const string key3 = "key3";
-
-            const string expected = "updated value 2";
-            var actual = hashQueue.AddOrUpdate(key2, "", (_, _) => expected);
-
-            Assert.AreEqual(expected, actual);
-
-            var node1 = hashQueue.Map[key1];
-            var node2 = hashQueue.Map[key2];
-            var node3 = hashQueue.Map[key3];
 
             Assert.IsNull(node1.Prev);
             Assert.AreSame(node2, node1.Next);
@@ -195,6 +142,18 @@ namespace System.Common.Tests
 
             Assert.AreSame(node1, hashQueue.Head);
             Assert.AreSame(node3, hashQueue.Tail);
+        }
+
+        [TestMethod]
+        public void ReturnNewValueGivenNewKey()
+        {
+            using var hashQueue = CreateSampleHashQueue();
+
+            const string expected = "value 4";
+
+            var actual = hashQueue.GetOrAdd("key4", expected);
+
+            Assert.AreSame(expected, actual);
         }
     }
 }

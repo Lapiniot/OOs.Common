@@ -13,7 +13,7 @@ namespace System.Net.Connections
     {
         private readonly string[] subProtocols;
 
-        public WebSocketClientConnection(Uri remoteUri, params string[] subProtocols) : base(null)
+        public WebSocketClientConnection(Uri remoteUri, string[] subProtocols) : base(null)
         {
             RemoteUri = remoteUri ?? throw new ArgumentNullException(nameof(remoteUri));
             this.subProtocols = subProtocols ?? throw new ArgumentNullException(nameof(subProtocols));

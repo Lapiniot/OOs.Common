@@ -91,7 +91,7 @@ namespace System.Net.Connections
 
                 socket = new Socket(RemoteEndPoint.AddressFamily, Stream, Tcp);
 
-                await socket.ConnectAsync(RemoteEndPoint).ConfigureAwait(false);
+                await socket.ConnectAsync(RemoteEndPoint, cancellationToken).ConfigureAwait(false);
             }
             catch(SocketException se) when(se.SocketErrorCode == HostNotFound)
             {

@@ -24,6 +24,8 @@ namespace System.Net.Http
 
         public string Serialize(JwtToken token)
         {
+            if(token is null) throw new ArgumentNullException(nameof(token));
+
             const DSASignatureFormat signatureFormat = DSASignatureFormat.IeeeP1363FixedFieldConcatenation;
 
             var jwtInfo = "{\"typ\":\"JWT\",\"alg\":\"ES256\"}";

@@ -21,6 +21,8 @@ namespace System.Net.Http
 
         public static byte[] ExportP256DHPublicKey(ECDiffieHellmanPublicKey publicKey)
         {
+            if(publicKey is null) throw new ArgumentNullException(nameof(publicKey));
+
             var buffer = new byte[65];
             var parameters = publicKey.ExportParameters();
             buffer[0] = 0x04;
@@ -31,6 +33,8 @@ namespace System.Net.Http
 
         public static byte[] ExportP256DHPublicKey(this ECDiffieHellman ecdh)
         {
+            if(ecdh is null) throw new ArgumentNullException(nameof(ecdh));
+
             return ExportP256DHPublicKey(ecdh.PublicKey);
         }
 
@@ -57,6 +61,10 @@ namespace System.Net.Http
 
         public static byte[] DeriveKeyFromHmac(this ECDiffieHellman ecdh, byte[] otherPartyPublicKey, byte[] hmacKey)
         {
+            if(ecdh is null) throw new ArgumentNullException(nameof(ecdh));
+            if(otherPartyPublicKey is null) throw new ArgumentNullException(nameof(otherPartyPublicKey));
+            if(hmacKey is null) throw new ArgumentNullException(nameof(hmacKey));
+
             using(var publicKey = ImportP256DHPublicKey(otherPartyPublicKey))
             {
                 return ecdh.DeriveKeyFromHmac(publicKey, HashAlgorithmName.SHA256, hmacKey);
@@ -65,6 +73,8 @@ namespace System.Net.Http
 
         public static byte[] ComputeHKDF(byte[] salt, byte[] ikm, byte[] data, int length)
         {
+            if(data is null) throw new ArgumentNullException(nameof(data));
+
             using(var hmac = new HMACSHA256(salt))
             {
                 var key = hmac.ComputeHash(ikm);

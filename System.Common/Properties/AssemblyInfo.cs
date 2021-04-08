@@ -1,6 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("System.Common.Tests")]
+[assembly: CLSCompliant(true)]
 
 namespace System.Runtime.CompilerServices
 {

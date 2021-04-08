@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace System.Net.Http
 {
@@ -40,7 +41,7 @@ namespace System.Net.Http
                 ? DateTimeOffset.FromUnixTimeSeconds(seconds).ToUniversalTime()
                 : null;
             set => claims["exp"] = value is not null
-                ? value.Value.ToUniversalTime().ToUnixTimeSeconds().ToString()
+                ? value.Value.ToUniversalTime().ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)
                 : null;
         }
 

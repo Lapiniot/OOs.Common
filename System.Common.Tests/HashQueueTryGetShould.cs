@@ -4,12 +4,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace System.Common.Tests
 {
     [TestClass]
-    public class HashQueue_TryGet_Should
+    public class HashQueueTryGetShould
     {
         [TestMethod]
-        public void ReturnTrue_AndValue_GivenExistingKey()
+        public void ReturnTrueAndValueGivenExistingKey()
         {
-            var hq = new HashQueueCollection<int, string>(
+            using var hq = new HashQueueCollection<int, string>(
                 (1, "value 1"),
                 (2, "value 2"),
                 (3, "value 3"));
@@ -28,9 +28,9 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void ReturnFalse_AndDefaultValue_GivenNonExistingKey()
+        public void ReturnFalseAndDefaultValueGivenNonExistingKey()
         {
-            var stringHashQueue = new HashQueueCollection<int, string>(
+            using var stringHashQueue = new HashQueueCollection<int, string>(
                 (1, "value 1"),
                 (2, "value 2"),
                 (3, "value 3"));
@@ -39,7 +39,7 @@ namespace System.Common.Tests
             Assert.IsFalse(actual);
             Assert.AreEqual(default, strValue);
 
-            var intHashQueue = new HashQueueCollection<string, int>(
+            using var intHashQueue = new HashQueueCollection<string, int>(
                 ("1", 1),
                 ("2", 2),
                 ("3", 3));
@@ -50,9 +50,9 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void Throw_ArgumentNullException_GivenKey_Null()
+        public void ThrowArgumentNullExceptionGivenKeyNull()
         {
-            var hq = new HashQueueCollection<string, string>();
+            using var hq = new HashQueueCollection<string, string>();
             Assert.ThrowsException<ArgumentNullException>(() => hq.TryGet(null, out _));
         }
     }

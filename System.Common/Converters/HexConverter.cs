@@ -3,6 +3,7 @@ using static System.Globalization.NumberStyles;
 
 namespace System.Converters
 {
+    [CLSCompliant(false)]
     public static class HexConverter
     {
         private const string ErrorMessage = "Invalid character in hex string";

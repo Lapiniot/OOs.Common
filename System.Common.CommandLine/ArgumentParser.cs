@@ -17,11 +17,15 @@ namespace System.Common.CommandLine
             this.schema = schema ?? throw new ArgumentNullException(nameof(schema));
         }
 
-        public void Parse(Queue<string> tokens, out string command, out Dictionary<string, object> arguments, out List<string> extras)
+        public void Parse(Queue<string> tokens, out string command, out IReadOnlyDictionary<string, object> arguments, out IEnumerable<string> extras)
         {
+            if(tokens is null) throw new ArgumentNullException(nameof(tokens));
+
             command = default;
-            arguments = new Dictionary<string, object>();
-            extras = new List<string>();
+            var args = new Dictionary<string, object>();
+            var unknown = new List<string>();
+            arguments = args;
+            extras = unknown;
 
             var comparer = new ComparerAdapter<string>((x1, x2) => CompareByLength(x1, x2));
 
@@ -35,7 +39,7 @@ namespace System.Common.CommandLine
                 if(item.ShortName != null) smap.Add(item.ShortName, item);
             }
 
-            command = commands.SingleOrDefault(c => c.Default)?.Name;
+            command = commands.SingleOrDefault(c => c.IsDefault)?.Name;
 
             if(tokens.Count == 0) return;
 
@@ -56,15 +60,15 @@ namespace System.Common.CommandLine
 
                 if(arg.StartsWith("--", false, InvariantCulture))
                 {
-                    AddByName(arg[2..], nmap, arguments);
+                    AddByName(arg[2..], nmap, args);
                 }
                 else if(arg[0] == '-' || arg[0] == '/')
                 {
-                    AddByShortName(arg[1..], tokens, smap, arguments);
+                    AddByShortName(arg[1..], tokens, smap, args);
                 }
                 else
                 {
-                    extras.Add(arg);
+                    unknown.Add(arg);
                 }
             }
         }

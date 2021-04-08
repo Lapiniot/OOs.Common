@@ -1,7 +1,7 @@
 ﻿namespace System.Common.CommandLine
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public class CommandAttribute : Attribute, ICommandMetadata
+    public sealed class CommandAttribute : Attribute, ICommandMetadata
     {
         public CommandAttribute(string name)
         {
@@ -10,6 +10,6 @@
 
         public string Name { get; }
 
-        public bool Default { get; set; }
+        public bool IsDefault { get; set; }
     }
 }

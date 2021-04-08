@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace System.Common.Tests
 {
     [TestClass]
-    public class HashQueue_Dequeue_Should
+    public class HashQueueDequeueShould
     {
         internal static HashQueueCollection<string, string> CreateSampleHashQueue()
         {
@@ -12,9 +12,9 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void ReturnFalseAndDefaultValue_GivenEmptyQueue()
+        public void ReturnFalseAndDefaultValueGivenEmptyQueue()
         {
-            var hq = new HashQueueCollection<string, string>();
+            using var hq = new HashQueueCollection<string, string>();
 
             var actual = hq.Dequeue(out _);
 
@@ -22,9 +22,9 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void ReturnTrueAndValue_GivenNotEmptyQueue()
+        public void ReturnTrueAndValueGivenNotEmptyQueue()
         {
-            var hq = CreateSampleHashQueue();
+            using var hq = CreateSampleHashQueue();
 
             var actual = hq.Dequeue(out var value);
 
@@ -33,14 +33,14 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void RemoveFirstItemFromMap_GivenNonEmptyQueue()
+        public void RemoveFirstItemFromMapGivenNonEmptyQueue()
         {
             const string key2 = "key2";
             const string key3 = "key3";
             const string value2 = "value 2";
             const string value3 = "value 3";
 
-            var hashQueue = CreateSampleHashQueue();
+            using var hashQueue = CreateSampleHashQueue();
 
             hashQueue.Dequeue(out _);
 
@@ -57,9 +57,9 @@ namespace System.Common.Tests
         }
 
         [TestMethod]
-        public void UpdateReferences_GivenNotEmptyQueue()
+        public void UpdateReferencesGivenNotEmptyQueue()
         {
-            var hashQueue = CreateSampleHashQueue();
+            using var hashQueue = CreateSampleHashQueue();
 
             hashQueue.Dequeue(out _);
 

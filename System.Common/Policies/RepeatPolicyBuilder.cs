@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace System.Policies
@@ -77,6 +78,7 @@ namespace System.Policies
         /// <param name="minMilliseconds">Minimal amount of milliseconds to add</param>
         /// <param name="maxMilliseconds">Maximum amount of milliseconds to add</param>
         /// <returns>New instance of the builder</returns>
+        [SuppressMessage("security", "CA5394: Do not use insecure randomness")]
         public RepeatPolicyBuilder WithJitter(int minMilliseconds = 500, int maxMilliseconds = 10000)
         {
             return WithCondition((Exception _, int _, TimeSpan _, ref TimeSpan delay) =>

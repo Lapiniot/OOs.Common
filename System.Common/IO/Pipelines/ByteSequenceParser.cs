@@ -8,7 +8,7 @@ namespace System.IO.Pipelines
     {
         private readonly PipeReader reader;
 
-        public ByteSequenceParser(PipeReader reader)
+        protected ByteSequenceParser(PipeReader reader)
         {
             this.reader = reader ?? throw new ArgumentNullException(nameof(reader));
         }

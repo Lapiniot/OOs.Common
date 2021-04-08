@@ -22,11 +22,14 @@ namespace System.Net.Http
             this.publicKey = publicKey ?? throw new ArgumentNullException(nameof(publicKey));
             this.privateKey = privateKey ?? throw new ArgumentNullException(nameof(privateKey));
             tokenHandler = new JwtTokenHandler(this.publicKey, this.privateKey);
-            cryptoKey = Encoders.ToUrlSafeBase64String(publicKey);
+            cryptoKey = Encoders.ToBase64String(publicKey);
         }
 
         public async Task SendAsync(Uri endpoint, SubscriptionKeys keys, byte[] payload, CancellationToken cancellationToken)
         {
+            if(endpoint is null) throw new ArgumentNullException(nameof(endpoint));
+            if(payload is null) throw new ArgumentNullException(nameof(payload));
+
             var token = new JwtToken()
             {
                 Audience = endpoint.GetComponents(UriComponents.SchemeAndServer, UriFormat.SafeUnescaped),
@@ -46,15 +49,14 @@ namespace System.Net.Http
             {
                 byte[] cipher = new byte[data.Length + AesGcm.TagByteSizes.MaxSize];
                 aes.Encrypt((Span<byte>)nonce, data, cipher.AsSpan(0, data.Length), cipher.AsSpan(data.Length));
-                Console.WriteLine("Cipher=" + Convert.ToBase64String(cipher));
 
                 using(var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
                 {
                     Headers =
                     {
                         { "Authorization", $"WebPush {tokenHandler.Serialize(token)}" },
-                        { "Encryption", $"salt={Encoders.ToUrlSafeBase64String(salt)}" },
-                        { "Crypto-Key", $"dh={Encoders.ToUrlSafeBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}" },
+                        { "Encryption", $"salt={Encoders.ToBase64String(salt)}" },
+                        { "Crypto-Key", $"dh={Encoders.ToBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}" },
                         { "TTL", "300" }
                     },
                     Content = new ByteArrayContent(cipher)
@@ -75,7 +77,7 @@ namespace System.Net.Http
             }
         }
 
-        private (byte[] PublicKey, byte[] DerivedKeyMaterial) GenerateServerKeys(byte[] otherPartyPublicKey, byte[] hmacKey)
+        private static (byte[] PublicKey, byte[] DerivedKeyMaterial) GenerateServerKeys(byte[] otherPartyPublicKey, byte[] hmacKey)
         {
             using(var ecdh = ECDiffieHellman.Create())
             {
@@ -86,7 +88,7 @@ namespace System.Net.Http
             }
         }
 
-        private byte[] GeneratePseudoRandomKey(byte[] key)
+        private static byte[] GeneratePseudoRandomKey(byte[] key)
         {
             using(var hmac = new HMACSHA256(key))
             {
@@ -109,7 +111,7 @@ namespace System.Net.Http
             return data;
         }
 
-        private byte[] CreateInfo(string label, byte[] clientPublicKey, byte[] serverPublicKey)
+        private static byte[] CreateInfo(string label, byte[] clientPublicKey, byte[] serverPublicKey)
         {
             int len = label.Length;
             var buffer = new byte[18 + len + 1 + 5 + 1 + 2 + clientPublicKey.Length + 2 + serverPublicKey.Length];

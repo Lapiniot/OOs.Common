@@ -24,7 +24,6 @@ namespace System
 
             try
             {
-                GC.SuppressFinalize(this);
                 await StopActivityAsync().ConfigureAwait(false);
             }
             finally

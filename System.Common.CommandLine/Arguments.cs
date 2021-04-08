@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 
@@ -7,18 +6,18 @@ namespace System.Common.CommandLine
 {
     public class Arguments
     {
-        private Arguments(string command, IDictionary<string, object> parameters, IList<string> extras)
+        private Arguments(string command, IReadOnlyDictionary<string, object> parameters, IEnumerable<string> extras)
         {
             Command = command;
-            ProvidedValues = new ReadOnlyDictionary<string, object>(parameters);
-            Extras = new ReadOnlyCollection<string>(extras);
+            ProvidedValues = parameters;
+            Extras = extras;
         }
 
         public string Command { get; }
 
         public IReadOnlyDictionary<string, object> ProvidedValues { get; }
 
-        public IReadOnlyList<string> Extras { get; }
+        public IEnumerable<string> Extras { get; }
 
         public bool this[string name] => (bool)ProvidedValues[name];
 

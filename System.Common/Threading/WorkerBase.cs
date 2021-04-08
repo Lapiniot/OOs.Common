@@ -51,12 +51,9 @@ namespace System.Threading
 
             try
             {
-                if(cancelableOperation is not null)
+                await using(cancelableOperation)
                 {
-                    await using(cancelableOperation)
-                    {
-                        cancelableOperation = null;
-                    }
+                    cancelableOperation = null;
                 }
             }
             finally
@@ -72,9 +69,9 @@ namespace System.Threading
         public virtual async ValueTask DisposeAsync()
         {
             if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
             try
             {
-                GC.SuppressFinalize(this);
                 await StopAsync().ConfigureAwait(false);
             }
             finally

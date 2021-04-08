@@ -14,7 +14,7 @@ namespace System.Configuration
         public CommandArgumentsConfigurationProvider(string[] args, string sectionName)
         {
             this.args = args ?? throw new ArgumentNullException(nameof(args));
-            this.prefix = !string.IsNullOrEmpty(sectionName) ? !sectionName.EndsWith(":") ? sectionName + ":" : sectionName : "args:";
+            this.prefix = !string.IsNullOrEmpty(sectionName) ? !sectionName.EndsWith(":", StringComparison.InvariantCultureIgnoreCase) ? sectionName + ":" : sectionName : "args:";
         }
 
         public override bool TryGet(string key, out string value)
