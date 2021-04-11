@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Threading;
@@ -12,29 +13,37 @@ namespace System.Net.Http
         private readonly HttpClient client;
         private readonly byte[] publicKey;
         private readonly byte[] privateKey;
+        private readonly string subject;
+        private readonly int expires;
         private readonly JwtTokenHandler tokenHandler;
         private readonly string cryptoKey;
         private bool disposed;
 
-        public WebPushClient(HttpClient client, byte[] publicKey, byte[] privateKey)
+        public WebPushClient(HttpClient client, byte[] publicKey, byte[] privateKey, string jwtSubject, int jwtExpires)
         {
+            if(string.IsNullOrEmpty(jwtSubject)) throw new ArgumentException($"'{nameof(jwtSubject)}' cannot be null or empty.", nameof(jwtSubject));
+            if(jwtExpires <= 0) throw new ArgumentException($"{nameof(jwtExpires)} must be greater than zero");
+
             this.client = client ?? throw new ArgumentNullException(nameof(client));
             this.publicKey = publicKey ?? throw new ArgumentNullException(nameof(publicKey));
             this.privateKey = privateKey ?? throw new ArgumentNullException(nameof(privateKey));
+            this.subject = jwtSubject;
+            this.expires = jwtExpires;
             tokenHandler = new JwtTokenHandler(this.publicKey, this.privateKey);
             cryptoKey = Encoders.ToBase64String(publicKey);
         }
 
-        public async Task SendAsync(Uri endpoint, SubscriptionKeys keys, byte[] payload, CancellationToken cancellationToken)
+        public async Task SendAsync(Uri endpoint, SubscriptionKeys keys, byte[] payload, int ttl, CancellationToken cancellationToken)
         {
             if(endpoint is null) throw new ArgumentNullException(nameof(endpoint));
             if(payload is null) throw new ArgumentNullException(nameof(payload));
+            if(ttl <= 0) throw new ArgumentException($"{nameof(ttl)} must be greater then zero");
 
             var token = new JwtToken()
             {
                 Audience = endpoint.GetComponents(UriComponents.SchemeAndServer, UriFormat.SafeUnescaped),
-                Subject = "mailto:aossss@gmail.com",
-                Expires = DateTimeOffset.UtcNow.AddHours(12)
+                Subject = subject,
+                Expires = DateTimeOffset.UtcNow.AddSeconds(expires)
             };
 
             var salt = CryptoExtensions.GenerateSalt(16);
@@ -44,36 +53,47 @@ namespace System.Net.Http
             var encryptionKey = CryptoExtensions.ComputeHKDF(salt, prk, CreateInfo("aesgcm", clientPublicKey, serverPublicKey), 16);
             var nonce = CryptoExtensions.ComputeHKDF(salt, prk, CreateInfo("nonce", clientPublicKey, serverPublicKey), 12);
             var data = GetPayloadWithPadding(payload);
+            var encrypted = EncryptPayload(data, encryptionKey, nonce);
 
-            using(var aes = new AesGcm(encryptionKey))
+            using(var content = CreateHttpContent(encrypted))
+            using(var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+            {
+                Headers =
+                {
+                    { "Authorization", $"WebPush {tokenHandler.Serialize(token)}" },
+                    { "Encryption", $"salt={Encoders.ToBase64String(salt)}" },
+                    { "Crypto-Key", $"dh={Encoders.ToBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}" },
+                    { "TTL", ttl.ToString(CultureInfo.InvariantCulture) }
+                },
+                Content = content
+            })
+            {
+                using(var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false))
+                {
+                    response.EnsureSuccessStatusCode();
+                }
+            }
+        }
+
+        private static HttpContent CreateHttpContent(byte[] content)
+        {
+            return new ByteArrayContent(content)
+            {
+                Headers =
+                {
+                    ContentType = new MediaTypeHeaderValue("application/octet-stream"),
+                    ContentEncoding = { "aesgcm" }
+                }
+            };
+        }
+
+        private static byte[] EncryptPayload(byte[] data, byte[] key, byte[] nonce)
+        {
+            using(var aes = new AesGcm(key))
             {
                 byte[] cipher = new byte[data.Length + AesGcm.TagByteSizes.MaxSize];
                 aes.Encrypt((Span<byte>)nonce, data, cipher.AsSpan(0, data.Length), cipher.AsSpan(data.Length));
-
-                using(var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
-                {
-                    Headers =
-                    {
-                        { "Authorization", $"WebPush {tokenHandler.Serialize(token)}" },
-                        { "Encryption", $"salt={Encoders.ToBase64String(salt)}" },
-                        { "Crypto-Key", $"dh={Encoders.ToBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}" },
-                        { "TTL", "300" }
-                    },
-                    Content = new ByteArrayContent(cipher)
-                    {
-                        Headers =
-                        {
-                            ContentType = new MediaTypeHeaderValue("application/octet-stream"),
-                            ContentEncoding = { "aesgcm" }
-                        }
-                    }
-                })
-                {
-                    using(var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false))
-                    {
-                        response.EnsureSuccessStatusCode();
-                    }
-                }
+                return cipher;
             }
         }
 
