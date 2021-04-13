@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
 namespace System.Net.Http
@@ -23,12 +24,8 @@ namespace System.Net.Http
         {
             if(publicKey is null) throw new ArgumentNullException(nameof(publicKey));
 
-            var buffer = new byte[65];
             var parameters = publicKey.ExportParameters();
-            buffer[0] = 0x04;
-            parameters.Q.X.CopyTo(buffer.AsSpan(1));
-            parameters.Q.Y.CopyTo(buffer.AsSpan(33));
-            return buffer;
+            return GetBytes(parameters.Q);
         }
 
         public static byte[] ExportP256DHPublicKey(this ECDiffieHellman ecdh)
@@ -38,6 +35,7 @@ namespace System.Net.Http
             return ExportP256DHPublicKey(ecdh.PublicKey);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ECParameters ImportECParameters(byte[] publicKey, byte[] privateKey)
         {
             return new ECParameters()
@@ -48,6 +46,13 @@ namespace System.Net.Http
             };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static (byte[] PublicKey, byte[] PrivateKey) ExportECParameters(ECParameters parameters)
+        {
+            return (GetBytes(parameters.Q), parameters.D);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ECPoint GetECPoint(byte[] publicKey)
         {
             if(publicKey is null) return new ECPoint();
@@ -57,6 +62,16 @@ namespace System.Net.Http
                 X = publicKey.AsSpan(1, 32).ToArray(),
                 Y = publicKey.AsSpan(33, 32).ToArray()
             };
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] GetBytes(ECPoint point)
+        {
+            var buffer = new byte[65];
+            buffer[0] = 0x04;
+            point.X.CopyTo(buffer.AsSpan(1));
+            point.Y.CopyTo(buffer.AsSpan(33));
+            return buffer;
         }
 
         public static byte[] DeriveKeyFromHmac(this ECDiffieHellman ecdh, byte[] otherPartyPublicKey, byte[] hmacKey)
@@ -84,6 +99,15 @@ namespace System.Net.Http
                 hmac.Key = key;
                 hmac.Initialize();
                 return hmac.ComputeHash(buffer).AsSpan(0, length).ToArray();
+            }
+        }
+
+        public static (byte[] PublicKey, byte[] PrivateKey) GenerateP256ECKeys()
+        {
+            using(var ecdh = ECDiffieHellman.Create())
+            {
+                ecdh.GenerateKey(ECCurve.NamedCurves.nistP256);
+                return ExportECParameters(ecdh.ExportParameters(true));
             }
         }
     }
