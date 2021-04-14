@@ -68,7 +68,21 @@ namespace System.Net.Sockets
 
             socket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
             socket.SetSocketOption(IP, MulticastTimeToLive, 1);
-            socket.SetSocketOption(IP, MulticastLoopback, false);
+            socket.SetSocketOption(IP, MulticastLoopback, true);
+
+            return socket;
+        }
+
+        public static Socket CreateIPv6UdpMulticastSender()
+        {
+            var socket = new Socket(InterNetworkV6, Dgram, ProtocolType.Udp);
+
+            var properties = Interfaces.FindBestMulticastInterface().GetIPv6Properties() ??
+                             throw new InvalidOperationException("Cannot get interface IPv6 configuration data.");
+
+            socket.SetSocketOption(IPv6, MulticastInterface, properties.Index);
+            socket.SetSocketOption(IPv6, MulticastTimeToLive, 1);
+            socket.SetSocketOption(IPv6, MulticastLoopback, true);
 
             return socket;
         }
@@ -91,19 +105,6 @@ namespace System.Net.Sockets
             Span<int> value = stackalloc int[1];
             value[0] = 0;
             socket.SetRawSocketOption(0, IpMulticastAll, MemoryMarshal.AsBytes(value));
-
-            return socket;
-        }
-
-        public static Socket CreateIPv6UdpMulticastSender()
-        {
-            var socket = new Socket(InterNetworkV6, Dgram, ProtocolType.Udp);
-
-            var properties = Interfaces.FindBestMulticastInterface().GetIPv6Properties() ??
-                             throw new InvalidOperationException("Cannot get interface IPv6 configuration data.");
-
-            socket.SetSocketOption(IPv6, MulticastInterface, properties.Index);
-            socket.SetSocketOption(IPv6, MulticastTimeToLive, 1);
 
             return socket;
         }
