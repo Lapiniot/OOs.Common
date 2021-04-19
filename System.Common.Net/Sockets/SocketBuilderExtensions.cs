@@ -4,6 +4,7 @@ using static System.Net.Sockets.SocketType;
 using static System.Net.Sockets.SocketOptionName;
 using static System.Net.Sockets.SocketOptionLevel;
 using System.Runtime.InteropServices;
+using System.Buffers.Binary;
 
 namespace System.Net.Sockets
 {
@@ -41,59 +42,44 @@ namespace System.Net.Sockets
             return socket;
         }
 
-        public static Socket ConfigureMulticastSender(this Socket socket)
+        public static Socket ConfigureMulticastSender(this Socket socket, int mcintIndex, int ttl = 1, bool allowLoopback = true)
         {
             if(socket is null) throw new ArgumentNullException(nameof(socket));
 
             switch(socket.AddressFamily)
             {
                 case InterNetwork:
-                    {
-                        var properties = Interfaces.FindBestMulticastInterface().GetIPv4Properties()
-                                                     ?? throw new InvalidOperationException("Cannot get interface IPv4 configuration data.");
-
-                        socket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(properties.Index));
-                        socket.SetSocketOption(IP, MulticastTimeToLive, 1);
-                        socket.SetSocketOption(IP, MulticastLoopback, true);
-                        break;
-                    }
-
+                    socket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(mcintIndex));
+                    break;
                 case InterNetworkV6:
-                    {
-                        var properties = Interfaces.FindBestMulticastInterface().GetIPv6Properties() ??
-                                                     throw new InvalidOperationException("Cannot get interface IPv6 configuration data.");
-
-                        socket.SetSocketOption(IPv6, MulticastInterface, properties.Index);
-                        socket.SetSocketOption(IPv6, MulticastTimeToLive, 1);
-                        socket.SetSocketOption(IPv6, MulticastLoopback, true);
-                        break;
-                    }
+                    socket.SetSocketOption(IPv6, MulticastInterface, mcintIndex);
+                    break;
 
                 default: throw new NotSupportedException("Unsupported address family");
             }
 
+            socket.SetSocketOption(IP, MulticastTimeToLive, ttl);
+            socket.SetSocketOption(IP, MulticastLoopback, allowLoopback);
+
             return socket;
         }
 
-        public static Socket JoinMulticastGroup(this Socket socket, IPEndPoint groupToJoin, bool allowUnicast = true)
+        public static Socket JoinMulticastGroup(this Socket socket, IPEndPoint groupToJoin, IPAddress mcint = null)
         {
             if(socket is null) throw new ArgumentNullException(nameof(socket));
             if(groupToJoin is null) throw new ArgumentNullException(nameof(groupToJoin));
-
-            var addressFamily = groupToJoin.AddressFamily;
-            if(addressFamily != InterNetwork && addressFamily != InterNetworkV6)
-            {
-                throw new NotSupportedException("Unsupported address family");
-            }
+            if(groupToJoin.AddressFamily != socket.AddressFamily) throw new NotSupportedException("Group address family mismatch");
+            if(mcint is not null && mcint.AddressFamily != socket.AddressFamily) throw new NotSupportedException("Multicast interface address family mismatch");
 
             socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, true);
             socket.SetSocketOption(SocketOptionLevel.Socket, ExclusiveAddressUse, false);
 
-            switch(addressFamily)
+            switch(socket.AddressFamily)
             {
                 case InterNetwork:
-                    socket.Bind(allowUnicast ? new IPEndPoint(Any, groupToJoin.Port) : groupToJoin);
-                    socket.SetSocketOption(IP, AddMembership, new MulticastOption(groupToJoin.Address));
+                    socket.SetSocketOption(IP, AddMembership, new MulticastOption(groupToJoin.Address,
+                        mcint ?? new IPAddress((int)socket.GetSocketOption(IP, MulticastInterface))));
+                    socket.Bind(new IPEndPoint(Any, groupToJoin.Port));
 
                     if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {
@@ -112,8 +98,11 @@ namespace System.Net.Sockets
                     break;
 
                 case InterNetworkV6:
-                    socket.Bind(allowUnicast ? new IPEndPoint(IPv6Any, groupToJoin.Port) : groupToJoin);
-                    socket.SetSocketOption(IPv6, AddMembership, new IPv6MulticastOption(groupToJoin.Address));
+                    socket.SetSocketOption(IPv6, AddMembership, new IPv6MulticastOption(groupToJoin.Address,
+                        mcint is not null
+                            ? BinaryPrimitives.ReadInt64BigEndian(mcint.GetAddressBytes())
+                            : (long)socket.GetSocketOption(IPv6, MulticastInterface)));
+                    socket.Bind(new IPEndPoint(IPv6Any, groupToJoin.Port));
                     break;
             }
 
