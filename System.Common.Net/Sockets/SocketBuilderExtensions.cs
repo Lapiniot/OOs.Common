@@ -4,7 +4,7 @@ using static System.Net.Sockets.SocketType;
 using static System.Net.Sockets.SocketOptionName;
 using static System.Net.Sockets.SocketOptionLevel;
 using System.Runtime.InteropServices;
-using System.Buffers.Binary;
+using static System.Buffers.Binary.BinaryPrimitives;
 
 namespace System.Net.Sockets
 {
@@ -42,7 +42,7 @@ namespace System.Net.Sockets
             return socket;
         }
 
-        public static Socket ConfigureMulticastSender(this Socket socket, int mcintIndex, int ttl = 1, bool allowLoopback = true)
+        public static Socket ConfigureMulticast(this Socket socket, int mcintIndex, int ttl = 1, bool allowLoopback = true)
         {
             if(socket is null) throw new ArgumentNullException(nameof(socket));
 
@@ -72,13 +72,11 @@ namespace System.Net.Sockets
             if(mcint is not null && mcint.AddressFamily != socket.AddressFamily) throw new NotSupportedException("Multicast interface address family mismatch");
 
             socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, true);
-            socket.SetSocketOption(SocketOptionLevel.Socket, ExclusiveAddressUse, false);
 
             switch(socket.AddressFamily)
             {
                 case InterNetwork:
-                    socket.SetSocketOption(IP, AddMembership, new MulticastOption(groupToJoin.Address,
-                        mcint ?? new IPAddress((int)socket.GetSocketOption(IP, MulticastInterface))));
+                    socket.SetSocketOption(IP, AddMembership, CreateMulticastOptionIPv4(socket, groupToJoin.Address, mcint));
                     socket.Bind(new IPEndPoint(Any, groupToJoin.Port));
 
                     if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -100,13 +98,37 @@ namespace System.Net.Sockets
                 case InterNetworkV6:
                     socket.SetSocketOption(IPv6, AddMembership, new IPv6MulticastOption(groupToJoin.Address,
                         mcint is not null
-                            ? BinaryPrimitives.ReadInt64BigEndian(mcint.GetAddressBytes())
+                            ? ReadInt64BigEndian(mcint.GetAddressBytes())
                             : (long)socket.GetSocketOption(IPv6, MulticastInterface)));
                     socket.Bind(new IPEndPoint(IPv6Any, groupToJoin.Port));
                     break;
             }
 
             return socket;
+        }
+
+        private static MulticastOption CreateMulticastOptionIPv4(Socket socket, IPAddress groupToJoin, IPAddress mcint)
+        {
+            if(mcint is not null)
+            {
+                Span<byte> bytes = stackalloc byte[4];
+                mcint.TryWriteBytes(bytes, out var written);
+                if(bytes[0] == 0)
+                    // Address from range 0.x.x.x must be interpreted as interface index
+                    return new MulticastOption(groupToJoin, ReadInt32BigEndian(bytes));
+                else
+                    return new MulticastOption(groupToJoin, mcint);
+            }
+            else
+            {
+                int iface = (int)socket.GetSocketOption(IP, MulticastInterface);
+                if((HostToNetworkOrder(iface) & 0xFF000000) == 0x00000000)
+                    // If most significant byte (in network order) is zero in the mcast 
+                    // interface, it represents interface index rather than IP address
+                    return new MulticastOption(groupToJoin, HostToNetworkOrder(iface));
+                else
+                    return new MulticastOption(groupToJoin, new IPAddress(iface));
+            }
         }
     }
 }
