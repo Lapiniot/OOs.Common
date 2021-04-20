@@ -45,16 +45,21 @@ namespace System.Net
                    networkInterface.OperationalStatus == Up;
         }
 
-        public static NetworkInterface FindInterface(string adapterNameOrAddress)
+        public static NetworkInterface FindByAddress(string adapterAddress)
         {
-            if(IPAddress.TryParse(adapterNameOrAddress, out var address))
-            {
-                return NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(i => i.GetIPProperties().UnicastAddresses.Any(ua => ua.Address.Equals(address)));
-            }
-            else
-            {
-                return NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(i => i.Name == adapterNameOrAddress);
-            }
+            return IPAddress.TryParse(adapterAddress, out var address)
+                ? NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(i => i.GetIPProperties().UnicastAddresses.Any(ua => ua.Address.Equals(address)))
+                : null;
+        }
+
+        public static NetworkInterface FindByName(string adapterName)
+        {
+            return NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(i => i.Name == adapterName);
+        }
+
+        public static NetworkInterface FindById(string adapterId)
+        {
+            return NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(i => i.Id == adapterId);
         }
 
         public static IEnumerable<NetworkInterface> GetActiveExternalInterfaces(this IEnumerable<NetworkInterface> interfaces)
