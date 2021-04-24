@@ -6,7 +6,7 @@ namespace System.Collections.Generic
 
         public ComparerAdapter(Func<T, T, int> compare)
         {
-            this.compare = compare ?? throw new ArgumentNullException($"{nameof(compare)} cannot be null");
+            this.compare = compare ?? throw new ArgumentNullException(nameof(compare));
         }
 
         public override int Compare(T x, T y)
