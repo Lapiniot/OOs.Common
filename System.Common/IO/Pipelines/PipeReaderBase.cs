@@ -27,6 +27,8 @@ namespace System.IO.Pipelines
         {
             if(disposed) return;
 
+            GC.SuppressFinalize(this);
+
             try
             {
                 await StopAsync().ConfigureAwait(false);

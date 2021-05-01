@@ -70,6 +70,8 @@ namespace System.Threading
         {
             if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
 
+            GC.SuppressFinalize(this);
+
             try
             {
                 await StopAsync().ConfigureAwait(false);

@@ -85,7 +85,7 @@ namespace System.Net.Connections
             {
                 if(RemoteEndPoint == null)
                 {
-                    var addresses = await GetHostAddressesAsync(hostNameOrAddress).ConfigureAwait(false);
+                    var addresses = await GetHostAddressesAsync(hostNameOrAddress, cancellationToken).ConfigureAwait(false);
                     RemoteEndPoint = new IPEndPoint(addresses[0], port);
                 }
 

@@ -12,6 +12,8 @@ namespace System.Collections.Generic
 
         public HashQueueCollection(params (TKey key, TValue value)[] items) : this()
         {
+            if(items is null) throw new ArgumentNullException(nameof(items));
+
             foreach(var (key, value) in items)
             {
                 AddNodeInternal(key, value);

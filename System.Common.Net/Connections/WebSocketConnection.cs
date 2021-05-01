@@ -24,6 +24,8 @@ namespace System.Net.Connections
         {
             if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
 
+            GC.SuppressFinalize(this);
+
             using(socket)
             {
                 await DisconnectAsync().ConfigureAwait(false);

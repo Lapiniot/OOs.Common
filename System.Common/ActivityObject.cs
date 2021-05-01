@@ -22,6 +22,8 @@ namespace System
         {
             if(Interlocked.CompareExchange(ref disposeState, 1, 0) != 0) return;
 
+            GC.SuppressFinalize(this);
+
             try
             {
                 await StopActivityAsync().ConfigureAwait(false);
