@@ -96,12 +96,12 @@ namespace System.Net.Pipelines
         /// <summary>
         /// Method gets called every time new data is available.
         /// </summary>
-        /// <param name="buffer">Sequence of linked buffers containing data produced by the pipe writer</param>
+        /// <param name="sequence">Sequence of linked buffers containing data produced by the pipe writer</param>
         /// <param name="consumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
         /// <returns>
         /// <value>True</value> if consumer should continue reading, otherwise <value>False</value> to immidiately terminate processing 
         /// </returns>
-        protected abstract bool Consume(in ReadOnlySequence<byte> buffer, out long consumed);
+        protected abstract bool Consume(in ReadOnlySequence<byte> sequence, out long consumed);
 
         /// <summary>
         /// Method gets called when consumer completed its work
