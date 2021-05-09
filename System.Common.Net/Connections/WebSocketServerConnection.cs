@@ -15,7 +15,7 @@ namespace System.Net.Connections
 
         public override string ToString()
         {
-            return $"{nameof(WebSocketServerConnection)}: {remoteEndPoint}";
+            return $"{Id}-{nameof(WebSocketServerConnection)}-{remoteEndPoint}";
         }
 
         #region Overrides of WebSocketTransportBase

@@ -15,6 +15,7 @@ namespace System.Net.Connections
         public TcpSocketServerConnection(Socket acceptedSocket)
         {
             socket = acceptedSocket ?? throw new ArgumentNullException(nameof(acceptedSocket));
+            Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         }
 
         public ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
@@ -39,6 +40,7 @@ namespace System.Net.Connections
 
         public bool IsConnected => socket.Connected;
         public Socket Socket => socket;
+        public string Id { get; }
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)
         {
@@ -54,7 +56,7 @@ namespace System.Net.Connections
 
         public override string ToString()
         {
-            return $"{nameof(TcpSocketServerConnection)}: {socket?.RemoteEndPoint}";
+            return $"{Id}-{nameof(TcpSocketServerConnection)}-{socket?.RemoteEndPoint}";
         }
     }
 }

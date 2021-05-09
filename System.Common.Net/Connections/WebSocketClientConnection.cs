@@ -24,7 +24,7 @@ namespace System.Net.Connections
 
         public IEnumerable<string> SubProtocols => subProtocols;
 
-        #region Overrides of WebSocketTransportBase
+        #region Overrides of WebSocketConnection
 
         public override async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
@@ -41,7 +41,7 @@ namespace System.Net.Connections
                 SetWebSocket(socket);
             }
             catch(WebSocketException wse) when(wse.InnerException is HttpRequestException
-                {InnerException: SocketException {SocketErrorCode: SocketError.HostNotFound}})
+            { InnerException: SocketException { SocketErrorCode: SocketError.HostNotFound } })
             {
                 throw new HostNotFoundException(wse);
             }
@@ -52,5 +52,10 @@ namespace System.Net.Connections
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return $"{Id}-{nameof(WebSocketClientConnection)}";
+        }
     }
 }

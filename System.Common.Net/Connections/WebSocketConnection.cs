@@ -16,6 +16,7 @@ namespace System.Net.Connections
         protected WebSocketConnection(TWebSocket socket)
         {
             this.socket = socket;
+            Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         }
 
         #region Implementation of IAsyncDisposable
@@ -39,14 +40,11 @@ namespace System.Net.Connections
             socket = webSocket;
         }
 
-        public override string ToString()
-        {
-            return $"{GetType().Name} (SubProtocol:'{socket?.SubProtocol}'; State: {socket?.State})";
-        }
-
         #region Implementation of IConnectedObject
 
         public bool IsConnected => socket?.State == Open;
+
+        public string Id { get; }
 
         public abstract Task ConnectAsync(CancellationToken cancellationToken = default);
 
