@@ -59,7 +59,7 @@ namespace System.Net.Listeners
 
         public override string ToString()
         {
-            return $"{nameof(TcpSocketListener)}: tcp://{endPoint}";
+            return $"{nameof(TcpSocketListener)} {{tcp://{endPoint}}}";
         }
     }
 }
