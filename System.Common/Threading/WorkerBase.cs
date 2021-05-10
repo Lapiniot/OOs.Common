@@ -25,6 +25,8 @@ namespace System.Threading
         /// <returns>Awaitable task that represents currently running operation</returns>
         public async Task RunAsync(CancellationToken stoppingToken)
         {
+            CheckDisposed();
+
             await semaphore.WaitAsync(stoppingToken).ConfigureAwait(false);
 
             CancelableOperationScope captured;
@@ -45,7 +47,31 @@ namespace System.Threading
         /// Signals currently running asynchronous work about completion request
         /// </summary>
         /// <returns>Awaitable task which represents result of background work completion</returns>
-        public async Task StopAsync()
+        public Task StopAsync()
+        {
+            CheckDisposed();
+            return StopCoreAsync();
+        }
+
+        public bool IsRunning => Volatile.Read(ref cancelableOperation) != null;
+
+        #region Implementation of IAsyncDisposable
+
+        public virtual async ValueTask DisposeAsync()
+        {
+            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
+            GC.SuppressFinalize(this);
+
+            using(semaphore)
+            {
+                await StopCoreAsync().ConfigureAwait(false);
+            }
+        }
+
+        #endregion
+
+        private async Task StopCoreAsync()
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
 
@@ -62,26 +88,12 @@ namespace System.Threading
             }
         }
 
-        #region Implementation of IAsyncDisposable
-
-        public bool IsRunning => Volatile.Read(ref cancelableOperation) != null;
-
-        public virtual async ValueTask DisposeAsync()
+        protected void CheckDisposed()
         {
-            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
-
-            GC.SuppressFinalize(this);
-
-            try
+            if(Volatile.Read(ref disposed) != 0)
             {
-                await StopAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                semaphore.Dispose();
+                throw new ObjectDisposedException(nameof(WorkerBase));
             }
         }
-
-        #endregion
     }
 }

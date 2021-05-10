@@ -11,8 +11,7 @@ namespace System
     public abstract class ActivityObject : IAsyncDisposable
     {
         private readonly SemaphoreSlim semaphore = new(1);
-        private bool disposed;
-        private long disposeState;
+        private int disposed;
 
         protected bool IsRunning { get; private set; }
 
@@ -20,18 +19,16 @@ namespace System
 
         public virtual async ValueTask DisposeAsync()
         {
-            if(Interlocked.CompareExchange(ref disposeState, 1, 0) != 0) return;
+            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
+            {
+                return;
+            }
 
             GC.SuppressFinalize(this);
 
-            try
+            using(semaphore)
             {
-                await StopActivityAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                semaphore.Dispose();
-                disposed = true;
+                await StopActivityCoreAsync().ConfigureAwait(false);
             }
         }
 
@@ -43,12 +40,18 @@ namespace System
 
         protected void CheckState(bool state, [CallerMemberName] string callerName = null)
         {
-            if(IsRunning != state) throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
+            if(IsRunning != state)
+            {
+                throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
+            }
         }
 
         protected void CheckDisposed()
         {
-            if(disposed) throw new InvalidOperationException("Cannot use this instance - has been already disposed.");
+            if(Volatile.Read(ref disposed) != 0)
+            {
+                throw new ObjectDisposedException(nameof(ActivityObject));
+            }
         }
 
         protected async Task StartActivityAsync(CancellationToken cancellationToken = default)
@@ -75,10 +78,14 @@ namespace System
             }
         }
 
-        protected async Task StopActivityAsync()
+        protected Task StopActivityAsync()
         {
             CheckDisposed();
+            return StopActivityCoreAsync();
+        }
 
+        private async Task StopActivityCoreAsync()
+        {
             if(IsRunning)
             {
                 await semaphore.WaitAsync().ConfigureAwait(false);
