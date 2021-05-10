@@ -63,7 +63,7 @@ namespace System.Net.Pipelines
 
                     if(buffer.Length > 0)
                     {
-                        var stop = !Consume(buffer, out var consumed);
+                        var shouldContinue = Consume(buffer, out var consumed);
 
                         if(consumed > 0)
                         {
@@ -74,7 +74,7 @@ namespace System.Net.Pipelines
                             reader.AdvanceTo(buffer.Start, buffer.End);
                         }
 
-                        if(stop) break;
+                        if(!shouldContinue) break;
                     }
 
                     if(result.IsCompleted || result.IsCanceled) break;
@@ -97,11 +97,11 @@ namespace System.Net.Pipelines
         /// Method gets called every time new data is available.
         /// </summary>
         /// <param name="sequence">Sequence of linked buffers containing data produced by the pipe writer</param>
-        /// <param name="consumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
+        /// <param name="bytesConsumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
         /// <returns>
         /// <value>True</value> if consumer should continue reading, otherwise <value>False</value> to immidiately terminate processing 
         /// </returns>
-        protected abstract bool Consume(in ReadOnlySequence<byte> sequence, out long consumed);
+        protected abstract bool Consume(in ReadOnlySequence<byte> sequence, out long bytesConsumed);
 
         /// <summary>
         /// Method gets called when consumer completed its work

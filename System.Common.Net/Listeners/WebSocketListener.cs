@@ -19,13 +19,14 @@ namespace System.Net.Listeners
         public WebSocketListener(string[] prefixes, string[] subProtocols, TimeSpan keepAliveInterval, int receiveBufferSize)
         {
             this.prefixes = prefixes ?? throw new ArgumentNullException(nameof(prefixes));
-            this.subProtocols = subProtocols;
+            this.subProtocols = subProtocols ?? throw new ArgumentNullException(nameof(subProtocols));
             this.keepAliveInterval = keepAliveInterval;
             this.receiveBufferSize = receiveBufferSize;
         }
 
-        public WebSocketListener(string[] prefixes, params string[] subProtocols) :
-            this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize) {}
+        public WebSocketListener(string[] prefixes, string[] subProtocols) :
+            this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
+        { }
 
         #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
@@ -109,7 +110,7 @@ namespace System.Net.Listeners
                                 continue;
                             }
 
-                            var headers = subProtocol.Split(new[] {' ', ','}, StringSplitOptions.RemoveEmptyEntries);
+                            var headers = subProtocol.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
                             subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
                             if(subProtocol is null)
                             {
