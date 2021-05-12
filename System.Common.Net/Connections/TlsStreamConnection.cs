@@ -20,7 +20,7 @@ namespace System.Net.Connections
             throw new NotImplementedException();
         }
 
-        protected override Task StartingAsync(CancellationToken cancellationToken)
+        protected override Task StartingAsync(object state, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

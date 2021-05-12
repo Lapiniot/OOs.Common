@@ -30,8 +30,8 @@ namespace System.Net.Pipelines
                 return consumer;
             }
         }
-
-        protected override Task StartingAsync(CancellationToken cancellationToken)
+        
+        protected override Task StartingAsync(object state, CancellationToken cancellationToken)
         {
             cancellationTokenSource = new CancellationTokenSource();
 

@@ -22,7 +22,7 @@ namespace System.Net
 
         protected INetworkConnection Connection => connection;
 
-        protected override Task StartingAsync(CancellationToken cancellationToken)
+        protected override Task StartingAsync(object state, CancellationToken cancellationToken)
         {
             pipe = new Pipe(new PipeOptions(useSynchronizationContext: false));
 
