@@ -30,7 +30,7 @@ namespace System.Net.Pipelines
                 return consumer;
             }
         }
-        
+
         protected override Task StartingAsync(object state, CancellationToken cancellationToken)
         {
             cancellationTokenSource = new CancellationTokenSource();
@@ -86,10 +86,9 @@ namespace System.Net.Pipelines
             {
                 OnCompleted();
             }
-            catch(Exception exception)
+            catch(Exception exception) when(OnCompleted(exception))
             {
-                OnCompleted(exception);
-                throw;
+                // Suppress exception if OnCompleted returns true (handled as expected)
             }
         }
 
@@ -107,6 +106,7 @@ namespace System.Net.Pipelines
         /// Method gets called when consumer completed its work
         /// </summary>
         /// <param name="exception">Should exceptions occur, last value is passed</param>
-        protected abstract void OnCompleted(Exception exception = null);
+        /// <returns><value>True</value> if exception is handled and shouldn't be rethrown</returns>
+        protected abstract bool OnCompleted(Exception exception = null);
     }
 }
