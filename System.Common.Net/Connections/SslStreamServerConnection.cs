@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace System.Net.Connections
 {
-    public sealed class SslStreamConnection : NetworkConnection
+    public sealed class SslStreamServerConnection : NetworkConnection
     {
         private SslStream sslStream;
         private readonly SslServerAuthenticationOptions options;
 
-        public SslStreamConnection(SslStream sslStream, SslServerAuthenticationOptions options)
+        public SslStreamServerConnection(SslStream sslStream, SslServerAuthenticationOptions options)
         {
             this.sslStream = sslStream ?? throw new ArgumentNullException(nameof(sslStream));
             this.options = options ?? throw new ArgumentNullException(nameof(options));

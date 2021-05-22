@@ -28,14 +28,14 @@ namespace System.Net.Listeners
 
         protected override INetworkConnection CreateConnection(Socket acceptedSocket)
         {
-            var stream = new NetworkStream(acceptedSocket, true);
+            var stream = new NetworkStream(acceptedSocket, IO.FileAccess.ReadWrite, true);
 
             try
             {
                 var sslStream = new SslStream(stream, false);
                 try
                 {
-                    return new SslStreamConnection(sslStream, options);
+                    return new SslStreamServerConnection(sslStream, options);
                 }
                 catch
                 {
