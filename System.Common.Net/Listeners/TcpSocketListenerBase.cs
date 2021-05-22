@@ -36,11 +36,13 @@ namespace System.Net.Listeners
             while(!cancellationToken.IsCancellationRequested)
             {
                 Socket acceptedSocket = null;
+                INetworkConnection connection = null;
 
                 try
                 {
                     acceptedSocket = await socket.AcceptAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
                     configureAccepted?.Invoke(acceptedSocket);
+                    connection = CreateConnection(acceptedSocket);
                 }
                 catch(OperationCanceledException)
                 {
@@ -53,7 +55,10 @@ namespace System.Net.Listeners
                     throw;
                 }
 
-                yield return CreateConnection(acceptedSocket);
+                if(connection is not null)
+                {
+                    yield return connection;
+                }
             }
         }
 
