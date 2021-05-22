@@ -14,8 +14,8 @@ namespace System.Net.Connections
         /// </summary>
         /// <param name="buffer">Memory buffer containing data to send</param>
         /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Number of bytes succesfully sent to other party</returns>
-        ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+        /// <returns>ValueTask that can be awaited</returns>
+        ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
         /// <summary>
         /// Receives data sent by other party
         /// </summary>

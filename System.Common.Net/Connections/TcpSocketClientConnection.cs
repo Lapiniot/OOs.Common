@@ -51,13 +51,16 @@ namespace System.Net.Connections
             }
         }
 
-        public override async ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             CheckState(true);
             try
             {
                 var vt = socket.SendAsync(buffer, None, cancellationToken);
-                return vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+                if(!vt.IsCompletedSuccessfully)
+                {
+                    await vt.ConfigureAwait(false);
+                }
             }
             catch(SocketException se) when(
                 se.SocketErrorCode == ConnectionAborted ||

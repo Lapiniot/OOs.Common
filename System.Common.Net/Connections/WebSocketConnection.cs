@@ -61,15 +61,16 @@ namespace System.Net.Connections
 
         #region Implementation of INetworkTransport
 
-        public async ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             try
             {
                 var vt = socket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken);
 
-                if(!vt.IsCompletedSuccessfully) await vt.ConfigureAwait(false);
-
-                return buffer.Length;
+                if(!vt.IsCompletedSuccessfully)
+                {
+                    await vt.ConfigureAwait(false);
+                }
             }
             catch(WebSocketException wse) when(wse.WebSocketErrorCode == ConnectionClosedPrematurely)
             {

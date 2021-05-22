@@ -12,7 +12,7 @@ namespace System.Net.Connections
 
         public abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 
-        public abstract ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+        public abstract ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 
         #region Implementation of IConnectedObject
 

@@ -18,9 +18,13 @@ namespace System.Net.Connections
             Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
         }
 
-        public ValueTask<int> SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return socket.SendAsync(buffer, None, cancellationToken);
+            var vt = socket.SendAsync(buffer, None, cancellationToken);
+            if(!vt.IsCompletedSuccessfully)
+            {
+                await vt.ConfigureAwait(false);
+            }
         }
 
         public ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
