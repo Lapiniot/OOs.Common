@@ -28,26 +28,7 @@ namespace System.Net.Listeners
 
         protected override INetworkConnection CreateConnection(Socket acceptedSocket)
         {
-            var stream = new NetworkStream(acceptedSocket, IO.FileAccess.ReadWrite, true);
-
-            try
-            {
-                var sslStream = new SslStream(stream, false);
-                try
-                {
-                    return new SslStreamServerConnection(sslStream, options);
-                }
-                catch
-                {
-                    sslStream.Dispose();
-                    throw;
-                }
-            }
-            catch
-            {
-                stream.Dispose();
-                throw;
-            }
+            return new SslStreamServerConnection(acceptedSocket, options);
         }
     }
 }

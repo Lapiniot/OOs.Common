@@ -125,5 +125,10 @@ namespace System.Net.Connections
                 }
             }
         }
+
+        public override string ToString()
+        {
+            return $"{nameof(SslStreamClientConnection)}: {Socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
+        }
     }
 }

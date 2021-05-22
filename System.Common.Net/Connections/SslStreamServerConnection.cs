@@ -1,4 +1,5 @@
 using System.Net.Security;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,13 +7,28 @@ namespace System.Net.Connections
 {
     public sealed class SslStreamServerConnection : NetworkConnection
     {
+#pragma warning disable CA2213 // Disposable fields should be disposed: Warning is wrongly emitted due to some issues with analyzer itself
         private SslStream sslStream;
+#pragma warning restore CA2213
+        private Socket socket;
         private readonly SslServerAuthenticationOptions options;
 
-        public SslStreamServerConnection(SslStream sslStream, SslServerAuthenticationOptions options)
+        public SslStreamServerConnection(Socket acceptedSocket, SslServerAuthenticationOptions options)
         {
-            this.sslStream = sslStream ?? throw new ArgumentNullException(nameof(sslStream));
-            this.options = options ?? throw new ArgumentNullException(nameof(options));
+            this.socket = acceptedSocket;
+            this.options = options;
+
+            var stream = new NetworkStream(acceptedSocket, IO.FileAccess.ReadWrite, true);
+
+            try
+            {
+                sslStream = new SslStream(stream, false);
+            }
+            catch
+            {
+                stream.Dispose();
+                throw;
+            }
         }
 
         public override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
@@ -42,6 +58,12 @@ namespace System.Net.Connections
             {
                 await base.DisposeAsync().ConfigureAwait(false);
             }
+        }
+
+
+        public override string ToString()
+        {
+            return $"{Id}-{nameof(SslStreamServerConnection)}-{socket.RemoteEndPoint}";
         }
     }
 }
