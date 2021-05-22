@@ -33,6 +33,7 @@ namespace System.Net.Connections
         }
 
         public IPEndPoint RemoteEndPoint { get; private set; }
+        protected Socket Socket { get => socket; set => socket = value; }
 
         public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
