@@ -35,16 +35,13 @@ namespace System.Net.Connections
 
         #endregion
 
-        protected void SetWebSocket(TWebSocket webSocket)
-        {
-            socket = webSocket;
-        }
-
         #region Implementation of IConnectedObject
 
         public bool IsConnected => socket?.State == Open;
 
         public string Id { get; }
+
+        protected TWebSocket Socket { get => socket; set => socket = value; }
 
         public abstract Task ConnectAsync(CancellationToken cancellationToken = default);
 

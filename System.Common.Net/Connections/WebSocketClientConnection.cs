@@ -38,7 +38,7 @@ namespace System.Net.Connections
             try
             {
                 await socket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
-                SetWebSocket(socket);
+                Socket = socket;
             }
             catch(WebSocketException wse) when(wse.InnerException is HttpRequestException
             { InnerException: SocketException { SocketErrorCode: SocketError.HostNotFound } })
