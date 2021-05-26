@@ -12,17 +12,21 @@ namespace System.Net.Listeners
         private readonly X509Certificate serverCertificate;
         private bool disposed;
 
-        public SslStreamTcpSocketListener(IPEndPoint endPoint, X509Certificate serverCertificate,
-            SslProtocols enabledSslProtocols = SslProtocols.None, int backlog = 100,
-            Action<Socket> configureListening = null, Action<Socket> configureAccepted = null) :
+        public SslStreamTcpSocketListener(IPEndPoint endPoint, int backlog = 100,
+            Action<Socket> configureListening = null, Action<Socket> configureAccepted = null,
+            X509Certificate serverCertificate = null, SslProtocols enabledSslProtocols = SslProtocols.None,
+            RemoteCertificateValidationCallback remoteCertificateValidationCallback = null,
+            ServerCertificateSelectionCallback serverCertificateSelectionCallback = null) :
             base(endPoint, backlog, configureListening, configureAccepted)
         {
-            this.serverCertificate = serverCertificate ?? throw new ArgumentNullException(nameof(serverCertificate));
+            this.serverCertificate = serverCertificate;
 
             options = new SslServerAuthenticationOptions()
             {
                 ServerCertificate = serverCertificate,
-                EnabledSslProtocols = enabledSslProtocols
+                EnabledSslProtocols = enabledSslProtocols,
+                RemoteCertificateValidationCallback = remoteCertificateValidationCallback,
+                ServerCertificateSelectionCallback = serverCertificateSelectionCallback
             };
         }
 
