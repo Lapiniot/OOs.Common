@@ -1,6 +1,7 @@
 using System.Net.Connections;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 
 namespace System.Net.Listeners
@@ -11,7 +12,8 @@ namespace System.Net.Listeners
         private readonly X509Certificate serverCertificate;
         private bool disposed;
 
-        public SslStreamTcpSocketListener(IPEndPoint endPoint, X509Certificate serverCertificate, int backlog = 100,
+        public SslStreamTcpSocketListener(IPEndPoint endPoint, X509Certificate serverCertificate,
+            SslProtocols enabledSslProtocols = SslProtocols.None, int backlog = 100,
             Action<Socket> configureListening = null, Action<Socket> configureAccepted = null) :
             base(endPoint, backlog, configureListening, configureAccepted)
         {
@@ -19,7 +21,8 @@ namespace System.Net.Listeners
 
             options = new SslServerAuthenticationOptions()
             {
-                ServerCertificate = serverCertificate
+                ServerCertificate = serverCertificate,
+                EnabledSslProtocols = enabledSslProtocols
             };
         }
 
