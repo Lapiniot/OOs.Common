@@ -26,7 +26,8 @@ namespace System.Net.Listeners
                 ServerCertificate = serverCertificate,
                 EnabledSslProtocols = enabledSslProtocols,
                 RemoteCertificateValidationCallback = remoteCertificateValidationCallback,
-                ServerCertificateSelectionCallback = serverCertificateSelectionCallback
+                ServerCertificateSelectionCallback = serverCertificateSelectionCallback,
+                ClientCertificateRequired = true
             };
         }
 
