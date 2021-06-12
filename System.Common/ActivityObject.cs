@@ -34,7 +34,7 @@ namespace System
 
         #endregion
 
-        protected abstract Task StartingAsync(object state, CancellationToken cancellationToken);
+        protected abstract Task StartingAsync(CancellationToken cancellationToken);
 
         protected abstract Task StoppingAsync();
 
@@ -54,7 +54,7 @@ namespace System
             }
         }
 
-        protected async Task StartActivityAsync(CancellationToken cancellationToken, object state = null)
+        protected async Task StartActivityAsync(CancellationToken cancellationToken)
         {
             CheckDisposed();
 
@@ -66,7 +66,7 @@ namespace System
                 {
                     if(!IsRunning)
                     {
-                        await StartingAsync(state, cancellationToken).ConfigureAwait(false);
+                        await StartingAsync(cancellationToken).ConfigureAwait(false);
 
                         IsRunning = true;
                     }

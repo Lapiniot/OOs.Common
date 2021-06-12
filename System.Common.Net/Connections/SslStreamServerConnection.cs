@@ -47,7 +47,7 @@ namespace System.Net.Connections
             return Task.CompletedTask;
         }
 
-        protected override Task StartingAsync(object state, CancellationToken cancellationToken)
+        protected override Task StartingAsync(CancellationToken cancellationToken)
         {
             return sslStream.AuthenticateAsServerAsync(options, cancellationToken);
         }

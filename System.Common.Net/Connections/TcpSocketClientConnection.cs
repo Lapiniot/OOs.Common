@@ -83,7 +83,7 @@ namespace System.Net.Connections
             return CompletedTask;
         }
 
-        protected override async Task StartingAsync(object state, CancellationToken cancellationToken)
+        protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
             try
             {

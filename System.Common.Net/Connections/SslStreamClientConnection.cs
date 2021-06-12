@@ -77,9 +77,9 @@ namespace System.Net.Connections
             }
         }
 
-        protected override async Task StartingAsync(object state, CancellationToken cancellationToken)
+        protected override async Task StartingAsync(CancellationToken cancellationToken)
         {
-            await base.StartingAsync(state, cancellationToken).ConfigureAwait(false);
+            await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
             networkStream = new NetworkStream(Socket, IO.FileAccess.ReadWrite, false);
 

@@ -17,7 +17,7 @@ namespace System.Net.Pipelines
         private CancellationTokenSource cancellationTokenSource;
         private Task processor;
 
-        protected override Task StartingAsync(object state, CancellationToken cancellationToken)
+        protected override Task StartingAsync(CancellationToken cancellationToken)
         {
             cancellationTokenSource = new CancellationTokenSource();
             var token = cancellationTokenSource.Token;
