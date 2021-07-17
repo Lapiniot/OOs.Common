@@ -40,7 +40,7 @@ namespace System.Net.Listeners
 
                 try
                 {
-                    acceptedSocket = await socket.AcceptAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+                    acceptedSocket = await socket.AcceptAsync(cancellationToken).ConfigureAwait(false);
                     configureAccepted?.Invoke(acceptedSocket);
                     connection = CreateConnection(acceptedSocket);
                 }
