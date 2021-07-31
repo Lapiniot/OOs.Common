@@ -65,8 +65,10 @@ namespace System.Net
         public static IEnumerable<NetworkInterface> GetActiveExternalInterfaces(this IEnumerable<NetworkInterface> interfaces)
         {
             return interfaces.Where(ni =>
-                ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet &&
                 ni.OperationalStatus == OperationalStatus.Up &&
+                ni.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                ni.NetworkInterfaceType != NetworkInterfaceType.Unknown &&
+                ni.NetworkInterfaceType != NetworkInterfaceType.Tunnel &&
                 ni.GetIPProperties().GatewayAddresses.Count > 0);
         }
 
