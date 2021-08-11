@@ -1,7 +1,7 @@
 ﻿<Project>
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>preview</LangVersion>
         <Authors>aossss@gmail.com</Authors>
         <Company>aossss@gmail.com</Company>
         <Copyright>© aossss@gmail.com, 2018</Copyright>

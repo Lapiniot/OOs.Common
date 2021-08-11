@@ -93,7 +93,7 @@ namespace System.Net.Connections
                     RemoteEndPoint = new IPEndPoint(addresses[0], port);
                 }
 
-                socket = new Socket(RemoteEndPoint.AddressFamily, Stream, Tcp);
+                socket = new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, Tcp);
 
                 await socket.ConnectAsync(RemoteEndPoint, cancellationToken).ConfigureAwait(false);
             }
