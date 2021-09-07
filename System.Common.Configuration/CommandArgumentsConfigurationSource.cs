@@ -1,19 +1,18 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace System.Configuration
+namespace System.Configuration;
+
+public class CommandArgumentsConfigurationSource : IConfigurationSource
 {
-    public class CommandArgumentsConfigurationSource : IConfigurationSource
+    private readonly string[] args;
+
+    public CommandArgumentsConfigurationSource(string[] args)
     {
-        private readonly string[] args;
+        this.args = args;
+    }
 
-        public CommandArgumentsConfigurationSource(string[] args)
-        {
-            this.args = args;
-        }
-
-        public IConfigurationProvider Build(IConfigurationBuilder builder)
-        {
-            return new CommandArgumentsConfigurationProvider(args, "args");
-        }
+    public IConfigurationProvider Build(IConfigurationBuilder builder)
+    {
+        return new CommandArgumentsConfigurationProvider(args, "args");
     }
 }

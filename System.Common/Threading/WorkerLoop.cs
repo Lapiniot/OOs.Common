@@ -1,22 +1,20 @@
-﻿using System.Threading.Tasks;
+﻿namespace System.Threading;
 
-namespace System.Threading
+public sealed class WorkerLoop : WorkerBase
 {
-    public sealed class WorkerLoop : WorkerBase
+    private readonly Func<CancellationToken, Task> asyncWork;
+
+    public WorkerLoop(Func<CancellationToken, Task> asyncWork)
     {
-        private readonly Func<CancellationToken, Task> asyncWork;
+        ArgumentNullException.ThrowIfNull(asyncWork);
+        this.asyncWork = asyncWork;
+    }
 
-        public WorkerLoop(Func<CancellationToken, Task> asyncWork)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while(!stoppingToken.IsCancellationRequested)
         {
-            this.asyncWork = asyncWork ?? throw new ArgumentNullException(nameof(asyncWork));
-        }
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            while(!stoppingToken.IsCancellationRequested)
-            {
-                await asyncWork(stoppingToken).ConfigureAwait(false);
-            }
+            await asyncWork(stoppingToken).ConfigureAwait(false);
         }
     }
 }

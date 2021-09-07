@@ -1,27 +1,25 @@
 using System.IO.Pipelines;
 using System.Net.Connections;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace System.Net.Pipelines
+namespace System.Net.Pipelines;
+
+/// <summary>
+/// Provides generic pipe data producer which reads data from abstract <seealso cref="INetworkConnection" />
+/// on data arrival and writes it to the pipe. Reads by consumers are supported via
+/// implemented <seealso cref="System.IO.Pipelines.PipeReader" /> methods.
+/// </summary>
+public sealed class NetworkPipeReader : PipeReaderBase
 {
-    /// <summary>
-    /// Provides generic pipe data producer which reads data from abstract <seealso cref="INetworkConnection" />
-    /// on data arrival and writes it to the pipe. Reads by consumers are supported via
-    /// implemented <seealso cref="System.IO.Pipelines.PipeReader" /> methods.
-    /// </summary>
-    public sealed class NetworkPipeReader : PipeReaderBase
+    private readonly INetworkConnection connection;
+
+    public NetworkPipeReader(INetworkConnection connection, PipeOptions pipeOptions = null) : base(pipeOptions)
     {
-        private readonly INetworkConnection connection;
+        ArgumentNullException.ThrowIfNull(connection);
+        this.connection = connection;
+    }
 
-        public NetworkPipeReader(INetworkConnection connection, PipeOptions pipeOptions = null) : base(pipeOptions)
-        {
-            this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
-        }
-
-        protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return connection.ReceiveAsync(buffer, cancellationToken);
-        }
+    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    {
+        return connection.ReceiveAsync(buffer, cancellationToken);
     }
 }

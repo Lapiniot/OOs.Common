@@ -1,9 +1,8 @@
-namespace System.Threading
+namespace System.Threading;
+
+public interface IAsyncCancelable : IAsyncDisposable
 {
-    public interface IAsyncCancelable : IAsyncDisposable
-    {
-        bool IsCompleted { get; }
-        bool IsCanceled { get; }
-        Exception Exception { get; }
-    }
+    bool IsCompleted { get; }
+    bool IsCanceled { get; }
+    Exception Exception { get; }
 }

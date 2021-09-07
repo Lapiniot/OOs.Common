@@ -1,61 +1,59 @@
-using System.Collections.Generic;
 using System.Net.Connections.Exceptions;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
 using static System.Net.Properties.Strings;
 
-namespace System.Net.Connections
+namespace System.Net.Connections;
+
+public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSocket>
 {
-    public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSocket>
+    private readonly string[] subProtocols;
+
+    public WebSocketClientConnection(Uri remoteUri, string[] subProtocols) : base(null)
     {
-        private readonly string[] subProtocols;
+        ArgumentNullException.ThrowIfNull(remoteUri);
+        ArgumentNullException.ThrowIfNull(subProtocols);
 
-        public WebSocketClientConnection(Uri remoteUri, string[] subProtocols) : base(null)
+        RemoteUri = remoteUri;
+        this.subProtocols = subProtocols;
+        if(subProtocols.Length == 0) throw new ArgumentException(NoWsSubProtocol);
+    }
+
+    public Uri RemoteUri { get; }
+
+    public IEnumerable<string> SubProtocols => subProtocols;
+
+    #region Overrides of WebSocketConnection
+
+    public override async Task ConnectAsync(CancellationToken cancellationToken = default)
+    {
+        var socket = new ClientWebSocket();
+
+        foreach(var subProtocol in SubProtocols)
         {
-            RemoteUri = remoteUri ?? throw new ArgumentNullException(nameof(remoteUri));
-            this.subProtocols = subProtocols ?? throw new ArgumentNullException(nameof(subProtocols));
-            if(subProtocols.Length == 0) throw new ArgumentException(NoWsSubProtocol);
+            socket.Options.AddSubProtocol(subProtocol);
         }
 
-        public Uri RemoteUri { get; }
-
-        public IEnumerable<string> SubProtocols => subProtocols;
-
-        #region Overrides of WebSocketConnection
-
-        public override async Task ConnectAsync(CancellationToken cancellationToken = default)
+        try
         {
-            var socket = new ClientWebSocket();
-
-            foreach(var subProtocol in SubProtocols)
-            {
-                socket.Options.AddSubProtocol(subProtocol);
-            }
-
-            try
-            {
-                await socket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
-                Socket = socket;
-            }
-            catch(WebSocketException wse) when(wse.InnerException is HttpRequestException
-            { InnerException: SocketException { SocketErrorCode: SocketError.HostNotFound } })
-            {
-                throw new HostNotFoundException(wse);
-            }
-            catch(WebSocketException wse)
-            {
-                throw new ServerUnavailableException(wse);
-            }
+            await socket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
+            Socket = socket;
         }
-
-        #endregion
-
-        public override string ToString()
+        catch(WebSocketException wse) when(wse.InnerException is HttpRequestException
+        { InnerException: SocketException { SocketErrorCode: SocketError.HostNotFound } })
         {
-            return $"{Id}-{nameof(WebSocketClientConnection)}";
+            throw new HostNotFoundException(wse);
         }
+        catch(WebSocketException wse)
+        {
+            throw new ServerUnavailableException(wse);
+        }
+    }
+
+    #endregion
+
+    public override string ToString()
+    {
+        return $"{Id}-{nameof(WebSocketClientConnection)}";
     }
 }

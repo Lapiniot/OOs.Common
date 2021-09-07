@@ -1,10 +1,9 @@
-namespace System.Common.CommandLine
+namespace System.Common.CommandLine;
+
+public interface IArgumentMetadata
 {
-    public interface IArgumentMetadata
-    {
-        string Name { get; }
-        string ShortName { get; }
-        Type Type { get; }
-        string Description { get; }
-    }
+    string Name { get; }
+    string ShortName { get; }
+    Type Type { get; }
+    string Description { get; }
 }

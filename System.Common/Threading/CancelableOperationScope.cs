@@ -1,67 +1,64 @@
-﻿using System.Threading.Tasks;
+﻿namespace System.Threading;
 
-namespace System.Threading
+public sealed class CancelableOperationScope : IAsyncCancelable
 {
-    public sealed class CancelableOperationScope : IAsyncCancelable
+    private readonly CancellationTokenSource jointCts;
+    private readonly CancellationTokenSource localCts;
+    private long disposed;
+
+    private CancelableOperationScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken)
     {
-        private readonly CancellationTokenSource jointCts;
-        private readonly CancellationTokenSource localCts;
-        private long disposed;
+        ArgumentNullException.ThrowIfNull(operation);
 
-        private CancelableOperationScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken)
+        localCts = new CancellationTokenSource();
+
+        var token = stoppingToken != default
+            ? (jointCts = CancellationTokenSource.CreateLinkedTokenSource(localCts.Token, stoppingToken)).Token
+            : localCts.Token;
+
+        try
         {
-            if(operation == null) throw new ArgumentNullException(nameof(operation));
+            Completion = operation(token);
+        }
+        catch
+        {
+            using(localCts)
+            using(jointCts) { }
 
-            localCts = new CancellationTokenSource();
+            throw;
+        }
+    }
 
-            var token = stoppingToken != default
-                ? (jointCts = CancellationTokenSource.CreateLinkedTokenSource(localCts.Token, stoppingToken)).Token
-                : localCts.Token;
+    public static CancelableOperationScope StartInScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default)
+    {
+        return new(operation, stoppingToken);
+    }
 
+    #region Implementation of IAsyncCancelable
+
+    bool IAsyncCancelable.IsCompleted => Completion.IsCompleted;
+
+    bool IAsyncCancelable.IsCanceled => Completion.IsCanceled;
+
+    Exception IAsyncCancelable.Exception => Completion.Exception;
+
+    public Task Completion { get; }
+
+    public async ValueTask DisposeAsync()
+    {
+        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
+        using(localCts)
+        using(jointCts)
+        {
             try
             {
-                Completion = operation(token);
+                localCts.Cancel();
+                await Completion.ConfigureAwait(false);
             }
-            catch
-            {
-                using(localCts)
-                using(jointCts) {}
-
-                throw;
-            }
+            catch(OperationCanceledException) { }
         }
-
-        public static CancelableOperationScope StartInScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default)
-        {
-            return new(operation, stoppingToken);
-        }
-
-        #region Implementation of IAsyncCancelable
-
-        bool IAsyncCancelable.IsCompleted => Completion.IsCompleted;
-
-        bool IAsyncCancelable.IsCanceled => Completion.IsCanceled;
-
-        Exception IAsyncCancelable.Exception => Completion.Exception;
-
-        public Task Completion { get; }
-
-        public async ValueTask DisposeAsync()
-        {
-            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
-
-            using(localCts)
-            using(jointCts)
-            {
-                try
-                {
-                    localCts.Cancel();
-                    await Completion.ConfigureAwait(false);
-                }
-                catch(OperationCanceledException) {}
-            }
-        }
-
-        #endregion
     }
+
+    #endregion
 }

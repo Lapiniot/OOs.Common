@@ -1,10 +1,6 @@
-using System.Threading;
-using System.Threading.Tasks;
+namespace System.Policies;
 
-namespace System.Policies
+public interface IRepeatPolicy
 {
-    public interface IRepeatPolicy
-    {
-        Task RepeatAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default);
-    }
+    Task RepeatAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = default);
 }

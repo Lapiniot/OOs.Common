@@ -1,107 +1,104 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace System
+namespace System;
+
+/// <summary>
+/// Implements async state management template for any type which runs some activity and may be in two states only
+/// (Running/Stopped, Connected/Disconnected e.g.).
+/// </summary>
+public abstract class ActivityObject : IAsyncDisposable
 {
-    /// <summary>
-    /// Implements async state management template for any type which runs some activity and may be in two states only
-    /// (Running/Stopped, Connected/Disconnected e.g.).
-    /// </summary>
-    public abstract class ActivityObject : IAsyncDisposable
+    private readonly SemaphoreSlim semaphore = new(1);
+    private int disposed;
+
+    protected bool IsRunning { get; private set; }
+
+    #region Implementation of IAsyncDisposable
+
+    public virtual async ValueTask DisposeAsync()
     {
-        private readonly SemaphoreSlim semaphore = new(1);
-        private int disposed;
-
-        protected bool IsRunning { get; private set; }
-
-        #region Implementation of IAsyncDisposable
-
-        public virtual async ValueTask DisposeAsync()
+        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
         {
-            if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
-            {
-                return;
-            }
-
-            GC.SuppressFinalize(this);
-
-            using(semaphore)
-            {
-                await StopActivityCoreAsync().ConfigureAwait(false);
-            }
+            return;
         }
 
-        #endregion
+        GC.SuppressFinalize(this);
 
-        protected abstract Task StartingAsync(CancellationToken cancellationToken);
-
-        protected abstract Task StoppingAsync();
-
-        protected void CheckState(bool state, [CallerMemberName] string callerName = null)
+        using(semaphore)
         {
-            if(IsRunning != state)
-            {
-                throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
-            }
+            await StopActivityCoreAsync().ConfigureAwait(false);
         }
+    }
 
-        protected void CheckDisposed()
+    #endregion
+
+    protected abstract Task StartingAsync(CancellationToken cancellationToken);
+
+    protected abstract Task StoppingAsync();
+
+    protected void CheckState(bool state, [CallerMemberName] string callerName = null)
+    {
+        if(IsRunning != state)
         {
-            if(Volatile.Read(ref disposed) != 0)
-            {
-                throw new ObjectDisposedException(nameof(ActivityObject));
-            }
+            throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
         }
+    }
 
-        protected async Task StartActivityAsync(CancellationToken cancellationToken)
+    protected void CheckDisposed()
+    {
+        if(Volatile.Read(ref disposed) != 0)
         {
-            CheckDisposed();
+            throw new ObjectDisposedException(nameof(ActivityObject));
+        }
+    }
 
-            if(!IsRunning)
+    protected async Task StartActivityAsync(CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        if(!IsRunning)
+        {
+            await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            try
             {
-                await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-                try
+                if(!IsRunning)
                 {
-                    if(!IsRunning)
-                    {
-                        await StartingAsync(cancellationToken).ConfigureAwait(false);
+                    await StartingAsync(cancellationToken).ConfigureAwait(false);
 
-                        IsRunning = true;
-                    }
-                }
-                finally
-                {
-                    semaphore.Release();
+                    IsRunning = true;
                 }
             }
-        }
-
-        protected Task StopActivityAsync()
-        {
-            CheckDisposed();
-            return StopActivityCoreAsync();
-        }
-
-        private async Task StopActivityCoreAsync()
-        {
-            if(IsRunning)
+            finally
             {
-                await semaphore.WaitAsync().ConfigureAwait(false);
+                semaphore.Release();
+            }
+        }
+    }
 
-                try
+    protected Task StopActivityAsync()
+    {
+        CheckDisposed();
+        return StopActivityCoreAsync();
+    }
+
+    private async Task StopActivityCoreAsync()
+    {
+        if(IsRunning)
+        {
+            await semaphore.WaitAsync().ConfigureAwait(false);
+
+            try
+            {
+                if(IsRunning)
                 {
-                    if(IsRunning)
-                    {
-                        await StoppingAsync().ConfigureAwait(false);
-                    }
+                    await StoppingAsync().ConfigureAwait(false);
                 }
-                finally
-                {
-                    IsRunning = false;
-                    semaphore.Release();
-                }
+            }
+            finally
+            {
+                IsRunning = false;
+                semaphore.Release();
             }
         }
     }

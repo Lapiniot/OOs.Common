@@ -1,140 +1,137 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace System
+namespace System;
+
+public class ObserversContainer<T> : IObservable<T>, IDisposable
 {
-    public class ObserversContainer<T> : IObservable<T>, IDisposable
+    private ConcurrentDictionary<IObserver<T>, Subscription> observers;
+
+    public ObserversContainer()
     {
-        private ConcurrentDictionary<IObserver<T>, Subscription> observers;
+        observers = new ConcurrentDictionary<IObserver<T>, Subscription>();
+    }
 
-        public ObserversContainer()
+    public IDisposable Subscribe(IObserver<T> observer)
+    {
+        return observers switch
         {
-            observers = new ConcurrentDictionary<IObserver<T>, Subscription>();
-        }
+            null => throw new InvalidOperationException("Container doesn't support subscription in the current state."),
+            _ => observers.GetOrAdd(observer, o => new Subscription(o, this))
+        };
+    }
 
-        public IDisposable Subscribe(IObserver<T> observer)
+    private void Unsubscribe(IObserver<T> observer)
+    {
+        observers?.TryRemove(observer, out _);
+    }
+
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
+    public void Notify(T value)
+    {
+        Parallel.ForEach(observers, (pair, _) =>
         {
-            return observers switch
+            try
             {
-                null => throw new InvalidOperationException("Container doesn't support subscription in the current state."),
-                _ => observers.GetOrAdd(observer, o => new Subscription(o, this))
-            };
-        }
-
-        private void Unsubscribe(IObserver<T> observer)
-        {
-            observers?.TryRemove(observer, out _);
-        }
-
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
-        public void Notify(T value)
-        {
-            Parallel.ForEach(observers, (pair, _) =>
+                pair.Key.OnNext(value);
+            }
+            catch
             {
-                try
-                {
-                    pair.Key.OnNext(value);
-                }
-                catch
-                {
                     // ignored
                 }
-            });
-        }
+        });
+    }
 
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
-        public void NotifyError(Exception error)
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
+    public void NotifyError(Exception error)
+    {
+        Parallel.ForEach(observers, (pair, _) =>
         {
-            Parallel.ForEach(observers, (pair, _) =>
+            try
             {
-                try
-                {
-                    pair.Key.OnError(error);
-                }
-                catch
-                {
+                pair.Key.OnError(error);
+            }
+            catch
+            {
                     // ignored
                 }
-            });
-        }
+        });
+    }
 
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
-        public void NotifyCompleted()
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
+    public void NotifyCompleted()
+    {
+        Parallel.ForEach(observers, (pair, _) =>
         {
-            Parallel.ForEach(observers, (pair, _) =>
+            try
             {
-                try
-                {
-                    pair.Key.OnCompleted();
-                }
-                catch
-                {
+                pair.Key.OnCompleted();
+            }
+            catch
+            {
                     // ignored
                 }
-            });
-        }
+        });
+    }
 
-        private sealed class Subscription : IDisposable
+    private sealed class Subscription : IDisposable
+    {
+        private ObserversContainer<T> container;
+        private IObserver<T> observer;
+
+        public Subscription(IObserver<T> observer, ObserversContainer<T> container)
         {
-            private ObserversContainer<T> container;
-            private IObserver<T> observer;
-
-            public Subscription(IObserver<T> observer, ObserversContainer<T> container)
-            {
-                this.observer = observer;
-                this.container = container;
-            }
-
-            public void Dispose()
-            {
-                container?.Unsubscribe(observer);
-                container = null;
-                observer = null;
-            }
-        }
-
-        #region IDisposable Support
-
-        private bool disposed;
-
-        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
-        protected virtual void Dispose(bool disposing)
-        {
-            if(disposed) return;
-
-            if(disposing)
-            {
-                var cached = Interlocked.Exchange(ref observers, null);
-
-                if(cached != null)
-                {
-                    Parallel.ForEach(cached, (p, _) =>
-                    {
-                        try
-                        {
-                            p.Key.OnCompleted();
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    });
-
-                    cached.Clear();
-                }
-            }
-
-            disposed = true;
+            this.observer = observer;
+            this.container = container;
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            container?.Unsubscribe(observer);
+            container = null;
+            observer = null;
+        }
+    }
+
+    #region IDisposable Support
+
+    private bool disposed;
+
+    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
+    protected virtual void Dispose(bool disposing)
+    {
+        if(disposed) return;
+
+        if(disposing)
+        {
+            var cached = Interlocked.Exchange(ref observers, null);
+
+            if(cached != null)
+            {
+                Parallel.ForEach(cached, (p, _) =>
+                {
+                    try
+                    {
+                        p.Key.OnCompleted();
+                    }
+                    catch
+                    {
+                            // ignored
+                        }
+                });
+
+                cached.Clear();
+            }
         }
 
-        #endregion
+        disposed = true;
     }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    #endregion
 }

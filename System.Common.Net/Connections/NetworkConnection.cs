@@ -1,40 +1,36 @@
-using System.Threading;
-using System.Threading.Tasks;
+namespace System.Net.Connections;
 
-namespace System.Net.Connections
+public abstract class NetworkConnection : ActivityObject, INetworkConnection
 {
-    public abstract class NetworkConnection : ActivityObject, INetworkConnection
+    protected NetworkConnection()
     {
-        protected NetworkConnection()
-        {
-            Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
-        }
+        Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
+    }
 
-        public abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+    public abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 
-        public abstract ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+    public abstract ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 
-        #region Implementation of IConnectedObject
+    #region Implementation of IConnectedObject
 
-        public bool IsConnected => IsRunning;
+    public bool IsConnected => IsRunning;
 
-        public string Id { get; }
+    public string Id { get; }
 
-        public Task ConnectAsync(CancellationToken cancellationToken = default)
-        {
-            return StartActivityAsync(cancellationToken);
-        }
+    public Task ConnectAsync(CancellationToken cancellationToken = default)
+    {
+        return StartActivityAsync(cancellationToken);
+    }
 
-        public Task DisconnectAsync()
-        {
-            return StopActivityAsync();
-        }
+    public Task DisconnectAsync()
+    {
+        return StopActivityAsync();
+    }
 
-        #endregion
+    #endregion
 
-        public override string ToString()
-        {
-            return $"{Id}-{this.GetType().Name}";
-        }
+    public override string ToString()
+    {
+        return $"{Id}-{this.GetType().Name}";
     }
 }

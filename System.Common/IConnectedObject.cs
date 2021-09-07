@@ -1,12 +1,8 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿namespace System;
 
-namespace System
+public interface IConnectedObject
 {
-    public interface IConnectedObject
-    {
-        bool IsConnected { get; }
-        Task ConnectAsync(CancellationToken cancellationToken = default);
-        Task DisconnectAsync();
-    }
+    bool IsConnected { get; }
+    Task ConnectAsync(CancellationToken cancellationToken = default);
+    Task DisconnectAsync();
 }

@@ -1,8 +1,7 @@
-namespace System.Common.CommandLine
+namespace System.Common.CommandLine;
+
+public interface ICommandMetadata
 {
-    public interface ICommandMetadata
-    {
-        string Name { get; }
-        bool IsDefault { get; }
-    }
+    string Name { get; }
+    bool IsDefault { get; }
 }

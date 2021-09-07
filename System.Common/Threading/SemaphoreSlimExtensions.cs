@@ -1,60 +1,58 @@
-﻿using System.Threading.Tasks;
+﻿namespace System.Threading;
 
-namespace System.Threading
+public static class SemaphoreSlimExtensions
 {
-    public static class SemaphoreSlimExtensions
+    public static async Task<SemaphoreSlimLockScope> GetLockAsync(this SemaphoreSlim semaphoreSlim, CancellationToken cancellationToken)
     {
-        public static async Task<SemaphoreSlimLockScope> GetLockAsync(this SemaphoreSlim semaphoreSlim, CancellationToken cancellationToken)
-        {
-            if(semaphoreSlim is null) throw new ArgumentNullException(nameof(semaphoreSlim));
+        ArgumentNullException.ThrowIfNull(semaphoreSlim);
 
-            await semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await semaphoreSlim.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-            return new SemaphoreSlimLockScope(semaphoreSlim);
-        }
+        return new SemaphoreSlimLockScope(semaphoreSlim);
+    }
+}
+
+public readonly struct SemaphoreSlimLockScope : IEquatable<SemaphoreSlimLockScope>, IDisposable
+{
+    private readonly SemaphoreSlim semaphoreSlim;
+
+    internal SemaphoreSlimLockScope(SemaphoreSlim semaphoreSlim)
+    {
+        ArgumentNullException.ThrowIfNull(semaphoreSlim);
+        this.semaphoreSlim = semaphoreSlim;
     }
 
-    public readonly struct SemaphoreSlimLockScope : IEquatable<SemaphoreSlimLockScope>, IDisposable
+    #region Implementation of IDisposable
+
+    public void Dispose()
     {
-        private readonly SemaphoreSlim semaphoreSlim;
+        semaphoreSlim.Release();
+    }
 
-        internal SemaphoreSlimLockScope(SemaphoreSlim semaphoreSlim)
-        {
-            this.semaphoreSlim = semaphoreSlim ?? throw new ArgumentNullException(nameof(semaphoreSlim));
-        }
+    #endregion
 
-        #region Implementation of IDisposable
+    public static bool operator ==(SemaphoreSlimLockScope scope1, SemaphoreSlimLockScope scope2)
+    {
+        return scope1.semaphoreSlim == scope2.semaphoreSlim;
+    }
 
-        public void Dispose()
-        {
-            semaphoreSlim.Release();
-        }
+    public static bool operator !=(SemaphoreSlimLockScope scope1, SemaphoreSlimLockScope scope2)
+    {
+        return scope1.semaphoreSlim == scope2.semaphoreSlim;
+    }
 
-        #endregion
+    public override bool Equals(object obj)
+    {
+        return obj is SemaphoreSlimLockScope scope && semaphoreSlim == scope.semaphoreSlim;
+    }
 
-        public static bool operator ==(SemaphoreSlimLockScope scope1, SemaphoreSlimLockScope scope2)
-        {
-            return scope1.semaphoreSlim == scope2.semaphoreSlim;
-        }
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(semaphoreSlim);
+    }
 
-        public static bool operator !=(SemaphoreSlimLockScope scope1, SemaphoreSlimLockScope scope2)
-        {
-            return scope1.semaphoreSlim == scope2.semaphoreSlim;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is SemaphoreSlimLockScope scope && semaphoreSlim == scope.semaphoreSlim;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(semaphoreSlim);
-        }
-
-        public bool Equals(SemaphoreSlimLockScope other)
-        {
-            return semaphoreSlim == other.semaphoreSlim;
-        }
+    public bool Equals(SemaphoreSlimLockScope other)
+    {
+        return semaphoreSlim == other.semaphoreSlim;
     }
 }

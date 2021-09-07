@@ -1,17 +1,17 @@
-namespace System.Collections.Generic
+namespace System.Collections.Generic;
+
+public sealed class ComparerAdapter<T> : Comparer<T>
 {
-    public sealed class ComparerAdapter<T> : Comparer<T>
+    private readonly Func<T, T, int> compare;
+
+    public ComparerAdapter(Func<T, T, int> compare)
     {
-        private readonly Func<T, T, int> compare;
+        ArgumentNullException.ThrowIfNull(compare);
+        this.compare = compare;
+    }
 
-        public ComparerAdapter(Func<T, T, int> compare)
-        {
-            this.compare = compare ?? throw new ArgumentNullException(nameof(compare));
-        }
-
-        public override int Compare(T x, T y)
-        {
-            return compare(x, y);
-        }
+    public override int Compare(T x, T y)
+    {
+        return compare(x, y);
     }
 }
