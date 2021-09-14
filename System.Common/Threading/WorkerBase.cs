@@ -80,6 +80,10 @@ public abstract class WorkerBase : IAsyncDisposable
                 cancelableOperation = null;
             }
         }
+        catch
+        {
+            // Should not throw loop-breaking exception here by design
+        }
         finally
         {
             semaphore.Release();
