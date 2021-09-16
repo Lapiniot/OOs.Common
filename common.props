@@ -13,5 +13,6 @@
         <AnalysisLevel>latest</AnalysisLevel>
         <ImplicitUsings>true</ImplicitUsings>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <ImplicitUsings>true</ImplicitUsings>
     </PropertyGroup>
 </Project>
