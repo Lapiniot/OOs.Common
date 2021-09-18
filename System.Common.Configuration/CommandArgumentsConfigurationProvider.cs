@@ -7,7 +7,7 @@ namespace System.Configuration;
 
 public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvider
 {
-    private string prefix;
+    private readonly string prefix;
     private readonly string[] args;
 
     public CommandArgumentsConfigurationProvider(string[] args, string sectionName)

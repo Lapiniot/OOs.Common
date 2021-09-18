@@ -4,7 +4,7 @@ namespace System.Net.Http;
 
 public class JwtToken
 {
-    private Dictionary<string, string> claims;
+    private readonly Dictionary<string, string> claims;
 
     public JwtToken()
     {

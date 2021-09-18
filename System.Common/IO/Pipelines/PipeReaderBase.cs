@@ -9,14 +9,14 @@ public abstract class PipeReaderBase : PipeReader, IAsyncDisposable
     private const int Stopping = 2;
     private bool disposed;
     private CancellationTokenSource globalCts;
-    private PipeReader pipeReader;
-    private PipeWriter pipeWriter;
+    private readonly PipeReader reader;
+    private readonly PipeWriter writer;
     private Task producer;
     private int stateGuard;
 
     protected PipeReaderBase(PipeOptions pipeOptions = null)
     {
-        (pipeReader, pipeWriter) = new Pipe(pipeOptions ?? new PipeOptions(useSynchronizationContext: false));
+        (reader, writer) = new Pipe(pipeOptions ?? new PipeOptions(useSynchronizationContext: false));
     }
 
     #region Implementation of IAsyncDisposable
@@ -48,7 +48,7 @@ public abstract class PipeReaderBase : PipeReader, IAsyncDisposable
             case Stopped:
                 var cts = new CancellationTokenSource();
                 globalCts = cts;
-                producer = StartProducerAsync(pipeWriter, cts.Token);
+                producer = StartProducerAsync(writer, cts.Token);
                 break;
             case Stopping:
                 throw new InvalidOperationException("Cannot start in this state, currently in stopping transition.");
@@ -128,32 +128,32 @@ public abstract class PipeReaderBase : PipeReader, IAsyncDisposable
 
     public override void AdvanceTo(SequencePosition consumed)
     {
-        pipeReader.AdvanceTo(consumed);
+        reader.AdvanceTo(consumed);
     }
 
     public override void AdvanceTo(SequencePosition consumed, SequencePosition examined)
     {
-        pipeReader.AdvanceTo(consumed, examined);
+        reader.AdvanceTo(consumed, examined);
     }
 
     public override void CancelPendingRead()
     {
-        pipeReader.CancelPendingRead();
+        reader.CancelPendingRead();
     }
 
     public override void Complete(Exception exception = null)
     {
-        pipeReader.Complete(exception);
+        reader.Complete(exception);
     }
 
     public override ValueTask<ReadResult> ReadAsync(CancellationToken cancellationToken = default)
     {
-        return pipeReader.ReadAsync(cancellationToken);
+        return reader.ReadAsync(cancellationToken);
     }
 
     public override bool TryRead(out ReadResult result)
     {
-        return pipeReader.TryRead(out result);
+        return reader.TryRead(out result);
     }
 
     #endregion

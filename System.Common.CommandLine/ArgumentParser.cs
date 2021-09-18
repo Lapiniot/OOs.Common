@@ -5,9 +5,9 @@ namespace System.Common.CommandLine;
 
 public class ArgumentParser
 {
-    ICommandMetadata[] commands;
-    IArgumentMetadata[] schema;
-    static char[] quotes = { '"', '\'' };
+    readonly ICommandMetadata[] commands;
+    readonly IArgumentMetadata[] schema;
+    static readonly char[] quotes = { '"', '\'' };
 
     public ArgumentParser(ICommandMetadata[] commands, IArgumentMetadata[] schema)
     {

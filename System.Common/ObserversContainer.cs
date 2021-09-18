@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 
 namespace System;
 
@@ -26,7 +25,6 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
         observers?.TryRemove(observer, out _);
     }
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
     public void Notify(T value)
     {
         Parallel.ForEach(observers, (pair, _) =>
@@ -37,12 +35,11 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
             }
             catch
             {
-                    // ignored
-                }
+                // ignored
+            }
         });
     }
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
     public void NotifyError(Exception error)
     {
         Parallel.ForEach(observers, (pair, _) =>
@@ -53,12 +50,11 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
             }
             catch
             {
-                    // ignored
-                }
+                // ignored
+            }
         });
     }
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
     public void NotifyCompleted()
     {
         Parallel.ForEach(observers, (pair, _) =>
@@ -69,8 +65,8 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
             }
             catch
             {
-                    // ignored
-                }
+                // ignored
+            }
         });
     }
 
@@ -97,7 +93,6 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
 
     private bool disposed;
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "None of the handler exceptions should break notification loop")]
     protected virtual void Dispose(bool disposing)
     {
         if(disposed) return;
@@ -116,8 +111,8 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
                     }
                     catch
                     {
-                            // ignored
-                        }
+                        // ignored
+                    }
                 });
 
                 cached.Clear();

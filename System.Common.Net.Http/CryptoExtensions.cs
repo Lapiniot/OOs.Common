@@ -14,10 +14,8 @@ public static class CryptoExtensions
 
     public static ECDiffieHellmanPublicKey ImportP256DHPublicKey(byte[] publicKey)
     {
-        using(var ecdh = ECDiffieHellman.Create(ImportECParameters(publicKey, null)))
-        {
-            return ecdh.PublicKey;
-        }
+        using var ecdh = ECDiffieHellman.Create(ImportECParameters(publicKey, null));
+        return ecdh.PublicKey;
     }
 
     public static byte[] ExportP256DHPublicKey(ECDiffieHellmanPublicKey publicKey)
@@ -80,34 +78,28 @@ public static class CryptoExtensions
         ArgumentNullException.ThrowIfNull(otherPartyPublicKey);
         ArgumentNullException.ThrowIfNull(hmacKey);
 
-        using(var publicKey = ImportP256DHPublicKey(otherPartyPublicKey))
-        {
-            return ecdh.DeriveKeyFromHmac(publicKey, HashAlgorithmName.SHA256, hmacKey);
-        }
+        using var publicKey = ImportP256DHPublicKey(otherPartyPublicKey);
+        return ecdh.DeriveKeyFromHmac(publicKey, HashAlgorithmName.SHA256, hmacKey);
     }
 
     public static byte[] ComputeHKDF(byte[] salt, byte[] ikm, byte[] data, int length)
     {
         ArgumentNullException.ThrowIfNull(data);
 
-        using(var hmac = new HMACSHA256(salt))
-        {
-            var key = hmac.ComputeHash(ikm);
-            var buffer = new byte[data.Length + 1];
-            data.CopyTo(buffer, 0);
-            buffer[^1] = 0x01;
-            hmac.Key = key;
-            hmac.Initialize();
-            return hmac.ComputeHash(buffer).AsSpan(0, length).ToArray();
-        }
+        using var hmac = new HMACSHA256(salt);
+        var key = hmac.ComputeHash(ikm);
+        var buffer = new byte[data.Length + 1];
+        data.CopyTo(buffer, 0);
+        buffer[^1] = 0x01;
+        hmac.Key = key;
+        hmac.Initialize();
+        return hmac.ComputeHash(buffer).AsSpan(0, length).ToArray();
     }
 
     public static (byte[] PublicKey, byte[] PrivateKey) GenerateP256ECKeys()
     {
-        using(var ecdh = ECDiffieHellman.Create())
-        {
-            ecdh.GenerateKey(ECCurve.NamedCurves.nistP256);
-            return ExportECParameters(ecdh.ExportParameters(true));
-        }
+        using var ecdh = ECDiffieHellman.Create();
+        ecdh.GenerateKey(ECCurve.NamedCurves.nistP256);
+        return ExportECParameters(ecdh.ExportParameters(true));
     }
 }

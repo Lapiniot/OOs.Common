@@ -6,7 +6,7 @@ public static class SequenceExtensions
 {
     public const byte CR = (byte)'\r';
     public const byte LF = (byte)'\n';
-    private static byte[] NewLine = new byte[] { 0x0d, 0x0a };
+    private static readonly byte[] NewLine = new byte[] { 0x0d, 0x0a };
 
     public static bool TryReadLine(this ReadOnlySequence<byte> sequence, out ReadOnlyMemory<byte> line)
     {

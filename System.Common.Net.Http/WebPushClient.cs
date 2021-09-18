@@ -58,8 +58,8 @@ public class WebPushClient : IDisposable
         var data = GetPayloadWithPadding(payload);
         var encrypted = EncryptPayload(data, encryptionKey, nonce);
 
-        using(var content = CreateHttpContent(encrypted))
-        using(var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+        using var content = CreateHttpContent(encrypted);
+        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
             Headers =
                 {
@@ -69,13 +69,9 @@ public class WebPushClient : IDisposable
                     { "TTL", ttl.ToString(CultureInfo.InvariantCulture) }
                 },
             Content = content
-        })
-        {
-            using(var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false))
-            {
-                response.EnsureSuccessStatusCode();
-            }
-        }
+        };
+        using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
     }
 
     private static HttpContent CreateHttpContent(byte[] content)
@@ -92,23 +88,19 @@ public class WebPushClient : IDisposable
 
     private static byte[] EncryptPayload(byte[] data, byte[] key, byte[] nonce)
     {
-        using(var aes = new AesGcm(key))
-        {
-            byte[] cipher = new byte[data.Length + AesGcm.TagByteSizes.MaxSize];
-            aes.Encrypt((Span<byte>)nonce, data, cipher.AsSpan(0, data.Length), cipher.AsSpan(data.Length));
-            return cipher;
-        }
+        using var aes = new AesGcm(key);
+        byte[] cipher = new byte[data.Length + AesGcm.TagByteSizes.MaxSize];
+        aes.Encrypt((Span<byte>)nonce, data, cipher.AsSpan(0, data.Length), cipher.AsSpan(data.Length));
+        return cipher;
     }
 
     private static (byte[] PublicKey, byte[] DerivedKeyMaterial) GenerateServerKeys(byte[] otherPartyPublicKey, byte[] hmacKey)
     {
-        using(var ecdh = ECDiffieHellman.Create())
-        {
-            ecdh.GenerateKey(ECCurve.NamedCurves.nistP256);
-            var publicKey = ecdh.ExportP256DHPublicKey();
-            var keyMaterial = ecdh.DeriveKeyFromHmac(otherPartyPublicKey, hmacKey);
-            return (publicKey, keyMaterial);
-        }
+        using var ecdh = ECDiffieHellman.Create();
+        ecdh.GenerateKey(ECCurve.NamedCurves.nistP256);
+        var publicKey = ecdh.ExportP256DHPublicKey();
+        var keyMaterial = ecdh.DeriveKeyFromHmac(otherPartyPublicKey, hmacKey);
+        return (publicKey, keyMaterial);
     }
 
     private static byte[] GeneratePseudoRandomKey(byte[] key)
