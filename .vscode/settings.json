@@ -3,5 +3,6 @@
         "**/bin": true,
         "**/obj": true,
         "**/*.DotSettings": true
-    }
+    },
+    "omnisharp.enableRoslynAnalyzers": true
 }
