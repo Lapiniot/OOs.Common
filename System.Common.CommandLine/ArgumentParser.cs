@@ -5,9 +5,9 @@ namespace System.Common.CommandLine;
 
 public class ArgumentParser
 {
-    readonly ICommandMetadata[] commands;
-    readonly IArgumentMetadata[] schema;
-    static readonly char[] quotes = { '"', '\'' };
+    private readonly ICommandMetadata[] commands;
+    private readonly IArgumentMetadata[] schema;
+    private static readonly char[] quotes = { '"', '\'' };
 
     public ArgumentParser(ICommandMetadata[] commands, IArgumentMetadata[] schema)
     {
@@ -52,7 +52,7 @@ public class ArgumentParser
 
             command = commands.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase))?.Name;
 
-            tokens.Dequeue();
+            _ = tokens.Dequeue();
         }
 
         while(tokens.Count > 0)
@@ -63,7 +63,7 @@ public class ArgumentParser
             {
                 AddByName(arg[2..], nmap, args);
             }
-            else if(arg[0] == '-' || arg[0] == '/')
+            else if(arg[0] is '-' or '/')
             {
                 AddByShortName(arg[1..], tokens, smap, args);
             }
@@ -93,7 +93,7 @@ public class ArgumentParser
                 if(queue.TryPeek(out var str) && TryParseBoolean(str, out var value))
                 {
                     arguments[arg] = value;
-                    queue.Dequeue();
+                    _ = queue.Dequeue();
                 }
                 else
                 {
@@ -102,10 +102,9 @@ public class ArgumentParser
             }
             else
             {
-                if(queue.TryDequeue(out var value))
-                    arguments[arg] = type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture);
-                else
-                    throw new ArgumentException($"No value was specified for argument {arg}");
+                arguments[arg] = queue.TryDequeue(out var value)
+                    ? type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture)
+                    : throw new ArgumentException($"No value was specified for argument {arg}");
             }
         }
         else
@@ -163,7 +162,7 @@ public class ArgumentParser
 
                 if(!arg.StartsWith(key, false, InvariantCulture)) continue;
 
-                keys.Add(key);
+                _ = keys.Add(key);
                 arg = arg[key.Length..];
                 match = true;
 
@@ -192,18 +191,11 @@ public class ArgumentParser
 
         if(type == typeof(bool))
         {
-            if(pair.Length == 1)
-            {
-                arguments[key] = true;
-            }
-            else if(TryParseBoolean(pair[1], out var b))
-            {
-                arguments[key] = b;
-            }
-            else
-            {
-                throw new ArgumentException($"Invalid value for binary switch argument {key} Should be one of [True, False, true, false, 1, 0]");
-            }
+            arguments[key] = pair.Length == 1
+                ? true
+                : (object)(TryParseBoolean(pair[1], out var b)
+                    ? b
+                    : throw new ArgumentException($"Invalid value for binary switch argument {key} Should be one of [True, False, true, false, 1, 0]"));
         }
         else
         {
@@ -223,9 +215,7 @@ public class ArgumentParser
     {
         value = false;
 
-        if(IsNullOrWhiteSpace(str)) return false;
-
-        return str switch
+        return !IsNullOrWhiteSpace(str) && str switch
         {
             "True" => value = true,
             "true" => value = true,

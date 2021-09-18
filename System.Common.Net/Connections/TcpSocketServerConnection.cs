@@ -22,7 +22,7 @@ public sealed class TcpSocketServerConnection : INetworkConnection
         var vt = socket.SendAsync(buffer, None, cancellationToken);
         if(!vt.IsCompletedSuccessfully)
         {
-            await vt.ConfigureAwait(false);
+            _ = await vt.ConfigureAwait(false);
         }
     }
 

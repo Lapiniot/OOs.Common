@@ -14,7 +14,7 @@ public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvide
     {
         ArgumentNullException.ThrowIfNull(args);
         this.args = args;
-        this.prefix = !string.IsNullOrEmpty(sectionName) ? !sectionName.EndsWith(":", StringComparison.InvariantCultureIgnoreCase) ? sectionName + ":" : sectionName : "args:";
+        prefix = !string.IsNullOrEmpty(sectionName) ? !sectionName.EndsWith(":", StringComparison.InvariantCultureIgnoreCase) ? sectionName + ":" : sectionName : "args:";
     }
 
     public override bool TryGet(string key, out string value)

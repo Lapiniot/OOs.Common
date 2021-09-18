@@ -22,52 +22,52 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
 
     private void Unsubscribe(IObserver<T> observer)
     {
-        observers?.TryRemove(observer, out _);
+        _ = (observers?.TryRemove(observer, out _));
     }
 
     public void Notify(T value)
     {
-        Parallel.ForEach(observers, (pair, _) =>
-        {
-            try
-            {
-                pair.Key.OnNext(value);
-            }
-            catch
-            {
-                // ignored
-            }
-        });
+        _ = Parallel.ForEach(observers, (pair, _) =>
+          {
+              try
+              {
+                  pair.Key.OnNext(value);
+              }
+              catch
+              {
+                  // ignored
+              }
+          });
     }
 
     public void NotifyError(Exception error)
     {
-        Parallel.ForEach(observers, (pair, _) =>
-        {
-            try
-            {
-                pair.Key.OnError(error);
-            }
-            catch
-            {
-                // ignored
-            }
-        });
+        _ = Parallel.ForEach(observers, (pair, _) =>
+          {
+              try
+              {
+                  pair.Key.OnError(error);
+              }
+              catch
+              {
+                  // ignored
+              }
+          });
     }
 
     public void NotifyCompleted()
     {
-        Parallel.ForEach(observers, (pair, _) =>
-        {
-            try
-            {
-                pair.Key.OnCompleted();
-            }
-            catch
-            {
-                // ignored
-            }
-        });
+        _ = Parallel.ForEach(observers, (pair, _) =>
+          {
+              try
+              {
+                  pair.Key.OnCompleted();
+              }
+              catch
+              {
+                  // ignored
+              }
+          });
     }
 
     private sealed class Subscription : IDisposable
@@ -103,17 +103,17 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
 
             if(cached != null)
             {
-                Parallel.ForEach(cached, (p, _) =>
-                {
-                    try
-                    {
-                        p.Key.OnCompleted();
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                });
+                _ = Parallel.ForEach(cached, (p, _) =>
+                  {
+                      try
+                      {
+                          p.Key.OnCompleted();
+                      }
+                      catch
+                      {
+                          // ignored
+                      }
+                  });
 
                 cached.Clear();
             }

@@ -8,7 +8,7 @@ public class JwtToken
 
     public JwtToken()
     {
-        this.claims = new Dictionary<string, string>();
+        claims = new Dictionary<string, string>();
     }
 
     public JwtToken(IReadOnlyDictionary<string, string> claims)
@@ -44,5 +44,5 @@ public class JwtToken
             : null;
     }
 
-    public Dictionary<string, string> Claims { get => claims; }
+    public Dictionary<string, string> Claims => claims;
 }

@@ -6,7 +6,7 @@ namespace System.Net.Pipelines;
 /// <summary>
 /// Provides generic pipe data producer which reads data from abstract <seealso cref="INetworkConnection" />
 /// on data arrival and writes it to the pipe. Reads by consumers are supported via
-/// implemented <seealso cref="System.IO.Pipelines.PipeReader" /> methods.
+/// implemented <seealso cref="PipeReader" /> methods.
 /// </summary>
 public sealed class NetworkPipeReader : PipeReaderBase
 {

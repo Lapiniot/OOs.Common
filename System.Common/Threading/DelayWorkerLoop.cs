@@ -28,7 +28,7 @@ public sealed class DelayWorkerLoop : WorkerBase
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        ResetCancellationState(out var tokenSource, out var linkedSource);
+        _ = ResetCancellationState(out var tokenSource, out var linkedSource);
 
         try
         {
@@ -51,7 +51,7 @@ public sealed class DelayWorkerLoop : WorkerBase
         }
         finally
         {
-            Interlocked.Exchange(ref resetSource, null);
+            _ = Interlocked.Exchange(ref resetSource, null);
             linkedSource.Dispose();
             tokenSource.Dispose();
         }

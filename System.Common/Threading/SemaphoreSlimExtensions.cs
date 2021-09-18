@@ -26,7 +26,7 @@ public readonly struct SemaphoreSlimLockScope : IEquatable<SemaphoreSlimLockScop
 
     public void Dispose()
     {
-        semaphoreSlim.Release();
+        _ = semaphoreSlim.Release();
     }
 
     #endregion

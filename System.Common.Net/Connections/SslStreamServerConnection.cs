@@ -14,7 +14,7 @@ public sealed class SslStreamServerConnection : NetworkConnection
         socket = acceptedSocket;
         this.options = options;
 
-        var stream = new NetworkStream(acceptedSocket, IO.FileAccess.ReadWrite, true);
+        var stream = new NetworkStream(acceptedSocket, FileAccess.ReadWrite, true);
 
         try
         {

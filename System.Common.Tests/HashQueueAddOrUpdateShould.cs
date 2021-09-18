@@ -14,14 +14,14 @@ public class HashQueueAddOrUpdateShould
     public void ThrowArgumentNullExceptionGivenKeyNull()
     {
         using var hq = new HashQueueCollection<string, string>();
-        Assert.ThrowsException<ArgumentNullException>(() => hq.AddOrUpdate(null, "value 2", (_, _) => ""));
+        _ = Assert.ThrowsException<ArgumentNullException>(() => hq.AddOrUpdate(null, "value 2", (_, _) => ""));
     }
 
     [TestMethod]
     public void ThrowNullReferenceExceptionGivenUpdateFactory()
     {
         using var hq = CreateSampleHashQueue();
-        Assert.ThrowsException<ArgumentNullException>(() => hq.AddOrUpdate("key2", "value 2", (Func<string, string, string>)null));
+        _ = Assert.ThrowsException<ArgumentNullException>(() => hq.AddOrUpdate("key2", "value 2", (Func<string, string, string>)null));
     }
 
     [TestMethod]
@@ -124,12 +124,12 @@ public class HashQueueAddOrUpdateShould
     {
         using var hashQueue = CreateSampleHashQueue();
 
-        hashQueue.AddOrUpdate("key2", "value 2-2", (key, value) =>
-        {
-            Assert.AreEqual("key2", key);
-            Assert.AreEqual("value 2", value);
-            return "";
-        });
+        _ = hashQueue.AddOrUpdate("key2", "value 2-2", (key, value) =>
+          {
+              Assert.AreEqual("key2", key);
+              Assert.AreEqual("value 2", value);
+              return "";
+          });
     }
 
     [TestMethod]

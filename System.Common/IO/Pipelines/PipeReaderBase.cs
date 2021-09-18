@@ -72,7 +72,7 @@ public abstract class PipeReaderBase : PipeReader, IAsyncDisposable
                 finally
                 {
                     localCts.Dispose();
-                    Interlocked.Exchange(ref stateGuard, Stopped);
+                    _ = Interlocked.Exchange(ref stateGuard, Stopped);
                 }
 
                 break;

@@ -35,7 +35,7 @@ public abstract class WorkerBase : IAsyncDisposable
         }
         finally
         {
-            semaphore.Release();
+            _ = semaphore.Release();
         }
 
         await captured.Completion.ConfigureAwait(false);
@@ -86,7 +86,7 @@ public abstract class WorkerBase : IAsyncDisposable
         }
         finally
         {
-            semaphore.Release();
+            _ = semaphore.Release();
         }
     }
 

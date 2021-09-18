@@ -57,8 +57,8 @@ public class HashQueueConstructorShould
     [TestMethod]
     public void ThrowArgumentExceptionGivenKeyDuplicates()
     {
-        Assert.ThrowsException<ArgumentException>(() => new HashQueueCollection<string, string>(
-            ("key1", "value 1"), ("key2", "value 2"),
-            ("key2", ""), ("key3", "value 3")));
+        _ = Assert.ThrowsException<ArgumentException>(() => new HashQueueCollection<string, string>(
+              ("key1", "value 1"), ("key2", "value 2"),
+              ("key2", ""), ("key3", "value 3")));
     }
 }

@@ -63,7 +63,7 @@ public abstract class ByteSequenceParser<T> : IAsyncEnumerable<T>
         }
     }
 
-    protected abstract IEnumerable<ByteSequenceParser<T>.ParseResult> Parse(ReadResult readResult);
+    protected abstract IEnumerable<ParseResult> Parse(ReadResult readResult);
 
     protected record ParseResult(long Consumed, T Result, bool IsCompleted);
 }

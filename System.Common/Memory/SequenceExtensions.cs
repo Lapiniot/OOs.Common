@@ -37,7 +37,7 @@ public static class SequenceExtensions
     {
         if(sequenceReader.TryReadToAny(out line, NewLine))
         {
-            sequenceReader.AdvancePastAny(0x0d, 0x0a);
+            _ = sequenceReader.AdvancePastAny(0x0d, 0x0a);
             return true;
         }
         else if(!strict)

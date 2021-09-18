@@ -41,7 +41,7 @@ public class HashQueueDequeueShould
 
         using var hashQueue = CreateSampleHashQueue();
 
-        hashQueue.Dequeue(out _);
+        _ = hashQueue.Dequeue(out _);
 
         Assert.AreEqual(2, hashQueue.Map.Count);
 
@@ -60,7 +60,7 @@ public class HashQueueDequeueShould
     {
         using var hashQueue = CreateSampleHashQueue();
 
-        hashQueue.Dequeue(out _);
+        _ = hashQueue.Dequeue(out _);
 
         var node2 = hashQueue.Map["key2"];
         var node3 = hashQueue.Map["key3"];

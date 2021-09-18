@@ -172,6 +172,6 @@ public class HashQueueTryRemoveShould
     public void ThrowArgumentNullExceptionGivenKeyNull()
     {
         using var hq = new HashQueueCollection<string, string>();
-        Assert.ThrowsException<ArgumentNullException>(() => hq.TryRemove(null, out _));
+        _ = Assert.ThrowsException<ArgumentNullException>(() => hq.TryRemove(null, out _));
     }
 }

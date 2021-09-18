@@ -52,7 +52,7 @@ public class HashQueueTryAddShould
     {
         using var hq = new HashQueueCollection<int, string>();
         const string expectedValue = "old value";
-        hq.TryAdd(1, expectedValue);
+        _ = hq.TryAdd(1, expectedValue);
 
         var actual = hq.TryAdd(1, "new value");
 
@@ -65,7 +65,7 @@ public class HashQueueTryAddShould
     public void ReturnTrueUpdateHeadAndTailGivenNotFirstKeys()
     {
         using var hq = new HashQueueCollection<int, string>();
-        hq.TryAdd(1, "value 1");
+        _ = hq.TryAdd(1, "value 1");
         var node1 = hq.Map[1];
 
         var actual = hq.TryAdd(2, "value 2");
@@ -91,7 +91,7 @@ public class HashQueueTryAddShould
     public void ReturnFalseDoNotUpdateHeadAndTailGivenExistingKeys()
     {
         using var hq = new HashQueueCollection<int, string>();
-        hq.TryAdd(1, "value 1");
+        _ = hq.TryAdd(1, "value 1");
         var node1 = hq.Map[1];
 
         var actual = hq.TryAdd(1, "value 2");
@@ -105,7 +105,7 @@ public class HashQueueTryAddShould
     public void ReturnTrueUpdateNodeReferencesGivenNotFirstKeys()
     {
         using var hq = new HashQueueCollection<int, string>();
-        hq.TryAdd(1, "value 1");
+        _ = hq.TryAdd(1, "value 1");
         var node1 = hq.Map[1];
 
         var actual = hq.TryAdd(2, "value 2");
@@ -136,9 +136,9 @@ public class HashQueueTryAddShould
     {
         using var hq = new HashQueueCollection<int, string>();
 
-        hq.TryAdd(1, "value 1");
+        _ = hq.TryAdd(1, "value 1");
         var node1 = hq.Map[1];
-        hq.TryAdd(2, "value 2");
+        _ = hq.TryAdd(2, "value 2");
         var node2 = hq.Map[2];
 
         var actual = hq.TryAdd(2, "value 3");
@@ -157,12 +157,12 @@ public class HashQueueTryAddShould
 
         const string value1 = "value 1";
         const string key1 = "1";
-        hq.TryAdd(key1, value1);
+        _ = hq.TryAdd(key1, value1);
         var node1 = hq.Map[key1];
 
         const string value2 = "value 2";
         const string key2 = "2";
-        hq.TryAdd(key2, value2);
+        _ = hq.TryAdd(key2, value2);
         var node2 = hq.Map[key2];
 
         var actual = hq.TryAdd("3", "value 3");
@@ -182,12 +182,12 @@ public class HashQueueTryAddShould
 
         const string value1 = "value 1";
         const string key1 = "1";
-        hq.TryAdd(key1, value1);
+        _ = hq.TryAdd(key1, value1);
         var node1 = hq.Map[key1];
 
         const string value2 = "value 2";
         const string key2 = "2";
-        hq.TryAdd(key2, value2);
+        _ = hq.TryAdd(key2, value2);
         var node2 = hq.Map[key2];
 
         var actual = hq.TryAdd(key2, "value 3");
@@ -204,6 +204,6 @@ public class HashQueueTryAddShould
     public void ThrowArgumentNullExceptionGivenKeyNull()
     {
         using var hq = new HashQueueCollection<string, string>();
-        Assert.ThrowsException<ArgumentNullException>(() => hq.TryAdd(null, "test value"));
+        _ = Assert.ThrowsException<ArgumentNullException>(() => hq.TryAdd(null, "test value"));
     }
 }

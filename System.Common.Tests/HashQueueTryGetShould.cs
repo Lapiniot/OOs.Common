@@ -52,6 +52,6 @@ public class HashQueueTryGetShould
     public void ThrowArgumentNullExceptionGivenKeyNull()
     {
         using var hq = new HashQueueCollection<string, string>();
-        Assert.ThrowsException<ArgumentNullException>(() => hq.TryGet(null, out _));
+        _ = Assert.ThrowsException<ArgumentNullException>(() => hq.TryGet(null, out _));
     }
 }

@@ -29,8 +29,8 @@ public class WebPushClient : IDisposable
         this.client = client;
         this.publicKey = publicKey;
         this.privateKey = privateKey;
-        this.subject = jwtSubject;
-        this.expires = jwtExpires;
+        subject = jwtSubject;
+        expires = jwtExpires;
         tokenHandler = new JwtTokenHandler(this.publicKey, this.privateKey);
         cryptoKey = Encoders.ToBase64String(publicKey);
     }
@@ -71,7 +71,7 @@ public class WebPushClient : IDisposable
             Content = content
         };
         using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        _ = response.EnsureSuccessStatusCode();
     }
 
     private static HttpContent CreateHttpContent(byte[] content)
@@ -107,14 +107,14 @@ public class WebPushClient : IDisposable
     {
         const string str = "Content-Encoding: auth\0";
         Span<byte> buffer = stackalloc byte[str.Length + 1];
-        ASCII.GetBytes(str, buffer);
+        _ = ASCII.GetBytes(str, buffer);
         buffer[^1] = 0x01;
         return HMACSHA256.HashData(key, buffer);
     }
 
     private static byte[] GetPayloadWithPadding(byte[] payload)
     {
-        var paddingLength = (payload.Length / 16 + 1) * 16 - payload.Length;
+        var paddingLength = (((payload.Length / 16) + 1) * 16) - payload.Length;
         byte[] data = new byte[2 + paddingLength + payload.Length];
         Span<byte> span = data;
         span[..(2 + paddingLength)].Fill(0);
@@ -128,10 +128,10 @@ public class WebPushClient : IDisposable
         int len = label.Length;
         var buffer = new byte[18 + len + 1 + 5 + 1 + 2 + clientPublicKey.Length + 2 + serverPublicKey.Length];
         var span = buffer.AsSpan();
-        UTF8.GetBytes("Content-Encoding: ", span);
-        UTF8.GetBytes(label, span[18..]);
+        _ = UTF8.GetBytes("Content-Encoding: ", span);
+        _ = UTF8.GetBytes(label, span[18..]);
         span[18 + len] = 0;
-        UTF8.GetBytes("P-256", span[(19 + len)..]);
+        _ = UTF8.GetBytes("P-256", span[(19 + len)..]);
         span[24 + len] = 0;
         BinaryPrimitives.WriteUInt16BigEndian(span[(25 + len)..], (ushort)clientPublicKey.Length);
         clientPublicKey.CopyTo(span[(27 + len)..]);

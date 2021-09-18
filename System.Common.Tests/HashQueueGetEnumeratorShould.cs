@@ -10,8 +10,8 @@ public class HashQueueGetEnumeratorShould
     {
         using var hashQueue = new HashQueueCollection<int, string>((0, "Value 0"), (1, "Value 1"), (2, "Value 2"));
 
-        hashQueue.TryAdd(4, "Value 4");
-        hashQueue.TryAdd(3, "Value 3");
+        _ = hashQueue.TryAdd(4, "Value 4");
+        _ = hashQueue.TryAdd(3, "Value 3");
 
         using var enumerator = hashQueue.GetEnumerator();
         Assert.IsTrue(enumerator.MoveNext());

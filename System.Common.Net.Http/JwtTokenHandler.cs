@@ -65,7 +65,7 @@ public class JwtTokenHandler : IDisposable
 
     protected virtual int Base64EncodeInPlace(Span<byte> buffer, int length)
     {
-        Base64.EncodeToUtf8InPlace(buffer, length, out var written);
+        _ = Base64.EncodeToUtf8InPlace(buffer, length, out var written);
         Span<byte> encoded = buffer[..written].TrimEnd((byte)0x3D);
 
         for(int i = 0; i < encoded.Length; i++)

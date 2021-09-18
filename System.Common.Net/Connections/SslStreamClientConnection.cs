@@ -47,9 +47,7 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
             var vt = sslStream.ReadAsync(buffer, cancellationToken);
             return vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
         }
-        catch(SocketException se) when(
-            se.SocketErrorCode == ConnectionAborted ||
-            se.SocketErrorCode == ConnectionReset)
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
         {
             await StopActivityAsync().ConfigureAwait(false);
             throw new ConnectionAbortedException(se);
@@ -68,9 +66,7 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
                 await vt.ConfigureAwait(false);
             }
         }
-        catch(SocketException se) when(
-            se.SocketErrorCode == ConnectionAborted ||
-            se.SocketErrorCode == ConnectionReset)
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
         {
             await StopActivityAsync().ConfigureAwait(false);
             throw new ConnectionAbortedException(se);
@@ -81,7 +77,7 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
     {
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-        networkStream = new NetworkStream(Socket, IO.FileAccess.ReadWrite, false);
+        networkStream = new NetworkStream(Socket, FileAccess.ReadWrite, false);
 
         try
         {

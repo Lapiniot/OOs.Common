@@ -1,7 +1,6 @@
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using static System.Net.NetworkInformation.NetworkInterface;
-using static System.Net.NetworkInformation.OperationalStatus;
 using static System.Net.Sockets.AddressFamily;
 
 namespace System.Net;
@@ -40,24 +39,24 @@ public static class NetworkInterfaceExtensions
 
         return networkInterface.GetIPProperties().GatewayAddresses.Count > 0 &&
                networkInterface.SupportsMulticast &&
-               networkInterface.OperationalStatus == Up;
+               networkInterface.OperationalStatus == OperationalStatus.Up;
     }
 
     public static NetworkInterface FindByAddress(string adapterAddress)
     {
         return IPAddress.TryParse(adapterAddress, out var address)
-            ? NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(i => i.GetIPProperties().UnicastAddresses.Any(ua => ua.Address.Equals(address)))
+            ? GetAllNetworkInterfaces().FirstOrDefault(i => i.GetIPProperties().UnicastAddresses.Any(ua => ua.Address.Equals(address)))
             : null;
     }
 
     public static NetworkInterface FindByName(string adapterName)
     {
-        return NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(i => i.Name == adapterName);
+        return GetAllNetworkInterfaces().FirstOrDefault(i => i.Name == adapterName);
     }
 
     public static NetworkInterface FindById(string adapterId)
     {
-        return NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(i => i.Id == adapterId);
+        return GetAllNetworkInterfaces().FirstOrDefault(i => i.Id == adapterId);
     }
 
     public static IEnumerable<NetworkInterface> GetActiveExternalInterfaces(this IEnumerable<NetworkInterface> interfaces)

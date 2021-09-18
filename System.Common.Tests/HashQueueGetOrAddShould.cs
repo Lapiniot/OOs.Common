@@ -15,7 +15,7 @@ public class HashQueueGetOrAddShould
     {
         using var hq = new HashQueueCollection<string, string>();
 
-        Assert.ThrowsException<ArgumentNullException>(() => hq.GetOrAdd(null, "value 1"));
+        _ = Assert.ThrowsException<ArgumentNullException>(() => hq.GetOrAdd(null, "value 1"));
     }
 
     [TestMethod]

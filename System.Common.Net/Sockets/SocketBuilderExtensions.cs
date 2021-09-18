@@ -22,7 +22,7 @@ public static class SocketBuilderExtensions
         return GetIPv4MulticastGroup(1900);
     }
 
-    public static Socket CreateUdp(AddressFamily addressFamily = AddressFamily.InterNetwork)
+    public static Socket CreateUdp(AddressFamily addressFamily = InterNetwork)
     {
         return new(addressFamily, Dgram, ProtocolType.Udp);
     }
@@ -113,7 +113,7 @@ public static class SocketBuilderExtensions
         if(mcint is not null)
         {
             Span<byte> bytes = stackalloc byte[4];
-            mcint.TryWriteBytes(bytes, out var written);
+            _ = mcint.TryWriteBytes(bytes, out var written);
             if(bytes[0] == 0)
                 // Address from range 0.x.x.x must be interpreted as interface index
                 return new MulticastOption(groupToJoin, ReadInt32BigEndian(bytes));

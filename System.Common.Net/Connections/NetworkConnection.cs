@@ -31,6 +31,6 @@ public abstract class NetworkConnection : ActivityObject, INetworkConnection
 
     public override string ToString()
     {
-        return $"{Id}-{this.GetType().Name}";
+        return $"{Id}-{GetType().Name}";
     }
 }

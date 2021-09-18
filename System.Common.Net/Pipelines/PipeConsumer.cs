@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using System.IO.Pipelines;
 using System.Net.Properties;
-using static System.Threading.Tasks.Task;
 
 namespace System.Net.Pipelines;
 
@@ -20,15 +19,7 @@ public abstract class PipeConsumer : ActivityObject
         this.reader = reader;
     }
 
-    public Task Completion
-    {
-        get
-        {
-            if(!IsRunning) throw new InvalidOperationException(Strings.PipeNotStarted);
-
-            return consumer;
-        }
-    }
+    public Task Completion => IsRunning ? consumer : throw new InvalidOperationException(Strings.PipeNotStarted);
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
@@ -36,7 +27,7 @@ public abstract class PipeConsumer : ActivityObject
 
         consumer = StartConsumerAsync(cancellationTokenSource.Token);
 
-        return CompletedTask;
+        return Task.CompletedTask;
     }
 
     protected override async Task StoppingAsync()
@@ -79,11 +70,11 @@ public abstract class PipeConsumer : ActivityObject
                 if(result.IsCompleted || result.IsCanceled) break;
             }
 
-            OnCompleted();
+            _ = OnCompleted();
         }
         catch(OperationCanceledException)
         {
-            OnCompleted();
+            _ = OnCompleted();
         }
         catch(Exception exception) when(OnCompleted(exception))
         {

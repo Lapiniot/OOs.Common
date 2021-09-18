@@ -15,7 +15,7 @@ public sealed class HashQueueCollection<TKey, TValue> : IEnumerable<TValue>, IDi
 
         foreach(var (key, value) in items)
         {
-            AddNodeInternal(key, value);
+            _ = AddNodeInternal(key, value);
         }
     }
 
@@ -112,7 +112,7 @@ public sealed class HashQueueCollection<TKey, TValue> : IEnumerable<TValue>, IDi
 
             using(lockSlim.WithWriteLock())
             {
-                AddNodeInternal(key, value);
+                _ = AddNodeInternal(key, value);
             }
         }
 

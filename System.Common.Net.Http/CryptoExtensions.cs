@@ -53,13 +53,13 @@ public static class CryptoExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ECPoint GetECPoint(byte[] publicKey)
     {
-        if(publicKey is null) return new ECPoint();
-
-        return new ECPoint()
-        {
-            X = publicKey.AsSpan(1, 32).ToArray(),
-            Y = publicKey.AsSpan(33, 32).ToArray()
-        };
+        return publicKey is null
+            ? new ECPoint()
+            : new ECPoint()
+            {
+                X = publicKey.AsSpan(1, 32).ToArray(),
+                Y = publicKey.AsSpan(33, 32).ToArray()
+            };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
