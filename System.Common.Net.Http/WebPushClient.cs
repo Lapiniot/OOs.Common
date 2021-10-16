@@ -1,10 +1,14 @@
 using System.Buffers.Binary;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using static System.Text.Encoding;
 
 namespace System.Net.Http;
+
+[SuppressMessage("Performance", "CA1819: Properties should not return arrays")]
+public readonly record struct SubscriptionKeys(byte[] P256DHKey, byte[] AuthKey);
 
 public class WebPushClient : IDisposable
 {
