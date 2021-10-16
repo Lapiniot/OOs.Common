@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System;
 
@@ -25,6 +26,7 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
         _ = (observers?.TryRemove(observer, out _));
     }
 
+    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void Notify(T value)
     {
         _ = Parallel.ForEach(observers, (pair, _) =>
@@ -40,6 +42,7 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
           });
     }
 
+    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void NotifyError(Exception error)
     {
         _ = Parallel.ForEach(observers, (pair, _) =>
@@ -55,6 +58,7 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
           });
     }
 
+    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void NotifyCompleted()
     {
         _ = Parallel.ForEach(observers, (pair, _) =>
@@ -93,6 +97,7 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
 
     private bool disposed;
 
+    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     protected virtual void Dispose(bool disposing)
     {
         if(disposed) return;

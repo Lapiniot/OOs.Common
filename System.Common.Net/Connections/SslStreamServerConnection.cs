@@ -50,9 +50,13 @@ public sealed class SslStreamServerConnection : NetworkConnection
 
     public override async ValueTask DisposeAsync()
     {
-        await using(sslStream.ConfigureAwait(false))
+        try
         {
             await base.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            await sslStream.DisposeAsync().ConfigureAwait(false);
         }
     }
 

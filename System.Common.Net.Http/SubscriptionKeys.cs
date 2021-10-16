@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace System.Net.Http;
 
+[SuppressMessage("Performance", "CA1819: Properties should not return arrays")]
 public struct SubscriptionKeys : IEquatable<SubscriptionKeys>
 {
     public byte[] P256DHKey { get; }
