@@ -1,14 +1,10 @@
 using System.Buffers.Binary;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using static System.Text.Encoding;
 
 namespace System.Net.Http;
-
-[SuppressMessage("Performance", "CA1819: Properties should not return arrays")]
-public readonly record struct SubscriptionKeys(byte[] P256DHKey, byte[] AuthKey);
 
 public class WebPushClient : IDisposable
 {
@@ -39,9 +35,11 @@ public class WebPushClient : IDisposable
         cryptoKey = Encoders.ToBase64String(publicKey);
     }
 
-    public async Task SendAsync(Uri endpoint, SubscriptionKeys keys, byte[] payload, int ttl, CancellationToken cancellationToken)
+    public async Task SendAsync(Uri endpoint, byte[] clientPublicKey, byte[] authKey, byte[] payload, int ttl, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(clientPublicKey);
+        ArgumentNullException.ThrowIfNull(authKey);
         ArgumentNullException.ThrowIfNull(payload);
 
         if(ttl <= 0) throw new ArgumentException($"{nameof(ttl)} must be greater then zero");
@@ -54,8 +52,7 @@ public class WebPushClient : IDisposable
         };
 
         var salt = CryptoExtensions.GenerateSalt(16);
-        var clientPublicKey = keys.P256DHKey;
-        var (serverPublicKey, derivedKeyMaterial) = GenerateServerKeys(clientPublicKey, keys.AuthKey);
+        var (serverPublicKey, derivedKeyMaterial) = GenerateServerKeys(clientPublicKey, authKey);
         var prk = GeneratePseudoRandomKey(derivedKeyMaterial);
         var encryptionKey = CryptoExtensions.ComputeHKDF(salt, prk, CreateInfo("aesgcm", clientPublicKey, serverPublicKey), 16);
         var nonce = CryptoExtensions.ComputeHKDF(salt, prk, CreateInfo("nonce", clientPublicKey, serverPublicKey), 12);
