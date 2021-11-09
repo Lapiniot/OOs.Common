@@ -7,11 +7,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.IO.Pipelines" Version="6.0.0-rc.2.21480.5" />
+        <PackageReference Include="System.IO.Pipelines" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\System.Common\System.Common.csproj" />
+        <ProjectReference Include="../System.Common/System.Common.csproj" />
     </ItemGroup>
 
 </Project>

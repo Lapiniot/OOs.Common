@@ -3,7 +3,7 @@
   <Import Project="../common.props" />
 
   <ItemGroup>
-    <ProjectReference Include="..\System.Common\System.Common.csproj" />
+    <ProjectReference Include="../System.Common/System.Common.csproj" />
   </ItemGroup>
 
 </Project>
