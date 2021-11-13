@@ -14,5 +14,6 @@
         <ImplicitUsings>true</ImplicitUsings>
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <ImplicitUsings>true</ImplicitUsings>
+        <CLSCompliant>True</CLSCompliant>
     </PropertyGroup>
 </Project>

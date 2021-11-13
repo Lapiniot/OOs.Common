@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+    <Import Project="../common.props" />
+
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
         <IsPackable>false</IsPackable>
-        <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-        <ImplicitUsings>true</ImplicitUsings>
     </PropertyGroup>
 
     <ItemGroup>
