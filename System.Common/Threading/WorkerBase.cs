@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace System.Threading;
 
 /// <summary>
-/// Base class for types that run some work asynchronously on the background
+/// Base class for types that run some work asynchronously in the background
 /// </summary>
 public abstract class WorkerBase : IAsyncDisposable
 {
@@ -19,7 +19,7 @@ public abstract class WorkerBase : IAsyncDisposable
     protected abstract Task ExecuteAsync(CancellationToken stoppingToken);
 
     /// <summary>
-    /// Starts work and returns task that represent running asynchronous work
+    /// Starts work and returns task that represents running asynchronous work
     /// </summary>
     /// <param name="stoppingToken"><see cref="CancellationToken" /> that signals about external cancellation</param>
     /// <returns>Awaitable task that represents currently running operation</returns>

@@ -2,7 +2,7 @@ using System.Properties;
 
 namespace System.IO.Pipelines;
 
-public abstract class PipeReaderBase : PipeReader, IAsyncDisposable
+public abstract class PipeProducer : IAsyncDisposable
 {
     private const int Stopped = 0;
     private const int Started = 1;
@@ -14,7 +14,11 @@ public abstract class PipeReaderBase : PipeReader, IAsyncDisposable
     private Task producer;
     private int stateGuard;
 
-    protected PipeReaderBase(PipeOptions pipeOptions = null)
+    public PipeReader Reader => reader;
+
+    public Task Completion => producer;
+
+    protected PipeProducer(PipeOptions pipeOptions = null)
     {
         (reader, writer) = new Pipe(pipeOptions ?? new PipeOptions(useSynchronizationContext: false));
     }
@@ -113,6 +117,7 @@ public abstract class PipeReaderBase : PipeReader, IAsyncDisposable
         }
         catch(OperationCanceledException)
         {
+            // Expected
             await writer.CompleteAsync().ConfigureAwait(false);
         }
         catch(Exception exception)
@@ -123,38 +128,4 @@ public abstract class PipeReaderBase : PipeReader, IAsyncDisposable
     }
 
     protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
-
-    #region Overrides of PipeReader
-
-    public override void AdvanceTo(SequencePosition consumed)
-    {
-        reader.AdvanceTo(consumed);
-    }
-
-    public override void AdvanceTo(SequencePosition consumed, SequencePosition examined)
-    {
-        reader.AdvanceTo(consumed, examined);
-    }
-
-    public override void CancelPendingRead()
-    {
-        reader.CancelPendingRead();
-    }
-
-    public override void Complete(Exception exception = null)
-    {
-        reader.Complete(exception);
-    }
-
-    public override ValueTask<ReadResult> ReadAsync(CancellationToken cancellationToken = default)
-    {
-        return reader.ReadAsync(cancellationToken);
-    }
-
-    public override bool TryRead(out ReadResult result)
-    {
-        return reader.TryRead(out result);
-    }
-
-    #endregion
 }

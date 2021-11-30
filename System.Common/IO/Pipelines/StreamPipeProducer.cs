@@ -1,10 +1,10 @@
 namespace System.IO.Pipelines;
 
-public class StreamPipeReader : PipeReaderBase
+public class StreamPipeProducer : PipeProducer
 {
     private readonly Stream stream;
 
-    public StreamPipeReader(Stream stream, PipeOptions pipeOptions = null) : base(pipeOptions)
+    public StreamPipeProducer(Stream stream, PipeOptions pipeOptions = null) : base(pipeOptions)
     {
         ArgumentNullException.ThrowIfNull(stream);
         this.stream = stream;

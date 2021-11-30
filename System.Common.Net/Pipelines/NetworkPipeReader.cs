@@ -8,7 +8,7 @@ namespace System.Net.Pipelines;
 /// on data arrival and writes it to the pipe. Reads by consumers are supported via
 /// implemented <seealso cref="PipeReader" /> methods.
 /// </summary>
-public sealed class NetworkPipeReader : PipeReaderBase
+public sealed class NetworkPipeReader : PipeProducer
 {
     private readonly INetworkConnection connection;
 

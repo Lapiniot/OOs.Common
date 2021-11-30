@@ -1,8 +1,7 @@
 ﻿using System.Buffers;
-using System.IO.Pipelines;
-using System.Net.Properties;
+using System.Properties;
 
-namespace System.Net.Pipelines;
+namespace System.IO.Pipelines;
 
 /// <summary>
 /// Provides base abstract class for pipe data consumer.
@@ -53,7 +52,7 @@ public abstract class PipeConsumer : ActivityObject
 
                 if(buffer.Length > 0)
                 {
-                    var shouldContinue = Consume(buffer, out var consumed);
+                    Consume(buffer, out var consumed);
 
                     if(consumed > 0)
                     {
@@ -62,23 +61,37 @@ public abstract class PipeConsumer : ActivityObject
                     else
                     {
                         reader.AdvanceTo(buffer.Start, buffer.End);
+                        if(result.IsCompleted || result.IsCanceled)
+                        {
+                            // Seems we have not enough data to be consumed in a consistent way by the consumer logic, 
+                            // however we couldn't get more, because writer end has already completed writing. 
+                            // So we better terminate reading in order to avoid potential "dead" loop
+                            break;
+                        }
                     }
-
-                    if(!shouldContinue) break;
                 }
-
-                if(result.IsCompleted || result.IsCanceled) break;
+                else
+                {
+                    if(result.IsCompleted || result.IsCanceled)
+                    {
+                        break;
+                    }
+                }
             }
 
-            _ = OnCompleted();
+            OnCompleted();
         }
         catch(OperationCanceledException)
         {
-            _ = OnCompleted();
+            OnCompleted();
         }
         catch(Exception exception) when(OnCompleted(exception))
         {
             // Suppress exception if OnCompleted returns true (handled as expected)
+        }
+        finally
+        {
+            await reader.CompleteAsync().ConfigureAwait(false);
         }
     }
 
@@ -87,10 +100,7 @@ public abstract class PipeConsumer : ActivityObject
     /// </summary>
     /// <param name="sequence">Sequence of linked buffers containing data produced by the pipe writer</param>
     /// <param name="bytesConsumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
-    /// <returns>
-    /// <value>True</value> if consumer should continue reading, otherwise <value>False</value> to immidiately terminate processing 
-    /// </returns>
-    protected abstract bool Consume(in ReadOnlySequence<byte> sequence, out long bytesConsumed);
+    protected abstract void Consume(in ReadOnlySequence<byte> sequence, out long bytesConsumed);
 
     /// <summary>
     /// Method gets called when consumer completed its work
