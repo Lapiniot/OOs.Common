@@ -70,7 +70,9 @@ public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where
                 await vt.ConfigureAwait(false);
             }
         }
-        catch(WebSocketException wse) when(wse.WebSocketErrorCode == ConnectionClosedPrematurely)
+        catch(WebSocketException wse) when(
+            wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
+            (wse.WebSocketErrorCode is InvalidState && (socket.State is Aborted or Closed)))
         {
             throw new ConnectionAbortedException(wse);
         }
@@ -90,7 +92,9 @@ public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where
 
             return 0;
         }
-        catch(WebSocketException wse) when(wse.WebSocketErrorCode == ConnectionClosedPrematurely)
+        catch(WebSocketException wse) when(
+            wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
+            (wse.WebSocketErrorCode is InvalidState && (socket.State is Aborted or Closed)))
         {
             throw new ConnectionAbortedException(wse);
         }
