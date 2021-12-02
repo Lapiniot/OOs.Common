@@ -11,6 +11,7 @@ public abstract class PipeProducer : IAsyncDisposable
     private CancellationTokenSource globalCts;
     private readonly PipeReader reader;
     private readonly PipeWriter writer;
+    private readonly Pipe pipe;
     private Task producer;
     private long stateGuard;
 
@@ -22,7 +23,8 @@ public abstract class PipeProducer : IAsyncDisposable
 
     protected PipeProducer(PipeOptions pipeOptions = null)
     {
-        (reader, writer) = new Pipe(pipeOptions ?? new PipeOptions(useSynchronizationContext: false));
+        pipe = new(pipeOptions ?? new PipeOptions(useSynchronizationContext: false));
+        (reader, writer) = pipe;
     }
 
     #region Implementation of IAsyncDisposable
@@ -54,6 +56,7 @@ public abstract class PipeProducer : IAsyncDisposable
             case Stopped:
                 var cts = new CancellationTokenSource();
                 globalCts = cts;
+                pipe.Reset();
                 producer = StartProducerAsync(writer, cts.Token);
                 break;
             case Stopping:
