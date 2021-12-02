@@ -56,12 +56,18 @@ public abstract class PipeProducer : IAsyncDisposable
             case Stopped:
                 var cts = new CancellationTokenSource();
                 globalCts = cts;
-                pipe.Reset();
                 producer = StartProducerAsync(writer, cts.Token);
                 break;
             case Stopping:
                 throw new InvalidOperationException("Cannot start in this state, currently in stopping transition.");
         }
+    }
+
+    protected void Reset()
+    {
+        writer.Complete();
+        reader.Complete();
+        pipe.Reset();
     }
 
     public async ValueTask StopAsync()
@@ -92,7 +98,7 @@ public abstract class PipeProducer : IAsyncDisposable
         }
     }
 
-    private void CheckDisposed()
+    protected void CheckDisposed()
     {
         if(disposed) throw new InvalidOperationException(Strings.ObjectInstanceDisposed);
     }
