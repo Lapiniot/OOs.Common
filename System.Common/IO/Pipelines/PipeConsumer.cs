@@ -57,25 +57,20 @@ public abstract class PipeConsumer : ActivityObject
                     if(consumed > 0)
                     {
                         reader.AdvanceTo(buffer.GetPosition(consumed));
+                        continue;
                     }
                     else
                     {
+                        // Seems we have not enough data to be consumed in a consistent way by the consumer logic
                         reader.AdvanceTo(buffer.Start, buffer.End);
-                        if(result.IsCompleted || result.IsCanceled)
-                        {
-                            // Seems we have not enough data to be consumed in a consistent way by the consumer logic, 
-                            // however we couldn't get more, because writer end has already completed writing. 
-                            // So we better terminate reading in order to avoid potential "dead" loop
-                            break;
-                        }
                     }
                 }
-                else
+
+                if(result.IsCompleted || result.IsCanceled)
                 {
-                    if(result.IsCompleted || result.IsCanceled)
-                    {
-                        break;
-                    }
+                    // However we couldn't get more data, because writer end has already completed writing. 
+                    // So we better terminate reading in order to avoid potential "dead" loop
+                    break;
                 }
             }
 
