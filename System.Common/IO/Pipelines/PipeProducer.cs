@@ -75,26 +75,35 @@ public abstract class PipeProducer : IAsyncDisposable
         var localWorker = producer;
         var localCts = globalCts;
 
-        switch(Interlocked.CompareExchange(ref stateGuard, Stopping, Started))
+        try
         {
-            case Started:
-                // we are responsible for cancellation and cleanup
-                localCts.Cancel();
-                try
-                {
-                    await localWorker.ConfigureAwait(false);
-                }
-                finally
-                {
-                    localCts.Dispose();
-                    _ = Interlocked.Exchange(ref stateGuard, Stopped);
-                }
+            switch(Interlocked.CompareExchange(ref stateGuard, Stopping, Started))
+            {
+                case Started:
+                    // we are responsible for cancellation and cleanup
+                    localCts.Cancel();
+                    try
+                    {
+                        await localWorker.ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        localCts.Dispose();
+                        _ = Interlocked.Exchange(ref stateGuard, Stopped);
+                    }
 
-                break;
-            case Stopping:
-                // stopping in progress already, wait for currently active task in flight
-                await localWorker.ConfigureAwait(false);
-                break;
+                    break;
+                case Stopping:
+                    // stopping in progress already, wait for currently active task in flight
+                    await localWorker.ConfigureAwait(false);
+                    break;
+            }
+        }
+#pragma warning disable CA1031 // producer loop termination exception should not be rethrown here
+        catch
+#pragma warning restore CA1031
+        {
+            // by design
         }
     }
 
