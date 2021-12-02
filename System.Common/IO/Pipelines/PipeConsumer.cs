@@ -73,16 +73,10 @@ public abstract class PipeConsumer : ActivityObject
                     break;
                 }
             }
-
-            OnCompleted();
         }
         catch(OperationCanceledException)
         {
-            OnCompleted();
-        }
-        catch(Exception exception) when(OnCompleted(exception))
-        {
-            // Suppress exception if OnCompleted returns true (handled as expected)
+            // Expected
         }
         finally
         {
@@ -96,11 +90,4 @@ public abstract class PipeConsumer : ActivityObject
     /// <param name="sequence">Sequence of linked buffers containing data produced by the pipe writer</param>
     /// <param name="bytesConsumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
     protected abstract void Consume(in ReadOnlySequence<byte> sequence, out long bytesConsumed);
-
-    /// <summary>
-    /// Method gets called when consumer completed its work
-    /// </summary>
-    /// <param name="exception">Should exceptions occur, last value is passed</param>
-    /// <returns><value>True</value> if exception is handled and shouldn't be rethrown</returns>
-    protected abstract bool OnCompleted(Exception exception = null);
 }
