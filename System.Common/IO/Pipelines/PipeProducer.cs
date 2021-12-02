@@ -12,11 +12,13 @@ public abstract class PipeProducer : IAsyncDisposable
     private readonly PipeReader reader;
     private readonly PipeWriter writer;
     private Task producer;
-    private int stateGuard;
+    private long stateGuard;
 
     public PipeReader Reader => reader;
 
-    public Task Completion => producer;
+    public Task Completion => Interlocked.Read(ref stateGuard) != Started
+        ? throw new InvalidOperationException(Strings.InvalidStateNotStarted)
+        : producer;
 
     protected PipeProducer(PipeOptions pipeOptions = null)
     {
@@ -103,27 +105,30 @@ public abstract class PipeProducer : IAsyncDisposable
                 var rt = ReceiveAsync(buffer, token);
                 var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
 
-                if(received == 0) break;
+                if(received == 0)
+                {
+                    break;
+                }
 
                 writer.Advance(received);
 
                 var ft = writer.FlushAsync(token);
                 var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.ConfigureAwait(false);
 
-                if(result.IsCompleted || result.IsCanceled) break;
+                if(result.IsCompleted || result.IsCanceled)
+                {
+                    break;
+                }
             }
 
-            await writer.CompleteAsync().ConfigureAwait(false);
         }
         catch(OperationCanceledException)
         {
             // Expected
-            await writer.CompleteAsync().ConfigureAwait(false);
         }
-        catch(Exception exception)
+        finally
         {
-            await writer.CompleteAsync(exception).ConfigureAwait(false);
-            throw;
+            await writer.CompleteAsync().ConfigureAwait(false);
         }
     }
 

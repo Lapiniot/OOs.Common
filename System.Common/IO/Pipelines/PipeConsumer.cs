@@ -18,7 +18,7 @@ public abstract class PipeConsumer : ActivityObject
         this.reader = reader;
     }
 
-    public Task Completion => IsRunning ? consumer : throw new InvalidOperationException(Strings.PipeNotStarted);
+    public Task Completion => IsRunning ? consumer : throw new InvalidOperationException(Strings.InvalidStateNotStarted);
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
