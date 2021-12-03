@@ -12,30 +12,30 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
 {
     private readonly string machineName;
     private readonly SslProtocols enabledSslProtocols;
-    private readonly X509Certificate2 certificate;
+    private readonly X509Certificate2[] certificates;
     private SslStream sslStream;
     private NetworkStream networkStream;
 
     public SslStreamClientConnection(IPEndPoint endPoint, string machineName,
         SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2 certificate = null) :
+        X509Certificate2[] certificates = null) :
         base(endPoint)
     {
         ArgumentNullException.ThrowIfNull(machineName);
 
         this.machineName = machineName;
         this.enabledSslProtocols = enabledSslProtocols;
-        this.certificate = certificate;
+        this.certificates = certificates;
     }
 
     public SslStreamClientConnection(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2 certificate = null) :
+        X509Certificate2[] certificates = null) :
         base(hostNameOrAddress, port)
     {
         this.machineName = machineName ?? hostNameOrAddress;
         this.enabledSslProtocols = enabledSslProtocols;
-        this.certificate = certificate;
+        this.certificates = certificates;
     }
 
     public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
@@ -91,9 +91,9 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
                     EnabledSslProtocols = enabledSslProtocols
                 };
 
-                if(certificate is not null)
+                if(certificates is not null)
                 {
-                    options.ClientCertificates = new X509CertificateCollection(new[] { certificate });
+                    options.ClientCertificates = new X509CertificateCollection(certificates);
                 }
 
                 await sslStream.AuthenticateAsClientAsync(options, cancellationToken).ConfigureAwait(false);
