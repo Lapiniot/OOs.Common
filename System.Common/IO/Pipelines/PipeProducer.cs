@@ -17,7 +17,7 @@ public abstract class PipeProducer : IAsyncDisposable
 
     public PipeReader Reader => reader;
 
-    public Task Completion => Interlocked.Read(ref stateGuard) != Started
+    public Task Completion => Interlocked.Read(ref stateGuard) != Started || producer is null
         ? throw new InvalidOperationException(Strings.InvalidStateNotStarted)
         : producer;
 
@@ -63,10 +63,10 @@ public abstract class PipeProducer : IAsyncDisposable
         }
     }
 
-    protected void Reset()
+    public async Task ResetAsync()
     {
-        writer.Complete();
-        reader.Complete();
+        await writer.CompleteAsync().ConfigureAwait(false);
+        await reader.CompleteAsync().ConfigureAwait(false);
         pipe.Reset();
     }
 

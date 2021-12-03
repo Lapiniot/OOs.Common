@@ -26,7 +26,7 @@ public abstract class RetryPolicy : IRetryPolicy
                     .WaitAsync(cancellationToken)
                     .ConfigureAwait(false);
             }
-            catch(OperationCanceledException)
+            catch(OperationCanceledException oce) when(oce.CancellationToken == cancellationToken)
             {
                 throw;
             }
