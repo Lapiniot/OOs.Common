@@ -16,7 +16,8 @@ public sealed class SslStreamTcpSocketListener : TcpSocketListenerBase, IDisposa
         Action<Socket> configureListening = null, Action<Socket> configureAccepted = null,
         X509Certificate serverCertificate = null, SslProtocols enabledSslProtocols = SslProtocols.None,
         RemoteCertificateValidationCallback remoteCertificateValidationCallback = null,
-        ServerCertificateSelectionCallback serverCertificateSelectionCallback = null) :
+        ServerCertificateSelectionCallback serverCertificateSelectionCallback = null,
+        bool clientCertificateRequired = false) :
         base(endPoint, backlog, configureListening, configureAccepted)
     {
         this.serverCertificate = serverCertificate;
@@ -27,7 +28,7 @@ public sealed class SslStreamTcpSocketListener : TcpSocketListenerBase, IDisposa
             EnabledSslProtocols = enabledSslProtocols,
             RemoteCertificateValidationCallback = remoteCertificateValidationCallback,
             ServerCertificateSelectionCallback = serverCertificateSelectionCallback,
-            ClientCertificateRequired = true
+            ClientCertificateRequired = clientCertificateRequired
         };
     }
 
