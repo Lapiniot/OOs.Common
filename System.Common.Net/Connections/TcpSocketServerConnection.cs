@@ -8,6 +8,7 @@ namespace System.Net.Connections;
 public sealed class TcpSocketServerConnection : INetworkConnection
 {
     private readonly Socket socket;
+    private readonly EndPoint RemoteEndPoint;
     private int disposed;
 
     public TcpSocketServerConnection(Socket acceptedSocket)
@@ -15,6 +16,7 @@ public sealed class TcpSocketServerConnection : INetworkConnection
         ArgumentNullException.ThrowIfNull(acceptedSocket);
         socket = acceptedSocket;
         Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
+        RemoteEndPoint = socket.RemoteEndPoint;
     }
 
     public async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
@@ -59,6 +61,6 @@ public sealed class TcpSocketServerConnection : INetworkConnection
 
     public override string ToString()
     {
-        return $"{Id}-{nameof(TcpSocketServerConnection)}-{socket?.RemoteEndPoint}";
+        return $"{Id}-{nameof(TcpSocketServerConnection)}-{RemoteEndPoint}";
     }
 }
