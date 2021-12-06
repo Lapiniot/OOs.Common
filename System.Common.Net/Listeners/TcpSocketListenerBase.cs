@@ -29,7 +29,14 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnectio
     public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+        if(endPoint.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            // Allow IPv4 clients for backward compatibility, if endPoint designates IPv6 address
+            socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+        }
         configureListening?.Invoke(socket);
+
         socket.Bind(endPoint);
         socket.Listen(backlog);
 
