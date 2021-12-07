@@ -4,10 +4,10 @@ namespace System.Configuration;
 
 public static class CommandArgumentsConfigurationExtensions
 {
-    public static IConfigurationBuilder AddCommandArguments(this IConfigurationBuilder builder, string[] args)
+    public static IConfigurationBuilder AddCommandArguments(this IConfigurationBuilder builder, string[] args, bool strict = true)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.Add(new CommandArgumentsConfigurationSource(args));
+        return builder.Add(new CommandArgumentsConfigurationSource(args, strict));
     }
 }

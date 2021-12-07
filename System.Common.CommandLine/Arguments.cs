@@ -19,7 +19,7 @@ public class Arguments
 
     public bool this[string name] => (bool)ProvidedValues[name];
 
-    public static Arguments Parse(params string[] args)
+    public static Arguments Parse(string[] args, bool strict)
     {
         var queue = new Queue<string>(args);
 
@@ -37,7 +37,7 @@ public class Arguments
             .Distinct(commandByNameComparer)
             .ToArray() ?? Array.Empty<CommandAttribute>();
 
-        var parser = new ArgumentParser(commands, schema);
+        var parser = new ArgumentParser(commands, schema, strict);
 
         parser.Parse(queue, out var command, out var parameters, out var extras);
 

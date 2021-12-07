@@ -8,14 +8,16 @@ public class ArgumentParser
     private readonly ICommandMetadata[] commands;
     private readonly IArgumentMetadata[] schema;
     private static readonly char[] quotes = { '"', '\'' };
+    private readonly bool strict;
 
-    public ArgumentParser(ICommandMetadata[] commands, IArgumentMetadata[] schema)
+    public ArgumentParser(ICommandMetadata[] commands, IArgumentMetadata[] schema, bool strict)
     {
         ArgumentNullException.ThrowIfNull(commands);
         ArgumentNullException.ThrowIfNull(schema);
 
         this.commands = commands;
         this.schema = schema;
+        this.strict = strict;
     }
 
     public void Parse(Queue<string> tokens, out string command, out IReadOnlyDictionary<string, object> arguments, out IEnumerable<string> extras)
@@ -81,7 +83,7 @@ public class ArgumentParser
         return d != 0 ? d : CompareOrdinal(x, y);
     }
 
-    private static void AddByShortName(string arg, Queue<string> queue, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
+    private void AddByShortName(string arg, Queue<string> queue, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
     {
         if(metadata.TryGetValue(arg, out var def))
         {
@@ -115,10 +117,11 @@ public class ArgumentParser
 
             // Try to parse as switches only concatenated
 
-            if(!TryParseJointSwitchesArgument(arg, metadata, arguments))
-            {
-                throw new ArgumentException($"Invalid argument '{arg}'");
-            }
+            if(TryParseJointSwitchesArgument(arg, metadata, arguments)) return;
+
+            if(strict) throw new ArgumentException($"Invalid argument '{arg}'");
+
+            arguments[arg] = queue.TryPeek(out var next) && next[0] is not ('/' or '-') ? queue.Dequeue() : "";
         }
     }
 
@@ -180,13 +183,20 @@ public class ArgumentParser
         return true;
     }
 
-    private static void AddByName(string arg, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
+    private void AddByName(string arg, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
     {
         var pair = arg.Split(new[] { '=' }, 2);
 
-        if(!metadata.TryGetValue(pair[0], out var def)) return;
+        var key = pair[0];
 
-        var key = def.Name;
+        if(!metadata.TryGetValue(key, out var def))
+        {
+            if(strict) throw new ArgumentException($"Invalid argument '{key}'");
+            arguments[key] = pair.Length > 1 ? pair[1] : "";
+            return;
+        }
+
+        key = def.Name;
         var type = def.Type;
 
         if(type == typeof(bool))
