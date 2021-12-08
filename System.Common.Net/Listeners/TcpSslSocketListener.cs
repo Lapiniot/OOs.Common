@@ -6,13 +6,13 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace System.Net.Listeners;
 
-public sealed class SslStreamTcpSocketListener : TcpSocketListenerBase, IDisposable
+public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
 {
     private readonly SslServerAuthenticationOptions options;
     private readonly X509Certificate serverCertificate;
     private bool disposed;
 
-    public SslStreamTcpSocketListener(IPEndPoint endPoint, int backlog = 100,
+    public TcpSslSocketListener(IPEndPoint endPoint, int backlog = 100,
         Action<Socket> configureListening = null, Action<Socket> configureAccepted = null,
         X509Certificate serverCertificate = null, SslProtocols enabledSslProtocols = SslProtocols.None,
         RemoteCertificateValidationCallback remoteCertificateValidationCallback = null,
@@ -34,12 +34,12 @@ public sealed class SslStreamTcpSocketListener : TcpSocketListenerBase, IDisposa
 
     public override string ToString()
     {
-        return $"{nameof(SslStreamTcpSocketListener)} {{tcps://{EndPoint}}}";
+        return $"{nameof(TcpSslSocketListener)} {{tcps://{EndPoint}}}";
     }
 
     protected override INetworkConnection CreateConnection(Socket acceptedSocket)
     {
-        return new SslStreamServerConnection(acceptedSocket, options);
+        return new TcpSslServerSocketConnection(acceptedSocket, options);
     }
 
     public void Dispose()

@@ -3,26 +3,25 @@ using System.Net.Sockets;
 using static System.Net.Dns;
 using static System.Net.Properties.Strings;
 using static System.Net.Sockets.ProtocolType;
-using static System.Net.Sockets.SocketShutdown;
 using static System.Net.Sockets.SocketError;
 using static System.Net.Sockets.SocketFlags;
-using static System.Threading.Tasks.Task;
 
 namespace System.Net.Connections;
 
-public class TcpSocketClientConnection : NetworkConnection
+public class TcpClientSocketConnection : NetworkConnection
 {
     private readonly string hostNameOrAddress;
     private readonly int port;
     private Socket socket;
+    private long disposed;
 
-    public TcpSocketClientConnection(IPEndPoint ipEndPoint)
+    public TcpClientSocketConnection(IPEndPoint ipEndPoint)
     {
         ArgumentNullException.ThrowIfNull(ipEndPoint);
         RemoteEndPoint = ipEndPoint;
     }
 
-    public TcpSocketClientConnection(string hostNameOrAddress, int port)
+    public TcpClientSocketConnection(string hostNameOrAddress, int port)
     {
         ArgumentNullException.ThrowIfNull(hostNameOrAddress);
 
@@ -34,9 +33,25 @@ public class TcpSocketClientConnection : NetworkConnection
     public IPEndPoint RemoteEndPoint { get; private set; }
     protected Socket Socket { get => socket; set => socket = value; }
 
+    public override async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var vt = socket.SendAsync(buffer, None, cancellationToken);
+            if(!vt.IsCompletedSuccessfully)
+            {
+                await vt.ConfigureAwait(false);
+            }
+        }
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
+        {
+            await StopActivityAsync().ConfigureAwait(false);
+            throw new ConnectionAbortedException(se);
+        }
+    }
+
     public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
-        CheckState(true);
         try
         {
             var vt = socket.ReceiveAsync(buffer, None, cancellationToken);
@@ -49,46 +64,46 @@ public class TcpSocketClientConnection : NetworkConnection
         }
     }
 
-    public override async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public override async ValueTask DisposeAsync()
     {
-        CheckState(true);
-        try
+        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
+        GC.SuppressFinalize(this);
+
+        using(socket)
         {
-            var vt = socket.SendAsync(buffer, None, cancellationToken);
-            if(!vt.IsCompletedSuccessfully)
+            try
             {
-                _ = await vt.ConfigureAwait(false);
+                await base.DisposeAsync().ConfigureAwait(false);
             }
-        }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
-        {
-            await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionAbortedException(se);
+            finally
+            {
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+            }
         }
     }
 
-    protected override Task StoppingAsync()
+    protected override async Task StoppingAsync()
     {
-        socket.Shutdown(Both);
-
-        socket.Close();
-
-        socket = null;
-
-        return CompletedTask;
+        var vt = socket.DisconnectAsync(true);
+        if(!vt.IsCompletedSuccessfully)
+        {
+            await vt.ConfigureAwait(false);
+        }
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         try
         {
-            if(RemoteEndPoint == null)
+            if(RemoteEndPoint is null)
             {
                 var addresses = await GetHostAddressesAsync(hostNameOrAddress, cancellationToken).ConfigureAwait(false);
                 RemoteEndPoint = new IPEndPoint(addresses[0], port);
             }
 
-            socket = new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, Tcp);
+            socket ??= new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, Tcp);
 
             await socket.ConnectAsync(RemoteEndPoint, cancellationToken).ConfigureAwait(false);
         }
@@ -104,6 +119,6 @@ public class TcpSocketClientConnection : NetworkConnection
 
     public override string ToString()
     {
-        return $"{nameof(TcpSocketClientConnection)}: {socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
+        return $"{nameof(TcpClientSocketConnection)}: {socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
     }
 }

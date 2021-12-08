@@ -13,7 +13,7 @@ public sealed class TcpSocketListener : TcpSocketListenerBase
 
     protected override INetworkConnection CreateConnection(Socket acceptedSocket)
     {
-        return new TcpSocketServerConnection(acceptedSocket);
+        return new TcpServerSocketConnection(acceptedSocket);
     }
 
     public override string ToString()

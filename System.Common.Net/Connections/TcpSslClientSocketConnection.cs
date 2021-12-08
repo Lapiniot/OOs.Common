@@ -8,15 +8,14 @@ using static System.Net.Sockets.SocketError;
 
 namespace System.Net.Connections;
 
-public sealed class SslStreamClientConnection : TcpSocketClientConnection
+public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
 {
     private readonly string machineName;
     private readonly SslProtocols enabledSslProtocols;
     private readonly X509Certificate2[] certificates;
     private SslStream sslStream;
-    private NetworkStream networkStream;
 
-    public SslStreamClientConnection(IPEndPoint endPoint, string machineName,
+    public TcpSslClientSocketConnection(IPEndPoint endPoint, string machineName,
         SslProtocols enabledSslProtocols = SslProtocols.None,
         X509Certificate2[] certificates = null) :
         base(endPoint)
@@ -28,7 +27,7 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
         this.certificates = certificates;
     }
 
-    public SslStreamClientConnection(string hostNameOrAddress, int port,
+    public TcpSslClientSocketConnection(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
         X509Certificate2[] certificates = null) :
         base(hostNameOrAddress, port)
@@ -36,22 +35,6 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
         this.machineName = machineName ?? hostNameOrAddress;
         this.enabledSslProtocols = enabledSslProtocols;
         this.certificates = certificates;
-    }
-
-    public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        CheckState(true);
-
-        try
-        {
-            var vt = sslStream.ReadAsync(buffer, cancellationToken);
-            return vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
-        }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
-        {
-            await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionAbortedException(se);
-        }
     }
 
     public override async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
@@ -73,15 +56,31 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
         }
     }
 
+    public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    {
+        CheckState(true);
+
+        try
+        {
+            var vt = sslStream.ReadAsync(buffer, cancellationToken);
+            return vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+        }
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
+        {
+            await StopActivityAsync().ConfigureAwait(false);
+            throw new ConnectionAbortedException(se);
+        }
+    }
+
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         await base.StartingAsync(cancellationToken).ConfigureAwait(false);
 
-        networkStream = new NetworkStream(Socket, FileAccess.ReadWrite, false);
+        var networkStream = new NetworkStream(Socket, FileAccess.ReadWrite, true);
 
         try
         {
-            sslStream = new SslStream(networkStream, true);
+            sslStream = new SslStream(networkStream, false);
 
             try
             {
@@ -102,6 +101,7 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
             {
                 await using(sslStream.ConfigureAwait(false))
                 {
+                    sslStream = null;
                     throw;
                 }
             }
@@ -119,29 +119,19 @@ public sealed class SslStreamClientConnection : TcpSocketClientConnection
     {
         try
         {
-            if(sslStream is not null)
-            {
-                await sslStream.DisposeAsync().ConfigureAwait(false);
-            }
+            await base.DisposeAsync().ConfigureAwait(false);
         }
         finally
         {
-            try
+            if(sslStream is not null)
             {
-                if(networkStream is not null)
-                {
-                    await networkStream.DisposeAsync().ConfigureAwait(false);
-                }
-            }
-            finally
-            {
-                await base.DisposeAsync().ConfigureAwait(false);
+                await sslStream.DisposeAsync().ConfigureAwait(false);
             }
         }
     }
 
     public override string ToString()
     {
-        return $"{nameof(SslStreamClientConnection)}: {Socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
+        return $"{nameof(TcpSslClientSocketConnection)}: {Socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
     }
 }
