@@ -2,7 +2,7 @@
 
 namespace System.Threading;
 
-public sealed class IntervalWorkerLoop : WorkerBase
+public sealed class IntervalWorkerLoop : Worker
 {
     private readonly Func<CancellationToken, Task> asyncWork;
     private readonly TimeSpan interval;
@@ -19,7 +19,12 @@ public sealed class IntervalWorkerLoop : WorkerBase
     {
         while(!stoppingToken.IsCancellationRequested)
         {
-            await asyncWork(stoppingToken).ConfigureAwait(false);
+            var task = asyncWork(stoppingToken);
+            if(!task.IsCompletedSuccessfully)
+            {
+                await task.ConfigureAwait(false);
+            }
+
             await Delay(interval, stoppingToken).ConfigureAwait(false);
         }
     }

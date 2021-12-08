@@ -5,7 +5,7 @@ namespace System.Threading;
 /// <summary>
 /// Base class for types that run some work asynchronously in the background
 /// </summary>
-public abstract class WorkerBase : IAsyncDisposable
+public abstract class Worker : IAsyncDisposable
 {
     private readonly SemaphoreSlim semaphore = new(1);
     private CancelableOperationScope cancelableOperation;
@@ -97,7 +97,7 @@ public abstract class WorkerBase : IAsyncDisposable
     {
         if(Volatile.Read(ref disposed) != 0)
         {
-            throw new ObjectDisposedException(nameof(WorkerBase));
+            throw new ObjectDisposedException(nameof(Worker));
         }
     }
 }

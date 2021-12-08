@@ -1,6 +1,6 @@
 ﻿namespace System.Threading;
 
-public sealed class DelayWorkerLoop : WorkerBase
+public sealed class DelayWorkerLoop : Worker
 {
     public const int Infinite = -1;
     private readonly Func<CancellationToken, Task> asyncWork;
@@ -32,13 +32,18 @@ public sealed class DelayWorkerLoop : WorkerBase
 
         try
         {
-            while(!stoppingToken.IsCancellationRequested &&
-                  (maxIterations == Infinite || iteration < maxIterations))
+            while(!stoppingToken.IsCancellationRequested && (maxIterations == Infinite || iteration < maxIterations))
             {
                 try
                 {
                     await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
-                    await asyncWork(stoppingToken).ConfigureAwait(false);
+
+                    var task = asyncWork(stoppingToken);
+                    if(!task.IsCompletedSuccessfully)
+                    {
+                        await task.ConfigureAwait(false);
+                    }
+
                     iteration++;
                 }
                 catch(OperationCanceledException)

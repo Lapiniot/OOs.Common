@@ -1,6 +1,6 @@
 ﻿namespace System.Threading;
 
-public sealed class WorkerLoop : WorkerBase
+public sealed class WorkerLoop : Worker
 {
     private readonly Func<CancellationToken, Task> asyncWork;
 
@@ -14,7 +14,11 @@ public sealed class WorkerLoop : WorkerBase
     {
         while(!stoppingToken.IsCancellationRequested)
         {
-            await asyncWork(stoppingToken).ConfigureAwait(false);
+            var task = asyncWork(stoppingToken);
+            if(!task.IsCompletedSuccessfully)
+            {
+                await task.ConfigureAwait(false);
+            }
         }
     }
 }
