@@ -6,7 +6,7 @@ using static System.Net.WebSockets.WebSocketCloseStatus;
 
 namespace System.Net.Connections;
 
-public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where TWebSocket : WebSocket
+public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where TWebSocket : WebSocket
 {
     private int disposed;
     private TWebSocket socket;
@@ -14,52 +14,32 @@ public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where
     protected WebSocketConnection(TWebSocket socket)
     {
         this.socket = socket;
-        Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
     }
+
+    protected TWebSocket Socket { get => socket; set => socket = value; }
 
     #region Implementation of IAsyncDisposable
 
-    public virtual async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
+        {
+            return;
+        }
 
         GC.SuppressFinalize(this);
 
         using(socket)
         {
-            await DisconnectAsync().ConfigureAwait(false);
+            await base.DisposeAsync().ConfigureAwait(false);
         }
     }
 
     #endregion
 
-    #region Implementation of IConnectedObject
+    #region Implementation of INetworkConnection
 
-    public bool IsConnected => socket?.State == Open;
-
-    public string Id { get; }
-
-    protected TWebSocket Socket { get => socket; set => socket = value; }
-
-    public abstract Task ConnectAsync(CancellationToken cancellationToken = default);
-
-    public virtual async Task DisconnectAsync()
-    {
-        if(socket != null)
-        {
-            var state = socket.State;
-            if(state == Open || state == CloseReceived && socket.CloseStatus == NormalClosure)
-            {
-                await socket.CloseAsync(NormalClosure, "Good bye.", default).ConfigureAwait(false);
-            }
-        }
-    }
-
-    #endregion
-
-    #region Implementation of INetworkTransport
-
-    public async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public override async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
         try
         {
@@ -78,7 +58,7 @@ public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where
         }
     }
 
-    public async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
         try
         {
@@ -86,11 +66,13 @@ public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where
 
             var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
-            if(result.MessageType != WebSocketMessageType.Close) return result.Count;
+            if(result.MessageType is WebSocketMessageType.Close)
+            {
+                await DisconnectAsync().ConfigureAwait(false);
+                return 0;
+            }
 
-            await DisconnectAsync().ConfigureAwait(false);
-
-            return 0;
+            return result.Count;
         }
         catch(WebSocketException wse) when(
             wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
@@ -101,4 +83,14 @@ public abstract class WebSocketConnection<TWebSocket> : INetworkConnection where
     }
 
     #endregion
+
+    protected override Task StoppingAsync()
+    {
+        return Socket switch
+        {
+            { State: Open } => Socket.CloseAsync(NormalClosure, "Good bye.", default),
+            { State: CloseReceived, CloseStatus: NormalClosure } => Socket.CloseOutputAsync(NormalClosure, "Good bye.", default),
+            _ => Task.CompletedTask,
+        };
+    }
 }

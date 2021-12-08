@@ -29,9 +29,7 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
 
     public IEnumerable<string> SubProtocols => subProtocols;
 
-    #region Overrides of WebSocketConnection
-
-    public override async Task ConnectAsync(CancellationToken cancellationToken = default)
+    protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         var socket = new ClientWebSocket();
 
@@ -55,8 +53,8 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
             await socket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
             Socket = socket;
         }
-        catch(WebSocketException wse) when(wse.InnerException is HttpRequestException
-        { InnerException: SocketException { SocketErrorCode: SocketError.HostNotFound } })
+        catch(WebSocketException wse) when(
+            wse.InnerException is HttpRequestException { InnerException: SocketException { SocketErrorCode: SocketError.HostNotFound } })
         {
             throw new HostNotFoundException(wse);
         }
@@ -65,8 +63,6 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
             throw new ServerUnavailableException(wse);
         }
     }
-
-    #endregion
 
     public override string ToString()
     {

@@ -6,22 +6,20 @@ public class WebSocketServerConnection : WebSocketConnection<WebSocket>
 {
     private readonly IPEndPoint remoteEndPoint;
 
-    public WebSocketServerConnection(WebSocket acceptedWebSocket, IPEndPoint remoteEndPoint) : base(acceptedWebSocket)
+    public WebSocketServerConnection(WebSocket acceptedSocket, IPEndPoint remoteEndPoint) : base(acceptedSocket)
     {
         this.remoteEndPoint = remoteEndPoint;
     }
+
+    public IPEndPoint RemoteEndPoint => remoteEndPoint;
 
     public override string ToString()
     {
         return $"{Id}-{nameof(WebSocketServerConnection)}-{remoteEndPoint}";
     }
 
-    #region Overrides of WebSocketTransportBase
-
-    public override Task ConnectAsync(CancellationToken cancellationToken = default)
+    protected override Task StartingAsync(CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
     }
-
-    #endregion
 }
