@@ -1,6 +1,6 @@
 ﻿namespace System.Threading;
 
-public sealed class CancelableOperationScope : IAsyncCancelable
+public sealed class CancelableOperationScope : IAsyncCancelable, IDisposable
 {
     private readonly CancellationTokenSource jointCts;
     private readonly CancellationTokenSource localCts;
@@ -58,6 +58,11 @@ public sealed class CancelableOperationScope : IAsyncCancelable
             }
             catch(OperationCanceledException) { }
         }
+    }
+
+    public void Dispose()
+    {
+        _ = DisposeAsync().AsTask();
     }
 
     #endregion
