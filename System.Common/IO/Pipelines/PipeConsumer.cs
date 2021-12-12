@@ -45,14 +45,14 @@ public abstract class PipeConsumer : ActivityObject
         {
             while(!token.IsCancellationRequested)
             {
-                var rt = reader.ReadAsync(token);
-                var result = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
+                var vt = reader.ReadAsync(token);
+                var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
                 var buffer = result.Buffer;
 
                 if(buffer.Length > 0)
                 {
-                    Consume(buffer, out var consumed);
+                    Consume(ref buffer, out var consumed);
 
                     if(consumed > 0)
                     {
@@ -88,6 +88,6 @@ public abstract class PipeConsumer : ActivityObject
     /// Method gets called every time new data is available.
     /// </summary>
     /// <param name="sequence">Sequence of linked buffers containing data produced by the pipe writer</param>
-    /// <param name="bytesConsumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
-    protected abstract void Consume(in ReadOnlySequence<byte> sequence, out long bytesConsumed);
+    /// <param name="consumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
+    protected abstract void Consume(ref ReadOnlySequence<byte> sequence, out long consumed);
 }
