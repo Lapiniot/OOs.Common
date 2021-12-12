@@ -52,7 +52,7 @@ public abstract class PipeConsumer : ActivityObject
 
                 if(buffer.Length > 0)
                 {
-                    Consume(ref buffer, out var consumed);
+                    Consume(in buffer, out var consumed);
 
                     if(consumed > 0)
                     {
@@ -89,5 +89,5 @@ public abstract class PipeConsumer : ActivityObject
     /// </summary>
     /// <param name="sequence">Sequence of linked buffers containing data produced by the pipe writer</param>
     /// <param name="consumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
-    protected abstract void Consume(ref ReadOnlySequence<byte> sequence, out long consumed);
+    protected abstract void Consume(in ReadOnlySequence<byte> sequence, out long consumed);
 }
