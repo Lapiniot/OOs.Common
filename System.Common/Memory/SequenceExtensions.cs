@@ -14,7 +14,7 @@ public static class SequenceExtensions
 
         if(sequence.IsSingleSegment)
         {
-            var span = sequence.First.Span;
+            var span = sequence.FirstSpan;
             var index = span.IndexOf(CR);
             if(index <= 0 || index >= span.Length - 1 || span[index + 1] != LF) return false;
 
