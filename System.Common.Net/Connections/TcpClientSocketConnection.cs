@@ -78,8 +78,10 @@ public class TcpClientSocketConnection : NetworkConnection
             }
             finally
             {
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
+                if(socket.Connected)
+                {
+                    socket.Shutdown(SocketShutdown.Both);
+                }
             }
         }
     }

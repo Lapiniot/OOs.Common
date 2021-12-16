@@ -58,8 +58,10 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         {
             using(socket)
             {
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
+                if(socket.Connected)
+                {
+                    socket.Shutdown(SocketShutdown.Both);
+                }
             }
         }
 
