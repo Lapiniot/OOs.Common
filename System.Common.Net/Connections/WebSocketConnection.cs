@@ -39,7 +39,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
 
     #region Implementation of INetworkConnection
 
-    public override async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
         try
         {

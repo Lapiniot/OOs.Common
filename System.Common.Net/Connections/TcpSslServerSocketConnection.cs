@@ -31,7 +31,7 @@ public sealed class TcpSslServerSocketConnection : NetworkConnection
         }
     }
 
-    public override async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
         try
         {

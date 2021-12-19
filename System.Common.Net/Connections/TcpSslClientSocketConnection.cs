@@ -37,7 +37,7 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
         this.certificates = certificates;
     }
 
-    public override async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
         CheckState(true);
 

@@ -23,7 +23,7 @@ public sealed class TcpServerSocketConnection : INetworkConnection
     public Socket Socket => socket;
     public string Id { get; }
 
-    public async ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
         try
         {

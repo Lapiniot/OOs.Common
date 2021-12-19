@@ -12,7 +12,7 @@ public interface INetworkConnection : IConnectedObject, IAsyncDisposable
     /// <param name="buffer">Memory buffer containing data to send</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>ValueTask that can be awaited</returns>
-    ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+    ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken);
     /// <summary>
     /// Receives data sent by other party
     /// </summary>

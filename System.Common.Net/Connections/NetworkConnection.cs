@@ -9,7 +9,7 @@ public abstract class NetworkConnection : ActivityObject, INetworkConnection
 
     public abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 
-    public abstract ValueTask SendAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+    public abstract ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken);
 
     #region Implementation of IConnectedObject
 
