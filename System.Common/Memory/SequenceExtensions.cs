@@ -6,7 +6,6 @@ public static class SequenceExtensions
 {
     public const byte CR = (byte)'\r';
     public const byte LF = (byte)'\n';
-    private static readonly byte[] NewLine = new byte[] { 0x0d, 0x0a };
 
     public static bool TryReadLine(this ReadOnlySequence<byte> sequence, out ReadOnlyMemory<byte> line)
     {
@@ -35,9 +34,27 @@ public static class SequenceExtensions
 
     public static bool TryReadLine(this ref SequenceReader<byte> sequenceReader, out ReadOnlySequence<byte> line, bool strict = true)
     {
-        if(sequenceReader.TryReadToAny(out line, NewLine))
+        if(sequenceReader.TryReadTo(out line, LF, advancePastDelimiter: true))
         {
-            _ = sequenceReader.AdvancePastAny(0x0d, 0x0a);
+            long length = line.Length;
+            if(length > 0)
+            {
+                if(line.IsSingleSegment)
+                {
+                    if(line.FirstSpan[^1] is CR)
+                    {
+                        line = line.Slice(0, length - 1);
+                    }
+                }
+                else
+                {
+                    if(line.Slice(length - 1).FirstSpan[0] is CR)
+                    {
+                        line = line.Slice(0, length - 1);
+                    }
+                }
+            }
+
             return true;
         }
         else if(!strict)
