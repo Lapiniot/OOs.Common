@@ -64,6 +64,15 @@ public static class SocketBuilderExtensions
         return socket;
     }
 
+    public static Socket Bind(this Socket socket, int port = 0)
+    {
+        ArgumentNullException.ThrowIfNull(socket);
+
+        socket.Bind(socket.AddressFamily is InterNetworkV6 ? new IPEndPoint(IPv6Any, 0) : new IPEndPoint(Any, port));
+
+        return socket;
+    }
+
     public static Socket JoinMulticastGroup(this Socket socket, IPEndPoint groupToJoin, IPAddress mcint = null)
     {
         ArgumentNullException.ThrowIfNull(socket);
