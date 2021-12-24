@@ -71,7 +71,7 @@ public static class Crc32Adler
         0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
     };
 
-    public static uint Compute(Span<byte> span)
+    public static uint Compute(ReadOnlySpan<byte> span)
     {
         uint crc = 0xffffffff;
         for(int i = 0; i < span.Length; i++)
