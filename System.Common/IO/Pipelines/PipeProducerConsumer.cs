@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
-using System.IO.Pipelines;
 
-namespace System.Net.Pipelines;
+namespace System.IO.Pipelines;
 
 /// <summary>
 /// Provides base pipe processor implementation which runs two loops.
@@ -48,26 +47,30 @@ public abstract class PipeProducerConsumer : ActivityObject
                 var rt = ReceiveAsync(buffer, cancellationToken);
                 var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
 
-                if(received == 0) break;
+                if(received == 0)
+                {
+                    break;
+                }
 
                 writer.Advance(received);
 
                 var ft = writer.FlushAsync(cancellationToken);
                 var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.ConfigureAwait(false);
 
-                if(result.IsCompleted || result.IsCanceled) break;
+                if(result.IsCompleted || result.IsCanceled)
+                {
+                    break;
+                }
             }
 
-            await writer.CompleteAsync().ConfigureAwait(false);
         }
         catch(OperationCanceledException)
         {
-            await writer.CompleteAsync().ConfigureAwait(false);
+            // Expected
         }
-        catch(Exception exception)
+        finally
         {
-            await writer.CompleteAsync(exception).ConfigureAwait(false);
-            throw;
+            await writer.CompleteAsync().ConfigureAwait(false);
         }
     }
 
@@ -77,38 +80,42 @@ public abstract class PipeProducerConsumer : ActivityObject
         {
             while(!cancellationToken.IsCancellationRequested)
             {
-                var rt = reader.ReadAsync(cancellationToken);
-                var result = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
+                var vt = reader.ReadAsync(cancellationToken);
+                var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
 
                 var buffer = result.Buffer;
 
                 if(buffer.Length > 0)
                 {
-                    var consumed = Consume(buffer);
+                    Consume(in buffer, out var consumed);
 
                     if(consumed > 0)
                     {
                         reader.AdvanceTo(buffer.GetPosition(consumed));
+                        continue;
                     }
                     else
                     {
+                        // Seems we have not enough data to be consumed in a consistent way by the consumer logic
                         reader.AdvanceTo(buffer.Start, buffer.End);
                     }
                 }
 
-                if(result.IsCompleted || result.IsCanceled) break;
+                if(result.IsCompleted || result.IsCanceled)
+                {
+                    // However we couldn't get more data, because writer end has already completed writing. 
+                    // So we better terminate reading in order to avoid potential "dead" loop
+                    break;
+                }
             }
-
-            await reader.CompleteAsync().ConfigureAwait(false);
         }
         catch(OperationCanceledException)
         {
-            await reader.CompleteAsync().ConfigureAwait(false);
+            // Expected
         }
-        catch(Exception exception)
+        finally
         {
-            await reader.CompleteAsync(exception).ConfigureAwait(false);
-            throw;
+            await reader.CompleteAsync().ConfigureAwait(false);
         }
     }
 
@@ -121,12 +128,9 @@ public abstract class PipeProducerConsumer : ActivityObject
     protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 
     /// <summary>
-    /// The only method to be implemented. It is called every time new data is available.
+    /// Method gets called every time new data is available.
     /// </summary>
-    /// <param name="buffer">Sequence of linked buffers containing data produced by the pipe writer</param>
-    /// <returns>
-    /// Amount of bytes actually consumed by our implementation or <value>0</value>
-    /// if no data can be consumed at the moment.
-    /// </returns>
-    protected abstract long Consume(in ReadOnlySequence<byte> buffer);
+    /// <param name="sequence">Sequence of linked buffers containing data produced by the pipe writer</param>
+    /// <param name="consumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
+    protected abstract void Consume(in ReadOnlySequence<byte> sequence, out long consumed);
 }
