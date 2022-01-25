@@ -5,8 +5,9 @@ namespace System.IO.Pipelines;
 public abstract class PipeProducer : IAsyncDisposable
 {
     private const int Stopped = 0;
-    private const int Started = 1;
-    private const int Stopping = 2;
+    private const int Starting = 1;
+    private const int Started = 2;
+    private const int Stopping = 3;
     private bool disposed;
     private CancellationTokenSource globalCts;
     private readonly PipeReader reader;
@@ -17,9 +18,16 @@ public abstract class PipeProducer : IAsyncDisposable
 
     public PipeReader Reader => reader;
 
-    public Task Completion => Interlocked.Read(ref stateGuard) != Started || producer is null
-        ? throw new InvalidOperationException(Strings.InvalidStateNotStarted)
-        : producer;
+    public Task Completion
+    {
+        get
+        {
+            var currentProducer = Volatile.Read(ref producer);
+            return Interlocked.Read(ref stateGuard) != Started || currentProducer is null
+                ? throw new InvalidOperationException(Strings.InvalidStateNotStarted)
+                : currentProducer;
+        }
+    }
 
     protected PipeProducer(PipeOptions pipeOptions = null)
     {
@@ -31,17 +39,20 @@ public abstract class PipeProducer : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if(disposed) return;
+        if(Volatile.Read(ref disposed)) return;
 
         GC.SuppressFinalize(this);
 
-        try
+        using(globalCts)
         {
-            await StopAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            disposed = true;
+            try
+            {
+                await StopAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                Volatile.Write(ref disposed, true);
+            }
         }
     }
 
@@ -51,12 +62,21 @@ public abstract class PipeProducer : IAsyncDisposable
     {
         CheckDisposed();
 
-        switch(Interlocked.CompareExchange(ref stateGuard, Started, Stopped))
+        switch(Interlocked.CompareExchange(ref stateGuard, Starting, Stopped))
         {
             case Stopped:
-                var cts = new CancellationTokenSource();
-                globalCts = cts;
-                producer = StartProducerAsync(writer, cts.Token);
+                try
+                {
+                    var cts = new CancellationTokenSource();
+                    globalCts = cts;
+                    producer = StartProducerAsync(writer, cts.Token);
+                    Interlocked.Exchange(ref stateGuard, Started);
+                }
+                catch
+                {
+                    Interlocked.Exchange(ref stateGuard, Stopped);
+                    throw;
+                }
                 break;
             case Stopping:
                 throw new InvalidOperationException("Cannot start in this state, currently in stopping transition.");
@@ -72,32 +92,40 @@ public abstract class PipeProducer : IAsyncDisposable
 
     public async ValueTask StopAsync()
     {
-        var localWorker = producer;
-        var localCts = globalCts;
-
         try
         {
-            switch(Interlocked.CompareExchange(ref stateGuard, Stopping, Started))
+            long state;
+            var sw = new SpinWait();
+            do
             {
-                case Started:
-                    // we are responsible for cancellation and cleanup
-                    localCts.Cancel();
-                    try
-                    {
+                var localWorker = Volatile.Read(ref producer);
+                var localCts = Volatile.Read(ref globalCts);
+                state = Interlocked.CompareExchange(ref stateGuard, Stopping, Started);
+                switch(state)
+                {
+                    case Starting: sw.SpinOnce(); break;
+                    case Started:
+                        // we are responsible for cancellation and cleanup
+                        using(localCts)
+                        {
+                            localCts.Cancel();
+                            try
+                            {
+                                await localWorker.ConfigureAwait(false);
+                            }
+                            finally
+                            {
+                                Interlocked.Exchange(ref stateGuard, Stopped);
+                            }
+                        }
+                        break;
+                    case Stopping:
+                        // stopping in progress already, wait for currently active task in flight
                         await localWorker.ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        localCts.Dispose();
-                        _ = Interlocked.Exchange(ref stateGuard, Stopped);
-                    }
-
-                    break;
-                case Stopping:
-                    // stopping in progress already, wait for currently active task in flight
-                    await localWorker.ConfigureAwait(false);
-                    break;
+                        break;
+                }
             }
+            while(state is Starting);
         }
 #pragma warning disable CA1031 // producer loop termination exception should not be rethrown here
         catch
