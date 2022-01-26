@@ -18,13 +18,17 @@ public abstract class RetryPolicy : IRetryPolicy
         {
             try
             {
-                return await operation(cancellationToken)
-                    // This is a protection step for the operations that do not handle cancellation properly by themselves.
-                    // In case of external cancellation, WaitAsync transits to Cancelled state, throwing OperationCancelled exception,
-                    // and terminates retry loop. Original async operation may still be in progress, but we give up in order
-                    // to stop retry loop as soon as possible
-                    .WaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                var task = operation(cancellationToken);
+                if(!task.IsCompletedSuccessfully)
+                {
+                    return await task
+                        // This is a protection step for the operations that do not handle cancellation properly by themselves.
+                        // In case of external cancellation, WaitAsync transits to Cancelled state, throwing OperationCancelled exception,
+                        // and terminates retry loop. Original async operation may still be in progress, but we give up in order
+                        // to stop retry loop as soon as possible
+                        .WaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
             catch(OperationCanceledException oce) when(oce.CancellationToken == cancellationToken)
             {

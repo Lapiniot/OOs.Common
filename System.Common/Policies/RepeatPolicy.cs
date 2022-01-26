@@ -6,7 +6,7 @@ public abstract class RepeatPolicy : IRepeatPolicy
 {
     #region Implementation of IRetryPolicy
 
-    public async Task RepeatAsync(Func<CancellationToken, ValueTask> operation, CancellationToken cancellationToken)
+    public async Task RepeatAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(operation);
 
@@ -20,11 +20,11 @@ public abstract class RepeatPolicy : IRepeatPolicy
             {
                 try
                 {
-                    var valueTask = operation(cancellationToken);
+                    var task = operation(cancellationToken);
 
-                    if(!valueTask.IsCompletedSuccessfully)
+                    if(!task.IsCompletedSuccessfully)
                     {
-                        await valueTask.AsTask()
+                        await task
                             // This is a protection step for the operations that do not handle cancellation properly by themselves.
                             // In case of external cancellation, WaitAsync transits to Cancelled state, throwing OperationCancelled exception,
                             // and terminates retry loop. Original async operation may still be in progress, but we give up in order
