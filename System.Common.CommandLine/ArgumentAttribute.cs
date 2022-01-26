@@ -23,20 +23,4 @@ public sealed class ArgumentAttribute : Attribute, IArgumentMetadata
     public string ShortName { get; }
 
     public string Description { get; set; }
-
-    public override bool Equals(object obj)
-    {
-        return obj is ArgumentAttribute attribute &&
-               base.Equals(obj) &&
-               EqualityComparer<object>.Default.Equals(TypeId, attribute.TypeId) &&
-               Name == attribute.Name &&
-               EqualityComparer<Type>.Default.Equals(Type, attribute.Type) &&
-               ShortName == attribute.ShortName &&
-               Description == attribute.Description;
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(base.GetHashCode(), TypeId, Name, Type, ShortName, Description);
-    }
 }

@@ -39,9 +39,7 @@ public class JwtToken
         get => claims.TryGetValue("exp", out var value) && int.TryParse(value, out var seconds)
             ? DateTimeOffset.FromUnixTimeSeconds(seconds).ToUniversalTime()
             : null;
-        set => claims["exp"] = value is not null
-            ? value.Value.ToUniversalTime().ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture)
-            : null;
+        set => claims["exp"] = value?.ToUniversalTime().ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
     }
 
     public Dictionary<string, string> Claims => claims;

@@ -32,8 +32,8 @@ public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvide
         var arguments = Arguments.Parse(args, strict);
         var values = arguments.ProvidedValues;
 
-        // Make configuration value acessible via both original and upper camel case argument name
-        Data = values.ToDictionary(a => a.Key, a => (a.Value?.ToString()));
+        // Make configuration value accessible via both original and upper camel case argument name
+        Data = values.ToDictionary(a => a.Key, a => a.Value?.ToString());
         foreach(var (key, value) in values)
         {
             Data[ConvertToUpperCamelCase(key)] = value?.ToString();
@@ -45,9 +45,9 @@ public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvide
     {
         var sb = new StringBuilder();
         var jumpCase = true;
-        for(int i = 0; i < key.Length; i++)
+        foreach(var ch in key)
         {
-            if(key[i] == '-')
+            if(ch == '-')
             {
                 jumpCase = true;
                 continue;
@@ -55,12 +55,12 @@ public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvide
 
             if(jumpCase)
             {
-                sb.Append(char.ToUpperInvariant(key[i]));
+                sb.Append(char.ToUpperInvariant(ch));
                 jumpCase = false;
                 continue;
             }
 
-            sb.Append(key[i]);
+            sb.Append(ch);
         }
         return sb.ToString();
     }

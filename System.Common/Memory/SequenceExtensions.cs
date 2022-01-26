@@ -36,28 +36,29 @@ public static class SequenceExtensions
     {
         if(sequenceReader.TryReadTo(out line, LF, advancePastDelimiter: true))
         {
-            long length = line.Length;
-            if(length > 0)
+            var length = line.Length;
+
+            if(length <= 0) return true;
+
+            if(line.IsSingleSegment)
             {
-                if(line.IsSingleSegment)
+                if(line.FirstSpan[^1] is CR)
                 {
-                    if(line.FirstSpan[^1] is CR)
-                    {
-                        line = line.Slice(0, length - 1);
-                    }
+                    line = line.Slice(0, length - 1);
                 }
-                else
+            }
+            else
+            {
+                if(line.Slice(length - 1).FirstSpan[0] is CR)
                 {
-                    if(line.Slice(length - 1).FirstSpan[0] is CR)
-                    {
-                        line = line.Slice(0, length - 1);
-                    }
+                    line = line.Slice(0, length - 1);
                 }
             }
 
             return true;
         }
-        else if(!strict)
+
+        if(!strict)
         {
             line = sequenceReader.Sequence.Slice(sequenceReader.Position);
             sequenceReader.Advance(sequenceReader.Remaining);

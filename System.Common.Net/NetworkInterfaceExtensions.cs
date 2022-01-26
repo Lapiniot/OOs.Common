@@ -29,8 +29,7 @@ public static class NetworkInterfaceExtensions
     {
         ArgumentNullException.ThrowIfNull(networkInterface);
 
-        return networkInterface.GetIPProperties().UnicastAddresses.
-            FirstOrDefault(a => a.Address.AddressFamily == addressFamily).Address;
+        return networkInterface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == addressFamily).Address;
     }
 
     public static bool IsActiveMulticastEnabled(this NetworkInterface networkInterface)

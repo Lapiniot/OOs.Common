@@ -18,7 +18,7 @@ public readonly record struct MeasureTimeScope : IDisposable
         stopwatch = Stopwatch.StartNew();
     }
 
-    public readonly void Dispose()
+    public void Dispose()
     {
         stopwatch.Stop();
         Console.WriteLine(format, stopwatch.Elapsed, stopwatch.ElapsedMilliseconds);

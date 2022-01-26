@@ -109,9 +109,11 @@ public static class SocketBuilderExtensions
                 socket.SetSocketOption(IPv6, AddMembership, new IPv6MulticastOption(groupToJoin.Address,
                     mcint is not null
                         ? ReadInt64BigEndian(mcint.GetAddressBytes())
-                        : (long)socket.GetSocketOption(IPv6, MulticastInterface)));
+                        : (long)socket.GetSocketOption(IPv6, MulticastInterface)!));
                 socket.Bind(new IPEndPoint(IPv6Any, groupToJoin.Port));
                 break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(socket), "Unsupported address family");
         }
 
         return socket;
@@ -122,22 +124,19 @@ public static class SocketBuilderExtensions
         if(mcint is not null)
         {
             Span<byte> bytes = stackalloc byte[4];
-            _ = mcint.TryWriteBytes(bytes, out var written);
-            if(bytes[0] == 0)
-                // Address from range 0.x.x.x must be interpreted as interface index
-                return new MulticastOption(groupToJoin, ReadInt32BigEndian(bytes));
-            else
-                return new MulticastOption(groupToJoin, mcint);
+            _ = mcint.TryWriteBytes(bytes, out _);
+            // Address from range 0.x.x.x must be interpreted as interface index
+            return bytes[0] == 0
+                ? new MulticastOption(groupToJoin, ReadInt32BigEndian(bytes))
+                : new MulticastOption(groupToJoin, mcint);
         }
-        else
-        {
-            int iface = (int)socket.GetSocketOption(IP, MulticastInterface);
-            if((HostToNetworkOrder(iface) & 0xFF000000) == 0x00000000)
-                // If most significant byte (in network order) is zero in the mcast 
-                // interface, it represents interface index rather than IP address
-                return new MulticastOption(groupToJoin, HostToNetworkOrder(iface));
-            else
-                return new MulticastOption(groupToJoin, new IPAddress(iface));
-        }
+
+        var iface = (int)socket.GetSocketOption(IP, MulticastInterface)!;
+
+        // If most significant byte (in network order) is zero in the
+        // mcast interface, it represents interface index rather than IP address
+        return (HostToNetworkOrder(iface) & 0xFF000000) == 0x00000000
+            ? new MulticastOption(groupToJoin, HostToNetworkOrder(iface))
+            : new MulticastOption(groupToJoin, new IPAddress(iface));
     }
 }

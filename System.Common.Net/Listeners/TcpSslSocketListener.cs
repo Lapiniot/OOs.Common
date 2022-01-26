@@ -22,7 +22,7 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
     {
         this.serverCertificate = serverCertificate;
 
-        options = new SslServerAuthenticationOptions()
+        options = new SslServerAuthenticationOptions
         {
             ServerCertificate = serverCertificate,
             EnabledSslProtocols = enabledSslProtocols,
@@ -44,10 +44,8 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
 
     public void Dispose()
     {
-        if(!disposed)
-        {
-            serverCertificate.Dispose();
-            disposed = true;
-        }
+        if(disposed) return;
+        serverCertificate.Dispose();
+        disposed = true;
     }
 }

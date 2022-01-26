@@ -3,7 +3,7 @@ namespace System.Security;
 [CLSCompliant(false)]
 public static class Crc32Adler
 {
-    private static readonly uint[] Crc32Table =
+    private static readonly uint[] crc32Table =
     {
         0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,
         0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3,
@@ -73,11 +73,11 @@ public static class Crc32Adler
 
     public static uint Compute(ReadOnlySpan<byte> span)
     {
-        uint crc = 0xffffffff;
-        for(int i = 0; i < span.Length; i++)
+        var crc = 0xffffffffu;
+        foreach(var ch in span)
         {
-            crc = Crc32Table[(span[i] ^ crc) & 0xff] ^ crc >> 8;
+            crc = crc32Table[(ch ^ crc) & 0xff] ^ crc >> 8;
         }
-        return crc ^ 0xffffffff;
+        return crc ^ 0xffffffffu;
     }
 }

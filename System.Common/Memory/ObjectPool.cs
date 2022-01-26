@@ -25,15 +25,13 @@ public sealed class ObjectPool<T> where T : class, new()
 
     public T Rent()
     {
-        if(bag.TryTake(out var value))
-        {
-            Interlocked.Increment(ref capacity);
-            return value;
-        }
-        else
+        if(!bag.TryTake(out var value))
         {
             return new T();
         }
+
+        Interlocked.Increment(ref capacity);
+        return value;
     }
 
     public void Return(T instance)
@@ -59,9 +57,9 @@ public sealed class ObjectPool<T> where T : class, new()
         return current;
     }
 
-    private class InstanceHolder
+    private static class InstanceHolder
     {
-        static InstanceHolder() { }
         internal static readonly ObjectPool<T> instance = new();
+        static InstanceHolder() { }
     }
 }

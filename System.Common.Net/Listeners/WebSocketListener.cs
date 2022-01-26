@@ -59,7 +59,7 @@ public class WebSocketListener : IAsyncEnumerable<INetworkConnection>
             this.keepAliveInterval = keepAliveInterval;
             this.receiveBufferSize = receiveBufferSize;
             this.cancellationToken = cancellationToken;
-            shouldMatchSubProtocol = subProtocols != null && subProtocols.Length > 0;
+            shouldMatchSubProtocol = subProtocols is { Length: > 0 };
 
             listener = new HttpListener();
             foreach(var prefix in prefixes) listener.Prefixes.Add(prefix);

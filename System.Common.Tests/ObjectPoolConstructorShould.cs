@@ -9,7 +9,7 @@ public class ObjectPoolConstructorShould
     [DataRow(0)]
     [DataRow(-1)]
     [DataRow(-10)]
-    public void ThrowArgumentOutOfRangeExceptionGivenZeroOrNegativeCapacitiy(int capacity)
+    public void ThrowArgumentOutOfRangeExceptionGivenZeroOrNegativeCapacity(int capacity)
     {
         Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ObjectPool<object>(capacity));
     }
@@ -24,9 +24,9 @@ public class ObjectPoolConstructorShould
 
         // Assert: verify effective capacity equals to the value passed via constructor
         var instances = new object[2 * capacity];
-        for(int i = 0; i < instances.Length; i++) { pool.Return(instances[i] = new object()); }
+        for(var i = 0; i < instances.Length; i++) { pool.Return(instances[i] = new object()); }
         var rented = new object[2 * capacity];
-        for(int i = 0; i < rented.Length; i++) { rented[i] = pool.Rent(); }
+        for(var i = 0; i < rented.Length; i++) { rented[i] = pool.Rent(); }
 
         Assert.AreEqual(capacity, instances.Intersect(rented).Count());
     }

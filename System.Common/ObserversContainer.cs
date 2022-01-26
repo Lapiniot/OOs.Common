@@ -23,7 +23,7 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
 
     private void Unsubscribe(IObserver<T> observer)
     {
-        _ = (observers?.TryRemove(observer, out _));
+        _ = observers?.TryRemove(observer, out _);
     }
 
     [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]

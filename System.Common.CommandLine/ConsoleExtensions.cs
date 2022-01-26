@@ -14,18 +14,21 @@ public static class ConsoleExtensions
             {
                 case ConsoleKey.Enter: return sb.ToString();
                 case ConsoleKey.Escape: return null;
-                case ConsoleKey.Backspace: if(sb.Length > 0) _ = sb.Remove(sb.Length - 1, 1); break;
-                default: _ = sb.Append(ch.KeyChar); break;
+                case ConsoleKey.Backspace:
+                    if(sb.Length > 0) _ = sb.Remove(sb.Length - 1, 1);
+                    break;
+                default:
+                    _ = sb.Append(ch.KeyChar);
+                    break;
             }
 
-            if(echoInput)
-            {
-                var (_, top) = Console.GetCursorPosition();
-                Console.SetCursorPosition(0, top);
-                Console.Write(new string(' ', sb.Length + 1));
-                Console.SetCursorPosition(0, top);
-                Console.Write(new string('*', sb.Length));
-            }
+            if(!echoInput) continue;
+
+            var (_, top) = Console.GetCursorPosition();
+            Console.SetCursorPosition(0, top);
+            Console.Write(new string(' ', sb.Length + 1));
+            Console.SetCursorPosition(0, top);
+            Console.Write(new string('*', sb.Length));
         }
     }
 }

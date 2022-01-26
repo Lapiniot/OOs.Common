@@ -36,7 +36,7 @@ public static class CryptoExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ECParameters ImportECParameters(byte[] publicKey, byte[] privateKey)
     {
-        return new ECParameters()
+        return new ECParameters
         {
             Curve = ECCurve.NamedCurves.nistP256,
             Q = GetECPoint(publicKey),
@@ -55,7 +55,7 @@ public static class CryptoExtensions
     {
         return publicKey is null
             ? new ECPoint()
-            : new ECPoint()
+            : new ECPoint
             {
                 X = publicKey.AsSpan(1, 32).ToArray(),
                 Y = publicKey.AsSpan(33, 32).ToArray()

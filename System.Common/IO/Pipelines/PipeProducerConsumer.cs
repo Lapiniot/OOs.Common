@@ -94,11 +94,9 @@ public abstract class PipeProducerConsumer : ActivityObject
                         reader.AdvanceTo(buffer.GetPosition(consumed));
                         continue;
                     }
-                    else
-                    {
-                        // Seems we have not enough data to be consumed in a consistent way by the consumer logic
-                        reader.AdvanceTo(buffer.Start, buffer.End);
-                    }
+
+                    // Seems we have not enough data to be consumed in a consistent way by the consumer logic
+                    reader.AdvanceTo(buffer.Start, buffer.End);
                 }
 
                 if(result.IsCompleted || result.IsCanceled)

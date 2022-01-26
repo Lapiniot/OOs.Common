@@ -12,12 +12,12 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
 {
     private readonly string machineName;
     private readonly SslProtocols enabledSslProtocols;
-    private readonly X509Certificate2[] certificates;
+    private readonly X509Certificate[] certificates;
     private SslStream sslStream;
 
     public TcpSslClientSocketConnection(IPEndPoint endPoint, string machineName,
         SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2[] certificates = null) :
+        X509Certificate[] certificates = null) :
         base(endPoint)
     {
         ArgumentNullException.ThrowIfNull(machineName);
@@ -29,7 +29,7 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
 
     public TcpSslClientSocketConnection(string hostNameOrAddress, int port,
         string machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate2[] certificates = null) :
+        X509Certificate[] certificates = null) :
         base(hostNameOrAddress, port)
     {
         this.machineName = machineName ?? hostNameOrAddress;
@@ -84,7 +84,7 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
 
             try
             {
-                var options = new SslClientAuthenticationOptions()
+                var options = new SslClientAuthenticationOptions
                 {
                     TargetHost = machineName,
                     EnabledSslProtocols = enabledSslProtocols

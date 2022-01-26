@@ -9,15 +9,11 @@ namespace System.Net.Http;
 
 public class JwtTokenHandler : IDisposable
 {
-    private readonly byte[] publicKey;
-    private readonly byte[] privateKey;
     private readonly ECDsa ecdsa;
     private bool disposed;
 
     public JwtTokenHandler(byte[] publicKey, byte[] privateKey)
     {
-        this.publicKey = publicKey;
-        this.privateKey = privateKey;
         ecdsa = ECDsa.Create(CryptoExtensions.ImportECParameters(publicKey, privateKey));
     }
 
@@ -27,7 +23,7 @@ public class JwtTokenHandler : IDisposable
 
         const DSASignatureFormat signatureFormat = DSASignatureFormat.IeeeP1363FixedFieldConcatenation;
 
-        var jwtInfo = "{\"typ\":\"JWT\",\"alg\":\"ES256\"}";
+        const string jwtInfo = "{\"typ\":\"JWT\",\"alg\":\"ES256\"}";
         var maxJwtInfoSize = Base64.GetMaxEncodedToUtf8Length(jwtInfo.Length);
         var maxJwtDataSize = Base64.GetMaxEncodedToUtf8Length(
             2 + token.Claims.Sum(p => 6 + UTF8.GetMaxByteCount(p.Key.Length) + UTF8.GetMaxByteCount(p.Value.Length)));
@@ -44,7 +40,7 @@ public class JwtTokenHandler : IDisposable
         // Encode JWT payload part
         using(var writer = new Utf8JsonWriter(bufWriter))
         {
-            JsonSerializer.Serialize(writer, token.Claims, new JsonSerializerOptions()
+            JsonSerializer.Serialize(writer, token.Claims, new JsonSerializerOptions
             {
                 WriteIndented = false,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
@@ -54,31 +50,29 @@ public class JwtTokenHandler : IDisposable
         buffer[total++] = 0x2E;
 
         // Sign and encode signature part
-        if(ecdsa.TrySignData(buffer[0..(total - 1)], buffer[total..], HashAlgorithmName.SHA256, signatureFormat, out var bytesWritten))
+        if(!ecdsa.TrySignData(buffer[..(total - 1)], buffer[total..], HashAlgorithmName.SHA256, signatureFormat, out var bytesWritten))
         {
-            total += Base64EncodeInPlace(buffer[total..], bytesWritten);
-            return UTF8.GetString(buffer[..total]);
+            throw new InvalidOperationException("Signature computation failed");
         }
 
-        throw new InvalidOperationException("Signature computation failed");
+        total += Base64EncodeInPlace(buffer[total..], bytesWritten);
+        return UTF8.GetString(buffer[..total]);
+
     }
 
     protected virtual int Base64EncodeInPlace(Span<byte> buffer, int length)
     {
         _ = Base64.EncodeToUtf8InPlace(buffer, length, out var written);
-        Span<byte> encoded = buffer[..written].TrimEnd((byte)0x3D);
+        var encoded = buffer[..written].TrimEnd((byte)0x3D);
 
-        for(int i = 0; i < encoded.Length; i++)
+        for(var i = 0; i < encoded.Length; i++)
         {
-            switch(encoded[i])
+            encoded[i] = encoded[i] switch
             {
-                case 0x2B:
-                    encoded[i] = 0x2D;
-                    break;
-                case 0x2F:
-                    encoded[i] = 0x5F;
-                    break;
-            }
+                0x2B => 0x2D,
+                0x2F => 0x5F,
+                _ => encoded[i]
+            };
         }
 
         return encoded.Length;
@@ -86,15 +80,14 @@ public class JwtTokenHandler : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if(!disposed)
-        {
-            if(disposing)
-            {
-                ecdsa.Dispose();
-            }
+        if(disposed) return;
 
-            disposed = true;
+        if(disposing)
+        {
+            ecdsa.Dispose();
         }
+
+        disposed = true;
     }
 
     public void Dispose()

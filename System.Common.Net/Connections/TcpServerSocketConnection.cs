@@ -8,14 +8,14 @@ namespace System.Net.Connections;
 public sealed class TcpServerSocketConnection : INetworkConnection
 {
     private readonly Socket socket;
-    private readonly EndPoint RemoteEndPoint;
+    private readonly EndPoint remoteEndPoint;
     private int disposed;
 
     public TcpServerSocketConnection(Socket acceptedSocket)
     {
         ArgumentNullException.ThrowIfNull(acceptedSocket);
         socket = acceptedSocket;
-        RemoteEndPoint = socket.RemoteEndPoint;
+        remoteEndPoint = socket.RemoteEndPoint;
         Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
     }
 
@@ -54,14 +54,16 @@ public sealed class TcpServerSocketConnection : INetworkConnection
 
     public ValueTask DisposeAsync()
     {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) == 0)
+        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
         {
-            using(socket)
+            return ValueTask.CompletedTask;
+        }
+
+        using(socket)
+        {
+            if(socket.Connected)
             {
-                if(socket.Connected)
-                {
-                    socket.Shutdown(SocketShutdown.Both);
-                }
+                socket.Shutdown(SocketShutdown.Both);
             }
         }
 
@@ -84,6 +86,6 @@ public sealed class TcpServerSocketConnection : INetworkConnection
 
     public override string ToString()
     {
-        return $"{Id}-{nameof(TcpServerSocketConnection)}-{RemoteEndPoint}";
+        return $"{Id}-{nameof(TcpServerSocketConnection)}-{remoteEndPoint}";
     }
 }

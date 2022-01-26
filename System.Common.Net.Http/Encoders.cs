@@ -11,8 +11,8 @@ public static class Encoders
     {
         ArgumentNullException.ThrowIfNull(base64String);
 
-        int len = base64String.Length;
-        int totalWidth = len % 4 == 0 ? len : ((len >> 2) + 1) << 2;
+        var len = base64String.Length;
+        var totalWidth = len % 4 == 0 ? len : ((len >> 2) + 1) << 2;
         return Convert.FromBase64String(base64String.Replace('-', '+').Replace('_', '/').PadRight(totalWidth, '='));
     }
 }

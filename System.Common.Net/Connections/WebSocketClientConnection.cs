@@ -9,10 +9,10 @@ namespace System.Net.Connections;
 public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSocket>
 {
     private readonly string[] subProtocols;
-    private readonly X509Certificate2[] clientCertificates;
+    private readonly X509Certificate[] clientCertificates;
     private readonly TimeSpan? keepAliveInterval;
 
-    public WebSocketClientConnection(Uri remoteUri, string[] subProtocols, X509Certificate2[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
+    public WebSocketClientConnection(Uri remoteUri, string[] subProtocols, X509Certificate[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
         : base(null)
     {
         ArgumentNullException.ThrowIfNull(remoteUri);

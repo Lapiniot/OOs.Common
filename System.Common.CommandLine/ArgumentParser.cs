@@ -5,12 +5,12 @@ namespace System.Common.CommandLine;
 
 public class ArgumentParser
 {
-    private readonly ICommandMetadata[] commands;
-    private readonly IArgumentMetadata[] schema;
     private static readonly char[] quotes = { '"', '\'' };
+    private readonly IEnumerable<ICommandMetadata> commands;
+    private readonly IEnumerable<IArgumentMetadata> schema;
     private readonly bool strict;
 
-    public ArgumentParser(ICommandMetadata[] commands, IArgumentMetadata[] schema, bool strict)
+    public ArgumentParser(IEnumerable<ICommandMetadata> commands, IEnumerable<IArgumentMetadata> schema, bool strict)
     {
         ArgumentNullException.ThrowIfNull(commands);
         ArgumentNullException.ThrowIfNull(schema);
@@ -135,7 +135,7 @@ public class ArgumentParser
 
             if(type != typeof(bool))
             {
-                string value = arg[key.Length..];
+                var value = arg[key.Length..];
                 arguments[key] = type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture);
                 return true;
             }
@@ -211,7 +211,7 @@ public class ArgumentParser
         {
             if(pair.Length == 2)
             {
-                string value = pair[1];
+                var value = pair[1];
                 arguments[key] = type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture);
             }
             else

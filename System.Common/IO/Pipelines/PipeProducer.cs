@@ -108,10 +108,10 @@ public abstract class PipeProducer : IAsyncDisposable
                         // we are responsible for cancellation and cleanup
                         using(localCts)
                         {
-                            localCts.Cancel();
+                            localCts!.Cancel();
                             try
                             {
-                                await localWorker.ConfigureAwait(false);
+                                await localWorker!.ConfigureAwait(false);
                             }
                             finally
                             {
@@ -121,7 +121,7 @@ public abstract class PipeProducer : IAsyncDisposable
                         break;
                     case Stopping:
                         // stopping in progress already, wait for currently active task in flight
-                        await localWorker.ConfigureAwait(false);
+                        await localWorker!.ConfigureAwait(false);
                         break;
                 }
             }
@@ -140,13 +140,13 @@ public abstract class PipeProducer : IAsyncDisposable
         if(disposed) throw new InvalidOperationException(Strings.ObjectInstanceDisposed);
     }
 
-    private async Task StartProducerAsync(PipeWriter writer, CancellationToken token)
+    private async Task StartProducerAsync(PipeWriter pipeWriter, CancellationToken token)
     {
         try
         {
             while(!token.IsCancellationRequested)
             {
-                var buffer = writer.GetMemory();
+                var buffer = pipeWriter.GetMemory();
 
                 var rt = ReceiveAsync(buffer, token);
                 var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
@@ -156,9 +156,9 @@ public abstract class PipeProducer : IAsyncDisposable
                     break;
                 }
 
-                writer.Advance(received);
+                pipeWriter.Advance(received);
 
-                var ft = writer.FlushAsync(token);
+                var ft = pipeWriter.FlushAsync(token);
                 var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.ConfigureAwait(false);
 
                 if(result.IsCompleted || result.IsCanceled)
@@ -174,7 +174,7 @@ public abstract class PipeProducer : IAsyncDisposable
         }
         finally
         {
-            await writer.CompleteAsync().ConfigureAwait(false);
+            await pipeWriter.CompleteAsync().ConfigureAwait(false);
         }
     }
 

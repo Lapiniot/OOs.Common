@@ -45,22 +45,22 @@ public class ObjectPoolRentShould
     public void ReturnExistingInstancesAndCreateExtraOnDemandInvokedInParallel()
     {
         // Arrange
-        const int MaxCapacity = 8;
-        var pool = new ObjectPool<MockObject>(MaxCapacity);
-        var instances = new MockObject[MaxCapacity];
-        for(int i = 0; i < instances.Length; i++) { pool.Return(instances[i] = new MockObject()); }
+        const int maxCapacity = 8;
+        var pool = new ObjectPool<MockObject>(maxCapacity);
+        var instances = new MockObject[maxCapacity];
+        for(var i = 0; i < instances.Length; i++) { pool.Return(instances[i] = new MockObject()); }
         MockObject.ResetCounter();
 
         // Act
         var actual = new List<MockObject>();
-        Parallel.For(0, 3 * MaxCapacity,
-            localInit: static () => new List<MockObject>(),
-            body: (_, _, acc) => { acc.Add(pool.Rent()); return acc; },
-            localFinally: (acc) => { lock(actual) actual.AddRange(acc); });
+        Parallel.For(0, 3 * maxCapacity,
+            static () => new List<MockObject>(),
+            (_, _, acc) => { acc.Add(pool.Rent()); return acc; },
+            acc => { lock(actual) actual.AddRange(acc); });
 
         // Assert
-        Assert.AreEqual(MaxCapacity, actual.Intersect(instances).Count());
-        Assert.AreEqual(2 * MaxCapacity, MockObject.ConstructorInvocations);
+        Assert.AreEqual(maxCapacity, actual.Intersect(instances).Count());
+        Assert.AreEqual(2 * maxCapacity, MockObject.ConstructorInvocations);
     }
 
     private class MockObject

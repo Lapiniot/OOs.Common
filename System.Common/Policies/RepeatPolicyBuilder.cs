@@ -3,15 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace System.Policies;
 
-public readonly struct RepeatPolicyBuilder : IEquatable<RepeatPolicyBuilder>
+public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition> Conditions)
 {
-    private ImmutableList<RepeatCondition> Conditions { get; }
-
-    private RepeatPolicyBuilder(ImmutableList<RepeatCondition> conditions)
-    {
-        Conditions = conditions;
-    }
-
     /// <summary>
     /// Creates new instance of the repeat policy
     /// </summary>
@@ -95,35 +88,5 @@ public readonly struct RepeatPolicyBuilder : IEquatable<RepeatPolicyBuilder>
     public RepeatPolicyBuilder WithBreakingException<T>() where T : Exception
     {
         return WithCondition((Exception exception, int _, TimeSpan _, ref TimeSpan _) => exception is not T);
-    }
-
-    public override bool Equals(object obj)
-    {
-        return obj is RepeatPolicyBuilder { Conditions: { } c } && c == Conditions;
-    }
-
-    public override int GetHashCode()
-    {
-        return base.GetHashCode();
-    }
-
-    public override string ToString()
-    {
-        return nameof(RepeatPolicyBuilder);
-    }
-
-    public bool Equals(RepeatPolicyBuilder other)
-    {
-        return other.Conditions == Conditions;
-    }
-
-    public static bool operator ==(RepeatPolicyBuilder b1, RepeatPolicyBuilder b2)
-    {
-        return b1.Equals(b2);
-    }
-
-    public static bool operator !=(RepeatPolicyBuilder b1, RepeatPolicyBuilder b2)
-    {
-        return !b1.Equals(b2);
     }
 }

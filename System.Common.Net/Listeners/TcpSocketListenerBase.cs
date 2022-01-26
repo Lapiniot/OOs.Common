@@ -43,7 +43,7 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnectio
         while(!cancellationToken.IsCancellationRequested)
         {
             Socket acceptedSocket = null;
-            INetworkConnection connection = null;
+            INetworkConnection connection;
 
             try
             {
