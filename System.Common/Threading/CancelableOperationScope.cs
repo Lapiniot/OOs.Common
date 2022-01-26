@@ -1,10 +1,11 @@
 ﻿namespace System.Threading;
 
-public sealed class CancelableOperationScope : IAsyncCancelable, IDisposable
+public sealed class CancelableOperationScope : IAsyncCancelable
 {
     private readonly CancellationTokenSource jointCts;
     private readonly CancellationTokenSource localCts;
-    private long disposed;
+    private readonly Task completion;
+    private int disposed;
 
     private CancelableOperationScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken)
     {
@@ -18,7 +19,7 @@ public sealed class CancelableOperationScope : IAsyncCancelable, IDisposable
 
         try
         {
-            Completion = operation(token);
+            completion = operation(token);
         }
         catch
         {
@@ -29,20 +30,20 @@ public sealed class CancelableOperationScope : IAsyncCancelable, IDisposable
         }
     }
 
-    public static CancelableOperationScope StartInScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default)
+    public static CancelableOperationScope Start(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default)
     {
         return new(operation, stoppingToken);
     }
 
     #region Implementation of IAsyncCancelable
 
-    bool IAsyncCancelable.IsCompleted => Completion.IsCompleted;
+    bool IAsyncCancelable.IsCompleted => completion.IsCompleted;
 
-    bool IAsyncCancelable.IsCanceled => Completion.IsCanceled;
+    bool IAsyncCancelable.IsCanceled => completion.IsCanceled;
 
-    Exception IAsyncCancelable.Exception => Completion.Exception;
+    Exception IAsyncCancelable.Exception => completion.Exception;
 
-    public Task Completion { get; }
+    public Task Completion => completion;
 
     public async ValueTask DisposeAsync()
     {
@@ -54,15 +55,10 @@ public sealed class CancelableOperationScope : IAsyncCancelable, IDisposable
             try
             {
                 localCts.Cancel();
-                await Completion.ConfigureAwait(false);
+                await completion.ConfigureAwait(false);
             }
             catch(OperationCanceledException) { }
         }
-    }
-
-    public void Dispose()
-    {
-        _ = DisposeAsync().AsTask();
     }
 
     #endregion

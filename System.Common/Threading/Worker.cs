@@ -33,7 +33,7 @@ public abstract class Worker : IAsyncDisposable
 
         try
         {
-            captured = cancelableOperation ??= CancelableOperationScope.StartInScope(ct => ExecuteAsync(ct), stoppingToken);
+            captured = cancelableOperation ??= CancelableOperationScope.Start(ct => ExecuteAsync(ct), stoppingToken);
         }
         finally
         {
