@@ -38,22 +38,9 @@ public sealed class ObjectPool<T> where T : class, new()
     {
         ArgumentNullException.ThrowIfNull(instance);
 
-        if(CompareDecrement(ref capacity, 0) is not 0)
+        if(InterlockedExtensions.CompareDecrement(ref capacity, 0) is not 0)
         {
             bag.Add(instance);
-        }
-    }
-
-    private static int CompareDecrement(ref int location, int minComparand)
-    {
-        var sw = new SpinWait();
-        while(true)
-        {
-            var current = Volatile.Read(ref location);
-            var value = current - 1;
-            if(value < minComparand || Interlocked.CompareExchange(ref location, value, current) == current)
-                return current;
-            sw.SpinOnce();
         }
     }
 
