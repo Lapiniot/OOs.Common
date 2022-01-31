@@ -46,15 +46,15 @@ public sealed class ObjectPool<T> where T : class, new()
 
     private static int CompareDecrement(ref int location, int minComparand)
     {
-        int current;
-
-        do
+        var sw = new SpinWait();
+        while(true)
         {
-            current = Volatile.Read(ref location);
-            if(current - 1 < minComparand) return current;
-        } while(Interlocked.CompareExchange(ref location, current - 1, current) != current);
-
-        return current;
+            var current = Volatile.Read(ref location);
+            var value = current - 1;
+            if(value < minComparand || Interlocked.CompareExchange(ref location, value, current) == current)
+                return current;
+            sw.SpinOnce();
+        }
     }
 
     private static class InstanceHolder
