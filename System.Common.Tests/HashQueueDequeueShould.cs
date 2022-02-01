@@ -7,7 +7,7 @@ public class HashQueueDequeueShould
 {
     internal static HashQueueCollection<string, string> CreateSampleHashQueue()
     {
-        return new(("key1", "value 1"), ("key2", "value 2"), ("key3", "value 3"));
+        return new(new[] { ("key1", "value 1"), ("key2", "value 2"), ("key3", "value 3") });
     }
 
     [TestMethod]

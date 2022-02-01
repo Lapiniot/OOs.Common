@@ -25,7 +25,7 @@ public class HashQueueConstructorShould
         const string value2 = "value 2";
         const string value3 = "value 3";
 
-        using var hashQueue = new HashQueueCollection<string, string>((key1, value1), (key2, value2), (key3, value3));
+        using var hashQueue = new HashQueueCollection<string, string>(new[] { (key1, value1), (key2, value2), (key3, value3) });
 
         Assert.AreEqual(3, hashQueue.Map.Count);
 
@@ -58,7 +58,6 @@ public class HashQueueConstructorShould
     public void ThrowArgumentExceptionGivenKeyDuplicates()
     {
         _ = Assert.ThrowsException<ArgumentException>(() => new HashQueueCollection<string, string>(
-              ("key1", "value 1"), ("key2", "value 2"),
-              ("key2", ""), ("key3", "value 3")));
+            new[] { ("key1", "value 1"), ("key2", "value 2"), ("key2", ""), ("key3", "value 3") }));
     }
 }

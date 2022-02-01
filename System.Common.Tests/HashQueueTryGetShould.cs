@@ -8,10 +8,7 @@ public class HashQueueTryGetShould
     [TestMethod]
     public void ReturnTrueAndValueGivenExistingKey()
     {
-        using var hq = new HashQueueCollection<int, string>(
-            (1, "value 1"),
-            (2, "value 2"),
-            (3, "value 3"));
+        using var hq = new HashQueueCollection<int, string>(new[] { (1, "value 1"), (2, "value 2"), (3, "value 3") });
 
         var actual = hq.TryGet(1, out var value);
         Assert.IsTrue(actual);
@@ -29,19 +26,13 @@ public class HashQueueTryGetShould
     [TestMethod]
     public void ReturnFalseAndDefaultValueGivenNonExistingKey()
     {
-        using var stringHashQueue = new HashQueueCollection<int, string>(
-            (1, "value 1"),
-            (2, "value 2"),
-            (3, "value 3"));
+        using var stringHashQueue = new HashQueueCollection<int, string>(new[] { (1, "value 1"), (2, "value 2"), (3, "value 3") });
 
         var actual = stringHashQueue.TryGet(5, out var strValue);
         Assert.IsFalse(actual);
         Assert.AreEqual(default, strValue);
 
-        using var intHashQueue = new HashQueueCollection<string, int>(
-            ("1", 1),
-            ("2", 2),
-            ("3", 3));
+        using var intHashQueue = new HashQueueCollection<string, int>(new[] { ("1", 1), ("2", 2), ("3", 3) });
 
         actual = intHashQueue.TryGet("5", out var intValue);
         Assert.IsFalse(actual);

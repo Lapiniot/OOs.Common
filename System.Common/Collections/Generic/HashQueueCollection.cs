@@ -2,17 +2,16 @@
 
 namespace System.Collections.Generic;
 
-public sealed class HashQueueCollection<TKey, TValue> : IEnumerable<TValue>, IDisposable
+public sealed class HashQueueCollection<TKey, TValue> : IEnumerable<TValue>, IDisposable where TKey : notnull
 {
     private readonly ReaderWriterLockSlim lockSlim;
     private readonly Dictionary<TKey, Node> map;
     private Node head;
     private Node tail;
 
-    public HashQueueCollection(params (TKey key, TValue value)[] items) : this()
+    public HashQueueCollection(IEnumerable<(TKey key, TValue value)> items) : this()
     {
         ArgumentNullException.ThrowIfNull(items);
-
         foreach(var (key, value) in items)
         {
             _ = AddNodeInternal(key, value);
@@ -25,17 +24,9 @@ public sealed class HashQueueCollection<TKey, TValue> : IEnumerable<TValue>, IDi
         lockSlim = new ReaderWriterLockSlim(NoRecursion);
     }
 
-    internal Node Head
-    {
-        get => head;
-        set => head = value;
-    }
+    internal Node Head => head;
 
-    internal Node Tail
-    {
-        get => tail;
-        set => tail = value;
-    }
+    internal Node Tail => tail;
 
     internal Dictionary<TKey, Node> Map => map;
 

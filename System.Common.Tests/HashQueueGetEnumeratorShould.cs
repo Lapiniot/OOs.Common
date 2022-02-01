@@ -8,7 +8,7 @@ public class HashQueueGetEnumeratorShould
     [TestMethod]
     public void ReturnOrderedSequence()
     {
-        using var hashQueue = new HashQueueCollection<int, string>((0, "Value 0"), (1, "Value 1"), (2, "Value 2"));
+        using var hashQueue = new HashQueueCollection<int, string>(new[] { (0, "Value 0"), (1, "Value 1"), (2, "Value 2") });
 
         _ = hashQueue.TryAdd(4, "Value 4");
         _ = hashQueue.TryAdd(3, "Value 3");
