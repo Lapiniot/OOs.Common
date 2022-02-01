@@ -3,83 +3,121 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace System;
 
-public class ObserversContainer<T> : IObservable<T>, IDisposable
+public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 {
     private ConcurrentDictionary<IObserver<T>, Subscription> observers;
+    private bool disposed;
 
     public ObserversContainer()
     {
         observers = new ConcurrentDictionary<IObserver<T>, Subscription>();
     }
 
-    public IDisposable Subscribe(IObserver<T> observer)
+    IDisposable IObservable<T>.Subscribe(IObserver<T> observer)
+    {
+        return Subscribe(observer);
+    }
+
+    public Subscription Subscribe(IObserver<T> observer)
     {
         return observers switch
         {
-            null => throw new InvalidOperationException("Container doesn't support subscription in the current state."),
-            _ => observers.GetOrAdd(observer, o => new Subscription(o, this))
+            null => throw new ObjectDisposedException("Container doesn't support subscription in the current state."),
+            _ => observers.GetOrAdd(observer, static (o, c) => new Subscription(o, c), this)
         };
     }
 
     private void Unsubscribe(IObserver<T> observer)
     {
-        _ = observers?.TryRemove(observer, out _);
+        observers?.TryRemove(observer, out _);
     }
 
     [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void Notify(T value)
     {
-        _ = Parallel.ForEach(observers, (pair, _) =>
-          {
-              try
-              {
-                  pair.Key.OnNext(value);
-              }
-              catch
-              {
-                  // ignored
-              }
-          });
+        Parallel.ForEach(observers, (pair, _) =>
+        {
+            try
+            {
+                pair.Key.OnNext(value);
+            }
+            catch
+            {
+                // ignored
+            }
+        });
     }
 
     [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void NotifyError(Exception error)
     {
-        _ = Parallel.ForEach(observers, (pair, _) =>
-          {
-              try
-              {
-                  pair.Key.OnError(error);
-              }
-              catch
-              {
-                  // ignored
-              }
-          });
+        Parallel.ForEach(observers, (pair, _) =>
+        {
+            try
+            {
+                pair.Key.OnError(error);
+            }
+            catch
+            {
+                // ignored
+            }
+        });
     }
 
     [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void NotifyCompleted()
     {
-        _ = Parallel.ForEach(observers, (pair, _) =>
-          {
-              try
-              {
-                  pair.Key.OnCompleted();
-              }
-              catch
-              {
-                  // ignored
-              }
-          });
+        Parallel.ForEach(observers, (pair, _) =>
+        {
+            try
+            {
+                pair.Key.OnCompleted();
+            }
+            catch
+            {
+                // ignored
+            }
+        });
     }
 
-    private sealed class Subscription : IDisposable
-    {
-        private ObserversContainer<T> container;
-        private IObserver<T> observer;
+    #region IDisposable Support
 
-        public Subscription(IObserver<T> observer, ObserversContainer<T> container)
+    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
+    public void Dispose()
+    {
+        if(disposed) return;
+
+        var cached = Interlocked.Exchange(ref observers, null);
+
+        if(cached != null)
+        {
+            Parallel.ForEach(cached, (p, _) =>
+            {
+                try
+                {
+                    p.Key.OnCompleted();
+                }
+                catch
+                {
+                    // ignored
+                }
+            });
+
+            cached.Clear();
+        }
+
+        disposed = true;
+    }
+
+    #endregion
+
+#pragma warning disable CA1034 // Nested types should not be visible
+    public readonly record struct Subscription : IDisposable
+    {
+        private readonly ObserversContainer<T> container;
+        private readonly IObserver<T> observer;
+
+        internal Subscription(IObserver<T> observer, ObserversContainer<T> container)
         {
             this.observer = observer;
             this.container = container;
@@ -87,51 +125,8 @@ public class ObserversContainer<T> : IObservable<T>, IDisposable
 
         public void Dispose()
         {
-            container?.Unsubscribe(observer);
-            container = null;
-            observer = null;
+            container.Unsubscribe(observer);
         }
     }
-
-    #region IDisposable Support
-
-    private bool disposed;
-
-    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
-    protected virtual void Dispose(bool disposing)
-    {
-        if(disposed) return;
-
-        if(disposing)
-        {
-            var cached = Interlocked.Exchange(ref observers, null);
-
-            if(cached != null)
-            {
-                _ = Parallel.ForEach(cached, (p, _) =>
-                  {
-                      try
-                      {
-                          p.Key.OnCompleted();
-                      }
-                      catch
-                      {
-                          // ignored
-                      }
-                  });
-
-                cached.Clear();
-            }
-        }
-
-        disposed = true;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    #endregion
+#pragma warning restore CA1034
 }
