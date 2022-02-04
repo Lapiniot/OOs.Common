@@ -1,0 +1,57 @@
+﻿namespace System.Common.Tests.OrderedHashMap;
+
+[TestClass]
+public class AddOrUpdateShould
+{
+    internal static OrderedHashMap<string, string> CreateSampleHashQueue()
+    {
+        return new(new KeyValuePair<string, string>[] { new("key1", "value 1"), new("key2", "value 2"), new("key3", "value 3") });
+    }
+
+    [TestMethod]
+    public void ThrowArgumentNullExceptionGivenKeyNull()
+    {
+        _ = Assert.ThrowsException<ArgumentNullException>(() =>
+        {
+            using var map = new OrderedHashMap<string, string>();
+            return map.AddOrUpdate(null, "", "");
+        });
+    }
+
+    [TestMethod]
+    public void AppendItemAndRetainOriginalOrderGivenNotExistingKey()
+    {
+        using var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
+
+        map.AddOrUpdate("key1", "add-value1", "");
+        using var enumerator = map.GetEnumerator();
+
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreEqual("value2", enumerator.Current);
+
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreEqual("value3", enumerator.Current);
+
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreEqual("add-value1", enumerator.Current);
+
+        Assert.IsFalse(enumerator.MoveNext());
+    }
+
+    [TestMethod]
+    public void ReplaceItemAndRetainOriginalOrderGivenExistingKey()
+    {
+        using var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
+
+        map.AddOrUpdate("key2", "add-value2", "update-value2");
+        using var enumerator = map.GetEnumerator();
+
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreEqual("update-value2", enumerator.Current);
+
+        Assert.IsTrue(enumerator.MoveNext());
+        Assert.AreEqual("value3", enumerator.Current);
+
+        Assert.IsFalse(enumerator.MoveNext());
+    }
+}
