@@ -1,12 +1,9 @@
-﻿using static System.Threading.LockRecursionPolicy;
+﻿namespace System.Collections.Generic;
 
-namespace System.Collections.Generic;
-
-public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue>, IDisposable where TKey : notnull
+public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKey : notnull
 {
-    // TODO: investigate performance with regular lock
-    private readonly ReaderWriterLockSlim lockSlim = new(NoRecursion);
     private readonly Dictionary<TKey, Node> map;
+    private readonly object syncLock = new();
     private Node head;
     private Node tail;
 
@@ -29,19 +26,10 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue>, IDisposa
         map = new Dictionary<TKey, Node>();
     }
 
-    #region Implementation of IDisposable
-
-    public void Dispose()
-    {
-        lockSlim.Dispose();
-    }
-
-    #endregion
-
     // TODO: implement struct based enumerator (with Reset() for optional reuse)
     public IEnumerator<TValue> GetEnumerator()
     {
-        using(lockSlim.WithReadLock())
+        lock(syncLock)
         {
             var node = head;
             while(node != null)
@@ -59,7 +47,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue>, IDisposa
 
     public TValue AddOrUpdate(TKey key, TValue addValue, TValue updateValue)
     {
-        using(lockSlim.WithWriteLock())
+        lock(syncLock)
         {
             return map.TryGetValue(key, out var node)
                 ? node.Value = updateValue
@@ -69,27 +57,21 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue>, IDisposa
 
     public bool TryRemove(TKey key, out TValue value)
     {
-        using(lockSlim.WithUpgradeableReadLock())
+        lock(syncLock)
         {
-            if(map.TryGetValue(key, out var node))
+            if(map.Remove(key, out var node))
             {
-                using(lockSlim.WithWriteLock())
-                {
-                    if(map.Remove(key))
-                    {
-                        if(node.Next != null) node.Next.Prev = node.Prev;
+                if(node.Next != null) node.Next.Prev = node.Prev;
 
-                        if(node.Prev != null) node.Prev.Next = node.Next;
+                if(node.Prev != null) node.Prev.Next = node.Next;
 
-                        if(head == node) head = node.Next;
+                if(head == node) head = node.Next;
 
-                        if(tail == node) tail = node.Prev;
+                if(tail == node) tail = node.Prev;
 
-                        value = node.Value;
+                value = node.Value;
 
-                        return true;
-                    }
-                }
+                return true;
             }
 
             value = default;

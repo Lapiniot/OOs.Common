@@ -13,7 +13,7 @@ public class AddOrUpdateShould
     {
         _ = Assert.ThrowsException<ArgumentNullException>(() =>
         {
-            using var map = new OrderedHashMap<string, string>();
+            var map = new OrderedHashMap<string, string>();
             return map.AddOrUpdate(null, "", "");
         });
     }
@@ -21,7 +21,7 @@ public class AddOrUpdateShould
     [TestMethod]
     public void AppendItemAndRetainOriginalOrderGivenNotExistingKey()
     {
-        using var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
+        var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
 
         map.AddOrUpdate("key1", "add-value1", "");
         using var enumerator = map.GetEnumerator();
@@ -41,7 +41,7 @@ public class AddOrUpdateShould
     [TestMethod]
     public void ReplaceItemAndRetainOriginalOrderGivenExistingKey()
     {
-        using var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
+        var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
 
         map.AddOrUpdate("key2", "add-value2", "update-value2");
         using var enumerator = map.GetEnumerator();

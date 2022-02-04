@@ -24,7 +24,7 @@ public class ConstructorShould
     [TestMethod]
     public void AddItemsWithGivenCollectionOrder()
     {
-        using var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(10, "10"), new(1, "1"), new(4, "4"), new(15, "15"), new(0, "0") });
+        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(10, "10"), new(1, "1"), new(4, "4"), new(15, "15"), new(0, "0") });
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
