@@ -14,7 +14,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         ArgumentNullException.ThrowIfNull(collection);
         foreach(var (key, value) in collection)
         {
-            _ = AddNodeInternal(key, value);
+            AddNode(key, value);
         }
     }
 
@@ -34,7 +34,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         {
             return map.TryGetValue(key, out var node)
                 ? node.Value = updateValue
-                : AddNodeInternal(key, addValue).Value;
+                : AddNode(key, addValue).Value;
         }
     }
 
@@ -45,33 +45,41 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
             if(map.Remove(key, out var node))
             {
                 if(node.Next != null) node.Next.Prev = node.Prev;
-
                 if(node.Prev != null) node.Prev.Next = node.Next;
-
                 if(head == node) head = node.Next;
-
                 if(tail == node) tail = node.Prev;
-
                 value = node.Value;
-
                 return true;
             }
 
             value = default;
-
             return false;
         }
     }
 
-    private Node AddNodeInternal(TKey key, TValue value)
+    private Node AddNode(TKey key, TValue value)
     {
-        var node = new Node(value, tail, null);
+        var node = new Node
+        {
+            Value = value,
+            Prev = tail,
+            Next = null
+        };
         head ??= node;
         if(tail != null) tail.Next = node;
         tail = node;
         map.Add(key, node);
         return node;
     }
+
+    private sealed class Node
+    {
+        public TValue Value { get; set; }
+        public Node Prev { get; set; }
+        public Node Next { get; set; }
+    }
+
+    #region Implementation of IEnumerable
 
     public Enumerator GetEnumerator()
     {
@@ -88,20 +96,6 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         return new Enumerator(this);
     }
 
-    internal sealed class Node
-    {
-        public Node(TValue value, Node prev, Node next)
-        {
-            Value = value;
-            Prev = prev;
-            Next = next;
-        }
-
-        public TValue Value { get; set; }
-        public Node Prev { get; set; }
-        public Node Next { get; set; }
-    }
-
     public struct Enumerator : IEnumerator<TValue>
     {
         private const int Init = 0;
@@ -109,10 +103,6 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         private const int Done = 2;
         private readonly OrderedHashMap<TKey, TValue> map;
         private Node node;
-
-        //0 - "init" state
-        //1 - "in progress"
-        //2 - "done" state
         private int state;
         private bool locked;
 
@@ -172,11 +162,9 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReleaseLock()
         {
-            if(locked)
-            {
-                locked = false;
-                Monitor.Exit(map.syncLock);
-            }
+            if(!locked) return;
+            locked = false;
+            Monitor.Exit(map.syncLock);
         }
 
         public void Reset()
@@ -186,4 +174,6 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
             ReleaseLock();
         }
     }
+
+    #endregion
 }
