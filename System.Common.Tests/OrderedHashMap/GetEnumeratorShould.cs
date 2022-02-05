@@ -6,13 +6,13 @@ public class GetEnumeratorShould
     [TestMethod]
     public void ReturnItemsInAddedOrder()
     {
-        var hashQueue = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(4, "Value 4"), new(1, "Value 1"), new(0, "Value 0") });
+        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(4, "Value 4"), new(1, "Value 1"), new(0, "Value 0") });
 
-        hashQueue.AddOrUpdate(3, "Value 3", "Value 3");
-        hashQueue.AddOrUpdate(2, "Value 2", "Value 2");
-        hashQueue.AddOrUpdate(4, "Value 4", "Value 4");
+        map.AddOrUpdate(3, "Value 3", "Value 3");
+        map.AddOrUpdate(2, "Value 2", "Value 2");
+        map.AddOrUpdate(4, "Value 4", "Value 4");
 
-        using var enumerator = hashQueue.GetEnumerator();
+        using var enumerator = map.GetEnumerator();
         Assert.IsTrue(enumerator.MoveNext());
         Assert.AreEqual("Value 4", enumerator.Current);
 
@@ -27,6 +27,16 @@ public class GetEnumeratorShould
 
         Assert.IsTrue(enumerator.MoveNext());
         Assert.AreEqual("Value 2", enumerator.Current);
+
+        Assert.IsFalse(enumerator.MoveNext());
+    }
+
+    [TestMethod]
+    public void ReturnNoItemsForEmptyMap()
+    {
+        var map = new OrderedHashMap<int, string>();
+
+        using var enumerator = map.GetEnumerator();
 
         Assert.IsFalse(enumerator.MoveNext());
     }

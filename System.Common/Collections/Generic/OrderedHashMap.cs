@@ -1,4 +1,6 @@
-﻿namespace System.Collections.Generic;
+﻿using System.Runtime.CompilerServices;
+
+namespace System.Collections.Generic;
 
 public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKey : notnull
 {
@@ -24,25 +26,6 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
     public OrderedHashMap()
     {
         map = new Dictionary<TKey, Node>();
-    }
-
-    // TODO: implement struct based enumerator (with Reset() for optional reuse)
-    public IEnumerator<TValue> GetEnumerator()
-    {
-        lock(syncLock)
-        {
-            var node = head;
-            while(node != null)
-            {
-                yield return node.Value;
-                node = node.Next;
-            }
-        }
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
     }
 
     public TValue AddOrUpdate(TKey key, TValue addValue, TValue updateValue)
@@ -90,6 +73,21 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         return node;
     }
 
+    public Enumerator GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
+
+    IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
+
     internal sealed class Node
     {
         public Node(TValue value, Node prev, Node next)
@@ -102,5 +100,90 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         public TValue Value { get; set; }
         public Node Prev { get; set; }
         public Node Next { get; set; }
+    }
+
+    public struct Enumerator : IEnumerator<TValue>
+    {
+        private const int Init = 0;
+        private const int InProgress = 1;
+        private const int Done = 2;
+        private readonly OrderedHashMap<TKey, TValue> map;
+        private Node node;
+
+        //0 - "init" state
+        //1 - "in progress"
+        //2 - "done" state
+        private int state;
+        private bool locked;
+
+        internal Enumerator(OrderedHashMap<TKey, TValue> map)
+        {
+            node = null;
+            state = Init;
+            locked = false;
+            this.map = map;
+        }
+
+        public TValue Current => node.Value;
+
+        object IEnumerator.Current => node.Value;
+
+        public void Dispose()
+        {
+            node = null;
+            state = Done;
+            ReleaseLock();
+        }
+
+        public bool MoveNext()
+        {
+            switch(state)
+            {
+                case Init:
+                    Monitor.Enter(map.syncLock, ref locked);
+                    node = map.head;
+                    if(node is not null)
+                    {
+                        state = InProgress;
+                        return true;
+                    }
+                    else
+                    {
+                        state = Done;
+                        ReleaseLock();
+                        return false;
+                    }
+                case InProgress:
+                    node = node.Next;
+                    if(node is null)
+                    {
+                        state = Done;
+                        ReleaseLock();
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                default: return false;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ReleaseLock()
+        {
+            if(locked)
+            {
+                locked = false;
+                Monitor.Exit(map.syncLock);
+            }
+        }
+
+        public void Reset()
+        {
+            node = null;
+            state = Init;
+            ReleaseLock();
+        }
     }
 }
