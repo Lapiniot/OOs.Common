@@ -14,11 +14,7 @@ public sealed class WorkerLoop : Worker
     {
         while(!stoppingToken.IsCancellationRequested)
         {
-            var task = asyncWork(stoppingToken);
-            if(!task.IsCompletedSuccessfully)
-            {
-                await task.ConfigureAwait(false);
-            }
+            await asyncWork(stoppingToken).ConfigureAwait(false);
         }
     }
 }

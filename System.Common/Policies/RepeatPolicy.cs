@@ -20,18 +20,9 @@ public abstract class RepeatPolicy : IRepeatPolicy
             {
                 try
                 {
-                    var task = operation(cancellationToken);
-
-                    if(!task.IsCompletedSuccessfully)
-                    {
-                        await task
-                            // This is a protection step for the operations that do not handle cancellation properly by themselves.
-                            // In case of external cancellation, WaitAsync transits to Cancelled state, throwing OperationCancelled exception,
-                            // and terminates retry loop. Original async operation may still be in progress, but we give up in order
-                            // to stop retry loop as soon as possible
-                            .WaitAsync(cancellationToken)
-                            .ConfigureAwait(false);
-                    }
+                    await operation(cancellationToken)                        // This is a protection step for the operations that do not handle cancellation properly by themselves.
+                        .WaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
                     if(!ShouldRepeat(null, attempt, DateTime.UtcNow - startedAt, ref delay))
                     {

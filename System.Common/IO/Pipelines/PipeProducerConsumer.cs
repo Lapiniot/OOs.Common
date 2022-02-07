@@ -44,8 +44,7 @@ public abstract class PipeProducerConsumer : ActivityObject
             {
                 var buffer = writer.GetMemory();
 
-                var rt = ReceiveAsync(buffer, cancellationToken);
-                var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
+                var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
 
                 if(received == 0)
                 {
@@ -54,8 +53,7 @@ public abstract class PipeProducerConsumer : ActivityObject
 
                 writer.Advance(received);
 
-                var ft = writer.FlushAsync(cancellationToken);
-                var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.ConfigureAwait(false);
+                var result = await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
 
                 if(result.IsCompleted || result.IsCanceled)
                 {
@@ -80,8 +78,7 @@ public abstract class PipeProducerConsumer : ActivityObject
         {
             while(!cancellationToken.IsCancellationRequested)
             {
-                var vt = reader.ReadAsync(cancellationToken);
-                var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+                var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
 
                 var buffer = result.Buffer;
 

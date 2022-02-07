@@ -27,11 +27,7 @@ public sealed class TcpServerSocketConnection : INetworkConnection
     {
         try
         {
-            var vt = socket.SendAsync(buffer, None, cancellationToken);
-            if(!vt.IsCompletedSuccessfully)
-            {
-                await vt.ConfigureAwait(false);
-            }
+            await socket.SendAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
         catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
         {
@@ -43,8 +39,7 @@ public sealed class TcpServerSocketConnection : INetworkConnection
     {
         try
         {
-            var vt = socket.ReceiveAsync(buffer, None, cancellationToken);
-            return vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+            return await socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
         catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
         {
@@ -77,11 +72,7 @@ public sealed class TcpServerSocketConnection : INetworkConnection
 
     public async Task DisconnectAsync()
     {
-        var vt = socket.DisconnectAsync(false);
-        if(!vt.IsCompletedSuccessfully)
-        {
-            await vt.ConfigureAwait(false);
-        }
+        await socket.DisconnectAsync(false).ConfigureAwait(false);
     }
 
     public override string ToString()

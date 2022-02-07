@@ -43,12 +43,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
     {
         try
         {
-            var vt = socket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken);
-
-            if(!vt.IsCompletedSuccessfully)
-            {
-                await vt.ConfigureAwait(false);
-            }
+            await socket.SendAsync(buffer, WebSocketMessageType.Binary, true, cancellationToken).ConfigureAwait(false);
         }
         catch(WebSocketException wse) when(
             wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
@@ -62,11 +57,12 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
     {
         try
         {
-            var vt = socket.ReceiveAsync(buffer, cancellationToken);
+            var result = await socket.ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
 
-            var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
-
-            if(result.MessageType is not WebSocketMessageType.Close) return result.Count;
+            if(result.MessageType is not WebSocketMessageType.Close)
+            {
+                return result.Count;
+            }
 
             await DisconnectAsync().ConfigureAwait(false);
             return 0;

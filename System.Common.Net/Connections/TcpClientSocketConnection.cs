@@ -37,11 +37,7 @@ public class TcpClientSocketConnection : NetworkConnection
     {
         try
         {
-            var vt = socket.SendAsync(buffer, None, cancellationToken);
-            if(!vt.IsCompletedSuccessfully)
-            {
-                await vt.ConfigureAwait(false);
-            }
+            await socket.SendAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
         catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
         {
@@ -54,8 +50,7 @@ public class TcpClientSocketConnection : NetworkConnection
     {
         try
         {
-            var vt = socket.ReceiveAsync(buffer, None, cancellationToken);
-            return vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+            return await socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
         catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
         {
@@ -88,11 +83,7 @@ public class TcpClientSocketConnection : NetworkConnection
 
     protected override async Task StoppingAsync()
     {
-        var vt = socket.DisconnectAsync(true);
-        if(!vt.IsCompletedSuccessfully)
-        {
-            await vt.ConfigureAwait(false);
-        }
+        await socket.DisconnectAsync(true).ConfigureAwait(false);
     }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)

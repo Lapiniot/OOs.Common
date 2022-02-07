@@ -148,8 +148,7 @@ public abstract class PipeProducer : IAsyncDisposable
             {
                 var buffer = pipeWriter.GetMemory();
 
-                var rt = ReceiveAsync(buffer, token);
-                var received = rt.IsCompletedSuccessfully ? rt.Result : await rt.ConfigureAwait(false);
+                var received = await ReceiveAsync(buffer, token).ConfigureAwait(false);
 
                 if(received == 0)
                 {
@@ -158,8 +157,7 @@ public abstract class PipeProducer : IAsyncDisposable
 
                 pipeWriter.Advance(received);
 
-                var ft = pipeWriter.FlushAsync(token);
-                var result = ft.IsCompletedSuccessfully ? ft.Result : await ft.ConfigureAwait(false);
+                var result = await pipeWriter.FlushAsync(token).ConfigureAwait(false);
 
                 if(result.IsCompleted || result.IsCanceled)
                 {

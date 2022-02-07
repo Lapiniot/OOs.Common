@@ -37,13 +37,7 @@ public sealed class DelayWorkerLoop : Worker
                 try
                 {
                     await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
-
-                    var task = asyncWork(stoppingToken);
-                    if(!task.IsCompletedSuccessfully)
-                    {
-                        await task.ConfigureAwait(false);
-                    }
-
+                    await asyncWork(stoppingToken).ConfigureAwait(false);
                     iteration++;
                 }
                 catch(OperationCanceledException)

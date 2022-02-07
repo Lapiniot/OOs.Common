@@ -19,12 +19,7 @@ public sealed class IntervalWorkerLoop : Worker
     {
         while(!stoppingToken.IsCancellationRequested)
         {
-            var task = asyncWork(stoppingToken);
-            if(!task.IsCompletedSuccessfully)
-            {
-                await task.ConfigureAwait(false);
-            }
-
+            await asyncWork(stoppingToken).ConfigureAwait(false);
             await Delay(interval, stoppingToken).ConfigureAwait(false);
         }
     }

@@ -45,8 +45,7 @@ public abstract class PipeConsumer : ActivityObject
         {
             while(!token.IsCancellationRequested)
             {
-                var vt = reader.ReadAsync(token);
-                var result = vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+                var result = await reader.ReadAsync(token).ConfigureAwait(false);
 
                 var buffer = result.Buffer;
 

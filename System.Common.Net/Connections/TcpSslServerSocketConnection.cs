@@ -35,11 +35,7 @@ public sealed class TcpSslServerSocketConnection : NetworkConnection
     {
         try
         {
-            var vt = sslStream.WriteAsync(buffer, cancellationToken);
-            if(!vt.IsCompletedSuccessfully)
-            {
-                await vt.ConfigureAwait(false);
-            }
+            await sslStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
         catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
         {
@@ -52,8 +48,7 @@ public sealed class TcpSslServerSocketConnection : NetworkConnection
     {
         try
         {
-            var vt = sslStream.ReadAsync(buffer, cancellationToken);
-            return vt.IsCompletedSuccessfully ? vt.Result : await vt.ConfigureAwait(false);
+            return await sslStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
         catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
         {
@@ -69,11 +64,7 @@ public sealed class TcpSslServerSocketConnection : NetworkConnection
 
     protected override async Task StoppingAsync()
     {
-        var vt = socket.DisconnectAsync(false);
-        if(!vt.IsCompletedSuccessfully)
-        {
-            await vt.ConfigureAwait(false);
-        }
+        await socket.DisconnectAsync(false).ConfigureAwait(false);
     }
 
     public override async ValueTask DisposeAsync()
