@@ -4,7 +4,7 @@ namespace System.Memory;
 
 public sealed class ObjectPool<T> where T : class, new()
 {
-    private readonly ConcurrentBag<T> bag = new();
+    private readonly ConcurrentQueue<T> bag;
     private int capacity;
 
     public ObjectPool(int capacity = 32)
@@ -15,6 +15,7 @@ public sealed class ObjectPool<T> where T : class, new()
         }
 
         this.capacity = capacity;
+        bag = new();
     }
 
 #pragma warning disable CA1000
@@ -25,7 +26,7 @@ public sealed class ObjectPool<T> where T : class, new()
 
     public T Rent()
     {
-        if(!bag.TryTake(out var value))
+        if(!bag.TryDequeue(out var value))
         {
             return new T();
         }
@@ -40,7 +41,7 @@ public sealed class ObjectPool<T> where T : class, new()
 
         if(InterlockedExtensions.CompareDecrement(ref capacity, 0) is not 0)
         {
-            bag.Add(instance);
+            bag.Enqueue(instance);
         }
     }
 
