@@ -57,6 +57,14 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         }
     }
 
+    public void TrimExcess()
+    {
+        lock(syncLock)
+        {
+            map.TrimExcess();
+        }
+    }
+
     private Node AddNode(TKey key, TValue value)
     {
         var node = new Node
