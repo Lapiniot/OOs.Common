@@ -29,9 +29,9 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         {
             await socket.SendAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
-            throw new ConnectionAbortedException(se);
+            throw new ConnectionClosedException(se);
         }
     }
 
@@ -41,9 +41,9 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         {
             return await socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
-            throw new ConnectionAbortedException(se);
+            throw new ConnectionClosedException(se);
         }
     }
 

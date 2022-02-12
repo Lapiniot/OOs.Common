@@ -39,10 +39,10 @@ public class TcpClientSocketConnection : NetworkConnection
         {
             await socket.SendAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionAbortedException(se);
+            throw new ConnectionClosedException(se);
         }
     }
 
@@ -52,10 +52,10 @@ public class TcpClientSocketConnection : NetworkConnection
         {
             return await socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionAbortedException(se);
+            throw new ConnectionClosedException(se);
         }
     }
 

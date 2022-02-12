@@ -49,7 +49,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
             wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
             wse.WebSocketErrorCode is InvalidState && socket.State is Aborted or Closed)
         {
-            throw new ConnectionAbortedException(wse);
+            throw new ConnectionClosedException(wse);
         }
     }
 
@@ -72,7 +72,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
             wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
             wse.WebSocketErrorCode is InvalidState && socket.State is Aborted or Closed)
         {
-            throw new ConnectionAbortedException(wse);
+            throw new ConnectionClosedException(wse);
         }
     }
 

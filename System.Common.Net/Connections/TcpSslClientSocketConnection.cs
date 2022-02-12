@@ -45,10 +45,10 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
         {
             await sslStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionAbortedException(se);
+            throw new ConnectionClosedException(se);
         }
     }
 
@@ -60,10 +60,10 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
         {
             return await sslStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset)
+        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionAbortedException(se);
+            throw new ConnectionClosedException(se);
         }
     }
 
