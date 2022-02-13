@@ -6,7 +6,7 @@ using static System.Text.Encoding;
 
 namespace System.Net.Http;
 
-public sealed class WebPushClient : IDisposable
+public class WebPushClient : IDisposable
 {
     private readonly HttpClient client;
     private readonly string cryptoKey;
@@ -137,10 +137,21 @@ public sealed class WebPushClient : IDisposable
         return buffer;
     }
 
-    public void Dispose()
+    protected virtual void Dispose(bool disposing)
     {
         if(disposed) return;
-        tokenHandler.Dispose();
+
+        if(disposing)
+        {
+            tokenHandler.Dispose();
+        }
+
         disposed = true;
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }
