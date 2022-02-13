@@ -6,7 +6,7 @@ using static System.Text.Encoding;
 
 namespace System.Net.Http;
 
-public class WebPushClient : IDisposable
+public sealed class WebPushClient : IDisposable
 {
     private readonly HttpClient client;
     private readonly string cryptoKey;
@@ -29,12 +29,6 @@ public class WebPushClient : IDisposable
         expires = jwtExpires;
         tokenHandler = new JwtTokenHandler(publicKey, privateKey);
         cryptoKey = Encoders.ToBase64String(publicKey);
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     public async Task SendAsync(Uri endpoint, byte[] clientPublicKey, byte[] authKey, byte[] payload, int ttl, CancellationToken cancellationToken)
@@ -143,15 +137,10 @@ public class WebPushClient : IDisposable
         return buffer;
     }
 
-    protected virtual void Dispose(bool disposing)
+    public void Dispose()
     {
         if(disposed) return;
-
-        if(disposing)
-        {
-            tokenHandler.Dispose();
-        }
-
+        tokenHandler.Dispose();
         disposed = true;
     }
 }

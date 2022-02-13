@@ -17,10 +17,7 @@ public abstract class ActivityObject : IAsyncDisposable
 
     public virtual async ValueTask DisposeAsync()
     {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
-        {
-            return;
-        }
+        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
 
         GC.SuppressFinalize(this);
 

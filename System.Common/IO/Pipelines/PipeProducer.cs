@@ -8,7 +8,7 @@ public abstract class PipeProducer : IAsyncDisposable
     private const int Starting = 1;
     private const int Started = 2;
     private const int Stopping = 3;
-    private bool disposed;
+    private int disposed;
     private CancellationTokenSource globalCts;
     private readonly PipeReader reader;
     private readonly PipeWriter writer;
@@ -39,20 +39,13 @@ public abstract class PipeProducer : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if(Volatile.Read(ref disposed)) return;
+        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
 
         GC.SuppressFinalize(this);
 
         using(globalCts)
         {
-            try
-            {
-                await StopAsync().ConfigureAwait(false);
-            }
-            finally
-            {
-                Volatile.Write(ref disposed, true);
-            }
+            await StopAsync().ConfigureAwait(false);
         }
     }
 
@@ -137,7 +130,7 @@ public abstract class PipeProducer : IAsyncDisposable
 
     protected void CheckDisposed()
     {
-        if(disposed) throw new InvalidOperationException(Strings.ObjectInstanceDisposed);
+        if(disposed is 1) throw new InvalidOperationException(Strings.ObjectInstanceDisposed);
     }
 
     private async Task StartProducerAsync(PipeWriter pipeWriter, CancellationToken token)
