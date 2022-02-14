@@ -35,49 +35,49 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
     [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void Notify(T value)
     {
-        Parallel.ForEach(observers, (pair, _) =>
+        foreach(var (observer, _) in observers)
         {
             try
             {
-                pair.Key.OnNext(value);
+                observer.OnNext(value);
             }
             catch
             {
                 // ignored
             }
-        });
+        }
     }
 
     [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void NotifyError(Exception error)
     {
-        Parallel.ForEach(observers, (pair, _) =>
+        foreach(var (observer, _) in observers)
         {
             try
             {
-                pair.Key.OnError(error);
+                observer.OnError(error);
             }
             catch
             {
                 // ignored
             }
-        });
+        }
     }
 
     [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void NotifyCompleted()
     {
-        Parallel.ForEach(observers, (pair, _) =>
+        foreach(var (observer, _) in observers)
         {
             try
             {
-                pair.Key.OnCompleted();
+                observer.OnCompleted();
             }
             catch
             {
                 // ignored
             }
-        });
+        }
     }
 
     #region IDisposable Support
@@ -91,17 +91,17 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 
         if(cached != null)
         {
-            Parallel.ForEach(cached, (p, _) =>
+            foreach(var (observer, _) in observers)
             {
                 try
                 {
-                    p.Key.OnCompleted();
+                    observer.OnCompleted();
                 }
                 catch
                 {
                     // ignored
                 }
-            });
+            }
 
             cached.Clear();
         }
