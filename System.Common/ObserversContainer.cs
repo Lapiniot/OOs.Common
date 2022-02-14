@@ -91,7 +91,7 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 
         if(cached != null)
         {
-            foreach(var (observer, _) in observers)
+            foreach(var (observer, _) in cached)
             {
                 try
                 {
