@@ -8,9 +8,10 @@ public class AsyncSemaphore
 {
     private readonly int maxCount;
     private readonly object syncRoot;
-    private readonly Queue<TaskCompletionSource> waiters;
     private int currentCount;
     private int waitersCount;
+    private Node head;
+    private Node tail;
 
     public AsyncSemaphore(int initialCount, int maxCount = int.MaxValue)
     {
@@ -26,7 +27,6 @@ public class AsyncSemaphore
 
         currentCount = initialCount;
         this.maxCount = maxCount;
-        waiters = new Queue<TaskCompletionSource>();
         syncRoot = new object();
     }
 
@@ -50,9 +50,19 @@ public class AsyncSemaphore
             }
 
             waitersCount++;
-            var tcs = new TaskCompletionSource(RunContinuationsAsynchronously);
-            waiters.Enqueue(tcs);
-            return tcs.Task.WaitAsync(cancellationToken);
+
+            var node = new Node();
+
+            if(head is null)
+            {
+                head = tail = node;
+            }
+            else
+            {
+                tail = tail.Next = node;
+            }
+
+            return node.CompletionSource.Task.WaitAsync(cancellationToken);
         }
     }
 
@@ -71,14 +81,26 @@ public class AsyncSemaphore
                 throw new SemaphoreFullException();
             }
 
-            while(waitersCount > 0 && releaseCount > 0 && waiters.TryDequeue(out var tcs))
+            while(waitersCount > 0 && releaseCount > 0 && head is not null)
             {
+                head.CompletionSource.SetResult();
+                head = head.Next;
                 waitersCount--;
                 releaseCount--;
-                tcs.SetResult();
             }
 
             currentCount += releaseCount;
         }
+    }
+
+    private class Node
+    {
+        public Node()
+        {
+            CompletionSource = new TaskCompletionSource(RunContinuationsAsynchronously);
+        }
+
+        public TaskCompletionSource CompletionSource { get; }
+        public Node Next { get; set; }
     }
 }
