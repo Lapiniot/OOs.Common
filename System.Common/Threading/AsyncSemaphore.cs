@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using static System.Properties.Strings;
 using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Threading;
@@ -13,15 +14,27 @@ public class AsyncSemaphore
 
     public AsyncSemaphore(int initialCount, int maxCount = int.MaxValue)
     {
+        if(initialCount < 0 || initialCount > maxCount)
+        {
+            throw new ArgumentOutOfRangeException(nameof(initialCount), initialCount, AsyncSemaphoreCtorInitialCountWrong);
+        }
+
+        if(maxCount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxCount), maxCount, AsyncSemaphoreCtorMaxCountWrong);
+        }
+
         currentCount = initialCount;
         this.maxCount = maxCount;
         waiters = new Queue<TaskCompletionSource>();
         syncRoot = new object();
     }
 
-    public int CurrentCount => currentCount;
+    public int MaxCount => maxCount;
 
-    public Task WaitAsync(CancellationToken cancellationToken)
+    public int CurrentCount => Volatile.Read(ref currentCount);
+
+    public Task WaitAsync(CancellationToken cancellationToken = default)
     {
         if(cancellationToken.IsCancellationRequested)
         {
@@ -53,18 +66,19 @@ public class AsyncSemaphore
     {
         lock(syncRoot)
         {
-            while(releaseCount-- > 0)
+            if(currentCount + releaseCount - waitersCount > maxCount)
             {
-                if(waitersCount > 0 && waiters.TryDequeue(out var tcs))
-                {
-                    waitersCount--;
-                    tcs.TrySetResult();
-                }
-                else
-                {
-                    currentCount++;
-                }
+                throw new SemaphoreFullException();
             }
+
+            while(waitersCount > 0 && releaseCount > 0 && waiters.TryDequeue(out var tcs))
+            {
+                waitersCount--;
+                releaseCount--;
+                tcs.SetResult();
+            }
+
+            currentCount += releaseCount;
         }
     }
 }
