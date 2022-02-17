@@ -27,12 +27,11 @@ public class AsyncSemaphore_WaitAsyncShould
         using var cts = new CancellationTokenSource();
 
         // Act 1
-        var task = semaphore.WaitAsync(cts.Token).AsTask();
+        var task = semaphore.WaitAsync(cts.Token);
 
         // Assert 1
         Assert.IsNotNull(task);
-        Assert.IsFalse(task.IsCanceled);
-        Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status);
+        Assert.IsFalse(task.IsCompleted);
         Assert.AreEqual(0, semaphore.CurrentCount);
 
         // Act 2
@@ -40,28 +39,26 @@ public class AsyncSemaphore_WaitAsyncShould
         semaphore.Release();
 
         // Assert 2
-        await Assert.ThrowsExceptionAsync<TaskCanceledException>(() => task).ConfigureAwait(false);
+        await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => await task.ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     [TestMethod]
-    public async Task ReturnTaskWhichTransitsToCompleted_WhenCurrentCountZeroAndCancellationRequestedAfterReleaseCalled()
+    public void ReturnTaskWhichTransitsToCompleted_WhenCurrentCountZeroAndCancellationRequestedAfterReleaseCalled()
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0);
         using var cts = new CancellationTokenSource();
 
         // Act 1
-        var task = semaphore.WaitAsync(cts.Token).AsTask();
+        var task = semaphore.WaitAsync(cts.Token);
 
         // Assert 1
         Assert.IsNotNull(task);
-        Assert.IsFalse(task.IsCanceled);
-        Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status);
+        Assert.IsFalse(task.IsCompleted);
         Assert.AreEqual(0, semaphore.CurrentCount);
 
         // Act 2
         semaphore.Release();
-        await task.ConfigureAwait(false); // Need to await here, because backing TaskCompletionSource is configured to run continuations asynchronously
         cts.Cancel();
 
         // Assert 2
@@ -90,19 +87,20 @@ public class AsyncSemaphore_WaitAsyncShould
         var semaphore = new AsyncSemaphore(0);
 
         // Act
-        var task1 = semaphore.WaitAsync().AsTask();
-        var task2 = semaphore.WaitAsync().AsTask();
+        var task1 = semaphore.WaitAsync();
+        var task2 = semaphore.WaitAsync();
 
         // Assert
         Assert.IsNotNull(task1);
-        Assert.IsFalse(task1.IsCompletedSuccessfully);
-        Assert.AreEqual(TaskStatus.WaitingForActivation, task1.Status);
+        Assert.IsFalse(task1.IsCompleted);
         Assert.AreEqual(0, semaphore.CurrentCount);
 
         Assert.IsNotNull(task2);
-        Assert.IsFalse(task2.IsCompletedSuccessfully);
-        Assert.AreEqual(TaskStatus.WaitingForActivation, task2.Status);
+        Assert.IsFalse(task2.IsCompleted);
         Assert.AreEqual(0, semaphore.CurrentCount);
+
+        // Proper cleanup
+        semaphore.Release(2);
     }
 
     [TestMethod]
@@ -113,12 +111,14 @@ public class AsyncSemaphore_WaitAsyncShould
     {
         // Arrange
         var semaphore = new AsyncSemaphore(initialCount);
-        var tasks = new List<Task>();
+        var tasks = new List<ValueTask>();
 
         // Act
-        Parallel.For(0, iterations, () => new List<Task>(), (_, _, result) =>
+        Parallel.For(0, iterations, () => new List<ValueTask>(), (_, _, result) =>
         {
-            result.Add(semaphore.WaitAsync().AsTask());
+#pragma warning disable CA2012 // Use ValueTasks correctly
+            result.Add(semaphore.WaitAsync());
+#pragma warning restore CA2012 // Use ValueTasks correctly
             return result;
         }, result =>
         {
@@ -128,11 +128,14 @@ public class AsyncSemaphore_WaitAsyncShould
             }
         });
         var actualCompleteTasks = tasks.Count(task => task.IsCompletedSuccessfully);
-        var actualPendingTasks = tasks.Count(task => !task.IsCompletedSuccessfully && task.Status == TaskStatus.WaitingForActivation);
+        var actualPendingTasks = tasks.Count(task => !task.IsCompleted);
 
         // Assert
         Assert.AreEqual(expectedCurrentCount, semaphore.CurrentCount);
         Assert.AreEqual(expectedCompleteTasks, actualCompleteTasks);
         Assert.AreEqual(expectedPendingTasks, actualPendingTasks);
+
+        // Proper cleanup
+        semaphore.Release(actualPendingTasks);
     }
 }

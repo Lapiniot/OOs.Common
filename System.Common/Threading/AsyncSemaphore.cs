@@ -1,17 +1,20 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
+using System.Threading.Tasks.Sources;
 using static System.Properties.Strings;
-using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Threading;
+
+#nullable enable
 
 public class AsyncSemaphore
 {
     private readonly int maxCount;
     private readonly object syncRoot;
     private int currentCount;
+    private WaiterNode? head;
+    private WaiterNode? tail;
     private int waitersCount;
-    private Node head;
-    private Node tail;
 
     public AsyncSemaphore(int initialCount, int maxCount = int.MaxValue)
     {
@@ -51,7 +54,8 @@ public class AsyncSemaphore
 
             waitersCount++;
 
-            var node = new Node();
+            var node = new WaiterNode();
+            node.Bind(cancellationToken);
 
             if(head is null)
             {
@@ -59,18 +63,15 @@ public class AsyncSemaphore
             }
             else
             {
-                tail = tail.Next = node;
+                tail = tail!.Next = node;
             }
 
-            return new ValueTask(node.CompletionSource.Task.WaitAsync(cancellationToken));
+            return new ValueTask(node, node.Version);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Release()
-    {
-        Release(1);
-    }
+    public void Release() => Release(1);
 
     public void Release(int releaseCount)
     {
@@ -83,24 +84,108 @@ public class AsyncSemaphore
 
             while(waitersCount > 0 && releaseCount > 0 && head is not null)
             {
-                head.CompletionSource.SetResult();
+                if(head.TrySetComplete()) releaseCount--;
                 head = head.Next;
                 waitersCount--;
-                releaseCount--;
             }
 
             currentCount += releaseCount;
         }
     }
 
-    private class Node
+    private class WaiterNode : IValueTaskSource
     {
-        public Node()
+        private int completed;
+        private ManualResetValueTaskSourceCore<bool> core;
+        private CancellationTokenRegistration? registration;
+
+        public WaiterNode()
         {
-            CompletionSource = new TaskCompletionSource(RunContinuationsAsynchronously);
+            core = new ManualResetValueTaskSourceCore<bool> { RunContinuationsAsynchronously = true };
         }
 
-        public TaskCompletionSource CompletionSource { get; }
-        public Node Next { get; set; }
+        public short Version => core.Version;
+
+        public WaiterNode? Next { get; set; }
+
+        public void Reset()
+        {
+            ResetPendingCancellation();
+            core.Reset();
+            completed = 0;
+        }
+
+        public void Bind(CancellationToken cancellationToken)
+        {
+            ResetPendingCancellation();
+
+            if(cancellationToken != default)
+            {
+                registration = cancellationToken.UnsafeRegister(
+                    static (state, token) => ((WaiterNode)state!).TrySetCanceled(token),
+                    this);
+            }
+        }
+
+        public bool TrySetComplete()
+        {
+            if(Interlocked.CompareExchange(ref completed, 1, 0) == 0)
+            {
+                ResetPendingCancellation();
+                core.SetResult(true);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool TrySetCanceled(CancellationToken cancellationToken) =>
+            TrySetException(ExceptionDispatchInfo.SetCurrentStackTrace(
+                new OperationCanceledException(cancellationToken)));
+
+        public bool TrySetException(Exception error)
+        {
+            if(Interlocked.CompareExchange(ref completed, 1, 0) == 0)
+            {
+                ResetPendingCancellation();
+                core.SetException(error);
+                return true;
+            }
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ResetPendingCancellation()
+        {
+            var local = registration;
+            registration = null;
+
+            if(local.HasValue)
+            {
+                local.Value.Dispose();
+            }
+        }
+
+        #region Implementation of IValueTaskSource
+
+        public void GetResult(short token)
+        {
+            try
+            {
+                core.GetResult(token);
+            }
+            finally
+            {
+                Reset();
+            }
+        }
+
+        public ValueTaskSourceStatus GetStatus(short token) => core.GetStatus(token);
+
+        public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags) =>
+            core.OnCompleted(continuation, state, token, flags);
+
+        #endregion
     }
 }

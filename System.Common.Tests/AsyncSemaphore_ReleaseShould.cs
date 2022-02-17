@@ -26,19 +26,20 @@ public class AsyncSemaphore_ReleaseShould
     }
 
     [TestMethod]
-    public async Task RetainCurrentCountButCompleteTasks_WhenThereArePendingWaitingTasks()
+    public void RetainCurrentCountButCompleteTasks_WhenThereArePendingWaitingTasks()
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0);
-        var task1 = semaphore.WaitAsync().AsTask();
-        var task2 = semaphore.WaitAsync().AsTask();
+        var task1 = semaphore.WaitAsync();
+        var task2 = semaphore.WaitAsync();
 
         // Act
         semaphore.Release(2);
-        await Task.WhenAll(task1, task2).ConfigureAwait(false);
 
         // Assert
         Assert.AreEqual(0, semaphore.CurrentCount);
+        Assert.IsTrue(task1.IsCompletedSuccessfully);
+        Assert.IsTrue(task2.IsCompletedSuccessfully);
     }
 
     [TestMethod]
@@ -46,13 +47,16 @@ public class AsyncSemaphore_ReleaseShould
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0);
-        var task = semaphore.WaitAsync().AsTask();
+        var task = semaphore.WaitAsync();
 
         // Act
         semaphore.Release(0);
 
         // Assert
-        Assert.AreEqual(TaskStatus.WaitingForActivation, task.Status);
+        Assert.IsFalse(task.IsCompleted);
+
+        // Proper cleanup
+        semaphore.Release();
     }
 
     [TestMethod]
@@ -60,10 +64,15 @@ public class AsyncSemaphore_ReleaseShould
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0, 1);
+#pragma warning disable CA2012 // Use ValueTasks correctly
         _ = semaphore.WaitAsync();
+#pragma warning restore CA2012 // Use ValueTasks correctly
 
         // Act/Assert
         Assert.ThrowsException<SemaphoreFullException>(() => semaphore.Release(3));
+
+        // Proper cleanup
+        semaphore.Release();
     }
 
     [TestMethod]
@@ -77,15 +86,22 @@ public class AsyncSemaphore_ReleaseShould
     {
         // Arrange
         var semaphore = new AsyncSemaphore(initialCount);
-        var waiters = new List<Task>(waitersCount);
-        for(var i = 0; i < waitersCount; i++) waiters.Add(semaphore.WaitAsync().AsTask());
+        var waiters = new List<ValueTask>(waitersCount);
+#pragma warning disable CA2012 // Use ValueTasks correctly
+        for(var i = 0; i < waitersCount; i++) waiters.Add(semaphore.WaitAsync());
+#pragma warning restore CA2012 // Use ValueTasks correctly
 
         // Act
         Parallel.For(0, iterations, _ => semaphore.Release());
+        var actualCompleteCount = waiters.Count(task => task.IsCompletedSuccessfully);
+        var actualPendingCount = waiters.Count(task => !task.IsCompletedSuccessfully);
 
         // Assert
-        Assert.AreEqual(expectedCompleteCount, waiters.Count(task => task.IsCompletedSuccessfully));
-        Assert.AreEqual(expectedPendingCount, waiters.Count(task => !task.IsCompletedSuccessfully && task.Status == TaskStatus.WaitingForActivation));
+        Assert.AreEqual(expectedCompleteCount, actualCompleteCount);
+        Assert.AreEqual(expectedPendingCount, actualPendingCount);
         Assert.AreEqual(expectedCurrentCount, semaphore.CurrentCount);
+
+        // Proper cleanup
+        semaphore.Release(actualPendingCount);
     }
 }
