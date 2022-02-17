@@ -3,20 +3,16 @@
 [TestClass]
 public class AddOrUpdateShould
 {
-    internal static OrderedHashMap<string, string> CreateSampleHashQueue()
-    {
-        return new(new KeyValuePair<string, string>[] { new("key1", "value 1"), new("key2", "value 2"), new("key3", "value 3") });
-    }
+    internal static OrderedHashMap<string, string> CreateSampleHashQueue() =>
+        new(new KeyValuePair<string, string>[] { new("key1", "value 1"), new("key2", "value 2"), new("key3", "value 3") });
 
     [TestMethod]
-    public void ThrowArgumentNullExceptionGivenKeyNull()
-    {
+    public void ThrowArgumentNullExceptionGivenKeyNull() =>
         _ = Assert.ThrowsException<ArgumentNullException>(() =>
         {
             var map = new OrderedHashMap<string, string>();
             return map.AddOrUpdate(null, "", "");
         });
-    }
 
     [TestMethod]
     public void AppendItemAndRetainOriginalOrderGivenNotExistingKey()

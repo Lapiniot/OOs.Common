@@ -48,15 +48,22 @@ public class ObjectPoolRentShould
         const int maxCapacity = 8;
         var pool = new ObjectPool<MockObject>(maxCapacity);
         var instances = new MockObject[maxCapacity];
-        for(var i = 0; i < instances.Length; i++) { pool.Return(instances[i] = new MockObject()); }
+        for(var i = 0; i < instances.Length; i++) pool.Return(instances[i] = new MockObject());
         MockObject.ResetCounter();
 
         // Act
         var actual = new List<MockObject>();
         Parallel.For(0, 3 * maxCapacity,
             static () => new List<MockObject>(),
-            (_, _, acc) => { acc.Add(pool.Rent()); return acc; },
-            acc => { lock(actual) actual.AddRange(acc); });
+            (_, _, acc) =>
+            {
+                acc.Add(pool.Rent());
+                return acc;
+            },
+            acc =>
+            {
+                lock(actual) actual.AddRange(acc);
+            });
 
         // Assert
         Assert.AreEqual(maxCapacity, actual.Intersect(instances).Count());
@@ -72,11 +79,8 @@ public class ObjectPoolRentShould
             Interlocked.Increment(ref constructorInvocations);
         }
 
-        public static void ResetCounter()
-        {
-            Interlocked.Exchange(ref constructorInvocations, 0);
-        }
-
         internal static int ConstructorInvocations => Volatile.Read(ref constructorInvocations);
+
+        public static void ResetCounter() => Interlocked.Exchange(ref constructorInvocations, 0);
     }
 }
