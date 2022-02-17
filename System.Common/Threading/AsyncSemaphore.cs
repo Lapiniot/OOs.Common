@@ -34,11 +34,11 @@ public class AsyncSemaphore
 
     public int CurrentCount => Volatile.Read(ref currentCount);
 
-    public Task WaitAsync(CancellationToken cancellationToken = default)
+    public ValueTask WaitAsync(CancellationToken cancellationToken = default)
     {
         if(cancellationToken.IsCancellationRequested)
         {
-            return Task.FromCanceled(cancellationToken);
+            return ValueTask.FromCanceled(cancellationToken);
         }
 
         lock(syncRoot)
@@ -46,7 +46,7 @@ public class AsyncSemaphore
             if(currentCount > 0)
             {
                 currentCount--;
-                return Task.CompletedTask;
+                return ValueTask.CompletedTask;
             }
 
             waitersCount++;
@@ -62,7 +62,7 @@ public class AsyncSemaphore
                 tail = tail.Next = node;
             }
 
-            return node.CompletionSource.Task.WaitAsync(cancellationToken);
+            return new ValueTask(node.CompletionSource.Task.WaitAsync(cancellationToken));
         }
     }
 

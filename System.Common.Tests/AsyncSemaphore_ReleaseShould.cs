@@ -30,8 +30,8 @@ public class AsyncSemaphore_ReleaseShould
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0);
-        var task1 = semaphore.WaitAsync();
-        var task2 = semaphore.WaitAsync();
+        var task1 = semaphore.WaitAsync().AsTask();
+        var task2 = semaphore.WaitAsync().AsTask();
 
         // Act
         semaphore.Release(2);
@@ -46,7 +46,7 @@ public class AsyncSemaphore_ReleaseShould
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0);
-        var task = semaphore.WaitAsync();
+        var task = semaphore.WaitAsync().AsTask();
 
         // Act
         semaphore.Release(0);
@@ -78,7 +78,7 @@ public class AsyncSemaphore_ReleaseShould
         // Arrange
         var semaphore = new AsyncSemaphore(initialCount);
         var waiters = new List<Task>(waitersCount);
-        for(var i = 0; i < waitersCount; i++) waiters.Add(semaphore.WaitAsync());
+        for(var i = 0; i < waitersCount; i++) waiters.Add(semaphore.WaitAsync().AsTask());
 
         // Act
         Parallel.For(0, iterations, _ => semaphore.Release());

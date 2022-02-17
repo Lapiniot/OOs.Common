@@ -27,7 +27,7 @@ public class AsyncSemaphore_WaitAsyncShould
         using var cts = new CancellationTokenSource();
 
         // Act 1
-        var task = semaphore.WaitAsync(cts.Token);
+        var task = semaphore.WaitAsync(cts.Token).AsTask();
 
         // Assert 1
         Assert.IsNotNull(task);
@@ -51,7 +51,7 @@ public class AsyncSemaphore_WaitAsyncShould
         using var cts = new CancellationTokenSource();
 
         // Act 1
-        var task = semaphore.WaitAsync(cts.Token);
+        var task = semaphore.WaitAsync(cts.Token).AsTask();
 
         // Assert 1
         Assert.IsNotNull(task);
@@ -90,8 +90,8 @@ public class AsyncSemaphore_WaitAsyncShould
         var semaphore = new AsyncSemaphore(0);
 
         // Act
-        var task1 = semaphore.WaitAsync();
-        var task2 = semaphore.WaitAsync();
+        var task1 = semaphore.WaitAsync().AsTask();
+        var task2 = semaphore.WaitAsync().AsTask();
 
         // Assert
         Assert.IsNotNull(task1);
@@ -118,7 +118,7 @@ public class AsyncSemaphore_WaitAsyncShould
         // Act
         Parallel.For(0, iterations, () => new List<Task>(), (_, _, result) =>
         {
-            result.Add(semaphore.WaitAsync());
+            result.Add(semaphore.WaitAsync().AsTask());
             return result;
         }, result =>
         {
