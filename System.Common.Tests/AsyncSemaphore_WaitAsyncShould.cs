@@ -122,7 +122,7 @@ public class AsyncSemaphore_WaitAsyncShould
             return result;
         }, result =>
         {
-            lock(tasks)
+            lock (tasks)
             {
                 tasks.AddRange(result);
             }

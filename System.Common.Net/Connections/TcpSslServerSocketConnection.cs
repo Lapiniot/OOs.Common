@@ -1,16 +1,16 @@
+using System.Net.Connections.Exceptions;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Net.Connections.Exceptions;
 using static System.Net.Sockets.SocketError;
 
 namespace System.Net.Connections;
 
 public sealed class TcpSslServerSocketConnection : NetworkConnection
 {
-    private readonly SslStream sslStream;
-    private readonly Socket socket;
     private readonly SslServerAuthenticationOptions options;
     private readonly EndPoint remoteEndPoint;
+    private readonly Socket socket;
+    private readonly SslStream sslStream;
 
     public TcpSslServerSocketConnection(Socket acceptedSocket, SslServerAuthenticationOptions options)
     {
@@ -22,7 +22,7 @@ public sealed class TcpSslServerSocketConnection : NetworkConnection
 
         try
         {
-            sslStream = new SslStream(stream, false);
+            sslStream = new(stream, false);
         }
         catch
         {
@@ -37,7 +37,7 @@ public sealed class TcpSslServerSocketConnection : NetworkConnection
         {
             await sslStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
+        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
             throw new ConnectionClosedException(se);
@@ -50,22 +50,16 @@ public sealed class TcpSslServerSocketConnection : NetworkConnection
         {
             return await sslStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
+        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
             throw new ConnectionClosedException(se);
         }
     }
 
-    protected override Task StartingAsync(CancellationToken cancellationToken)
-    {
-        return sslStream.AuthenticateAsServerAsync(options, cancellationToken);
-    }
+    protected override Task StartingAsync(CancellationToken cancellationToken) => sslStream.AuthenticateAsServerAsync(options, cancellationToken);
 
-    protected override async Task StoppingAsync()
-    {
-        await socket.DisconnectAsync(false).ConfigureAwait(false);
-    }
+    protected override async Task StoppingAsync() => await socket.DisconnectAsync(false).ConfigureAwait(false);
 
     public override async ValueTask DisposeAsync()
     {
@@ -79,8 +73,5 @@ public sealed class TcpSslServerSocketConnection : NetworkConnection
         }
     }
 
-    public override string ToString()
-    {
-        return $"{Id}-{nameof(TcpSslServerSocketConnection)}-{remoteEndPoint}";
-    }
+    public override string ToString() => $"{Id}-{nameof(TcpSslServerSocketConnection)}-{remoteEndPoint}";
 }

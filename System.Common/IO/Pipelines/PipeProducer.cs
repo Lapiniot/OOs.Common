@@ -8,13 +8,19 @@ public abstract class PipeProducer : IAsyncDisposable
     private const int Starting = 1;
     private const int Started = 2;
     private const int Stopping = 3;
-    private int disposed;
-    private CancellationTokenSource globalCts;
+    private readonly Pipe pipe;
     private readonly PipeReader reader;
     private readonly PipeWriter writer;
-    private readonly Pipe pipe;
+    private int disposed;
+    private CancellationTokenSource globalCts;
     private Task producer;
     private long stateGuard;
+
+    protected PipeProducer(PipeOptions pipeOptions = null)
+    {
+        pipe = new(pipeOptions ?? new PipeOptions(useSynchronizationContext: false));
+        (reader, writer) = pipe;
+    }
 
     public PipeReader Reader => reader;
 
@@ -29,33 +35,11 @@ public abstract class PipeProducer : IAsyncDisposable
         }
     }
 
-    protected PipeProducer(PipeOptions pipeOptions = null)
-    {
-        pipe = new(pipeOptions ?? new PipeOptions(useSynchronizationContext: false));
-        (reader, writer) = pipe;
-    }
-
-    #region Implementation of IAsyncDisposable
-
-    public async ValueTask DisposeAsync()
-    {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
-
-        GC.SuppressFinalize(this);
-
-        using(globalCts)
-        {
-            await StopAsync().ConfigureAwait(false);
-        }
-    }
-
-    #endregion
-
     public void Start()
     {
         CheckDisposed();
 
-        switch(Interlocked.CompareExchange(ref stateGuard, Starting, Stopped))
+        switch (Interlocked.CompareExchange(ref stateGuard, Starting, Stopped))
         {
             case Stopped:
                 try
@@ -70,6 +54,7 @@ public abstract class PipeProducer : IAsyncDisposable
                     Interlocked.Exchange(ref stateGuard, Stopped);
                     throw;
                 }
+
                 break;
             case Stopping:
                 throw new InvalidOperationException("Cannot start in this state, currently in stopping transition.");
@@ -94,12 +79,14 @@ public abstract class PipeProducer : IAsyncDisposable
                 var localWorker = Volatile.Read(ref producer);
                 var localCts = Volatile.Read(ref globalCts);
                 state = Interlocked.CompareExchange(ref stateGuard, Stopping, Started);
-                switch(state)
+                switch (state)
                 {
-                    case Starting: sw.SpinOnce(); break;
+                    case Starting:
+                        sw.SpinOnce();
+                        break;
                     case Started:
                         // we are responsible for cancellation and cleanup
-                        using(localCts)
+                        using (localCts)
                         {
                             localCts!.Cancel();
                             try
@@ -111,14 +98,14 @@ public abstract class PipeProducer : IAsyncDisposable
                                 Interlocked.Exchange(ref stateGuard, Stopped);
                             }
                         }
+
                         break;
                     case Stopping:
                         // stopping in progress already, wait for currently active task in flight
                         await localWorker!.ConfigureAwait(false);
                         break;
                 }
-            }
-            while(state is Starting);
+            } while (state is Starting);
         }
 #pragma warning disable CA1031 // producer loop termination exception should not be rethrown here
         catch
@@ -130,20 +117,20 @@ public abstract class PipeProducer : IAsyncDisposable
 
     protected void CheckDisposed()
     {
-        if(disposed is 1) throw new InvalidOperationException(Strings.ObjectInstanceDisposed);
+        if (disposed is 1) throw new InvalidOperationException(Strings.ObjectInstanceDisposed);
     }
 
     private async Task StartProducerAsync(PipeWriter pipeWriter, CancellationToken token)
     {
         try
         {
-            while(!token.IsCancellationRequested)
+            while (!token.IsCancellationRequested)
             {
                 var buffer = pipeWriter.GetMemory();
 
                 var received = await ReceiveAsync(buffer, token).ConfigureAwait(false);
 
-                if(received == 0)
+                if (received == 0)
                 {
                     break;
                 }
@@ -152,14 +139,13 @@ public abstract class PipeProducer : IAsyncDisposable
 
                 var result = await pipeWriter.FlushAsync(token).ConfigureAwait(false);
 
-                if(result.IsCompleted || result.IsCanceled)
+                if (result.IsCompleted || result.IsCanceled)
                 {
                     break;
                 }
             }
-
         }
-        catch(OperationCanceledException)
+        catch (OperationCanceledException)
         {
             // Expected
         }
@@ -170,4 +156,20 @@ public abstract class PipeProducer : IAsyncDisposable
     }
 
     protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+
+    #region Implementation of IAsyncDisposable
+
+    public async ValueTask DisposeAsync()
+    {
+        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
+        GC.SuppressFinalize(this);
+
+        using (globalCts)
+        {
+            await StopAsync().ConfigureAwait(false);
+        }
+    }
+
+    #endregion
 }

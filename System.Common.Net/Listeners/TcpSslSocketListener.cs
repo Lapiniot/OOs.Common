@@ -22,7 +22,7 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
     {
         this.serverCertificate = serverCertificate;
 
-        options = new SslServerAuthenticationOptions
+        options = new()
         {
             ServerCertificate = serverCertificate,
             EnabledSslProtocols = enabledSslProtocols,
@@ -32,19 +32,13 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
         };
     }
 
-    public override string ToString()
-    {
-        return $"{nameof(TcpSslSocketListener)} {{tcps://{EndPoint}}}";
-    }
+    public override string ToString() => $"{nameof(TcpSslSocketListener)} {{tcps://{EndPoint}}}";
 
-    protected override INetworkConnection CreateConnection(Socket acceptedSocket)
-    {
-        return new TcpSslServerSocketConnection(acceptedSocket, options);
-    }
+    protected override INetworkConnection CreateConnection(Socket acceptedSocket) => new TcpSslServerSocketConnection(acceptedSocket, options);
 
     public void Dispose()
     {
-        if(disposed) return;
+        if (disposed) return;
         serverCertificate.Dispose();
         disposed = true;
     }

@@ -4,22 +4,12 @@
 public class ConstructorShould
 {
     [TestMethod]
-    public void ThrowArgumentNullExceptionGivenNullCollection()
-    {
-        Assert.ThrowsException<ArgumentNullException>(() =>
-        {
-            _ = new OrderedHashMap<string, string>(null);
-        });
-    }
+    public void ThrowArgumentNullExceptionGivenNullCollection() =>
+        Assert.ThrowsException<ArgumentNullException>(() => new OrderedHashMap<string, string>(null));
 
     [TestMethod]
-    public void ThrowArgumentOutOfRangeExceptionGivenNegativeCapacity()
-    {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
-        {
-            _ = new OrderedHashMap<string, string>(-1);
-        });
-    }
+    public void ThrowArgumentOutOfRangeExceptionGivenNegativeCapacity() =>
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new OrderedHashMap<string, string>(-1));
 
     [TestMethod]
     public void AddItemsWithGivenCollectionOrder()

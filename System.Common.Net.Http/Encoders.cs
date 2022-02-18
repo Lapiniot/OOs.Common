@@ -2,10 +2,8 @@ namespace System.Net.Http;
 
 public static class Encoders
 {
-    public static string ToBase64String(byte[] bytes)
-    {
-        return Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
-    }
+    public static string ToBase64String(byte[] bytes) =>
+        Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
 
     public static byte[] FromBase64String(string base64String)
     {

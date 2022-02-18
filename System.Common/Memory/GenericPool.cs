@@ -5,12 +5,12 @@ namespace System.Memory;
 public sealed class GenericPool<T>
 {
     private readonly ConcurrentBag<T> bag = new();
-    private int capacity;
     private readonly Func<T> factory;
+    private int capacity;
 
     public GenericPool(Func<T> factory, int capacity = 32)
     {
-        if(capacity <= 0)
+        if (capacity <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(capacity));
         }
@@ -21,7 +21,7 @@ public sealed class GenericPool<T>
 
     public T Rent()
     {
-        if(!bag.TryTake(out var value))
+        if (!bag.TryTake(out var value))
         {
             return factory();
         }
@@ -34,7 +34,7 @@ public sealed class GenericPool<T>
     {
         ArgumentNullException.ThrowIfNull(instance);
 
-        if(InterlockedExtensions.CompareDecrement(ref capacity, 0) is not 0)
+        if (InterlockedExtensions.CompareDecrement(ref capacity, 0) is not 0)
         {
             bag.Add(instance);
         }

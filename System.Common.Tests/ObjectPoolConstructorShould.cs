@@ -22,9 +22,9 @@ public class ObjectPoolConstructorShould
 
         // Assert: verify effective capacity equals to the value passed via constructor
         var instances = new object[2 * capacity];
-        for(var i = 0; i < instances.Length; i++) pool.Return(instances[i] = new object());
+        for (var i = 0; i < instances.Length; i++) pool.Return(instances[i] = new());
         var rented = new object[2 * capacity];
-        for(var i = 0; i < rented.Length; i++) rented[i] = pool.Rent();
+        for (var i = 0; i < rented.Length; i++) rented[i] = pool.Rent();
 
         Assert.AreEqual(capacity, instances.Intersect(rented).Count());
     }

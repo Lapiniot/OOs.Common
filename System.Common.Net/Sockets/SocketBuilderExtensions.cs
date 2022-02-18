@@ -12,25 +12,14 @@ public delegate Socket CreateSocketFactory(IPEndPoint remoteEndPoint);
 
 public static class SocketBuilderExtensions
 {
-    public static IPEndPoint GetIPv4MulticastGroup(int port)
-    {
-        return new(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
-    }
+    public static IPEndPoint GetIPv4MulticastGroup(int port) => new(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
 
-    public static IPEndPoint GetIPv4SSDPGroup()
-    {
-        return GetIPv4MulticastGroup(1900);
-    }
+    public static IPEndPoint GetIPv4SSDPGroup() => GetIPv4MulticastGroup(1900);
 
-    public static Socket CreateUdp(AddressFamily addressFamily = InterNetwork)
-    {
-        return new(addressFamily, Dgram, ProtocolType.Udp);
-    }
+    public static Socket CreateUdp(AddressFamily addressFamily = InterNetwork) => new(addressFamily, Dgram, ProtocolType.Udp);
 
-    public static Socket CreateUdpBroadcast(AddressFamily addressFamily)
-    {
-        return new(addressFamily, Dgram, ProtocolType.Udp) { EnableBroadcast = true };
-    }
+    public static Socket CreateUdpBroadcast(AddressFamily addressFamily) =>
+        new(addressFamily, Dgram, ProtocolType.Udp) { EnableBroadcast = true };
 
     public static Socket CreateUdpConnected(IPEndPoint endpoint)
     {
@@ -46,7 +35,7 @@ public static class SocketBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(socket);
 
-        switch(socket.AddressFamily)
+        switch (socket.AddressFamily)
         {
             case InterNetwork:
                 socket.SetSocketOption(IP, MulticastInterface, HostToNetworkOrder(mcintIndex));
@@ -68,7 +57,7 @@ public static class SocketBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(socket);
 
-        socket.Bind(socket.AddressFamily is InterNetworkV6 ? new IPEndPoint(IPv6Any, 0) : new IPEndPoint(Any, port));
+        socket.Bind(socket.AddressFamily is InterNetworkV6 ? new(IPv6Any, 0) : new IPEndPoint(Any, port));
 
         return socket;
     }
@@ -78,18 +67,18 @@ public static class SocketBuilderExtensions
         ArgumentNullException.ThrowIfNull(socket);
         ArgumentNullException.ThrowIfNull(groupToJoin);
 
-        if(groupToJoin.AddressFamily != socket.AddressFamily) throw new NotSupportedException("Group address family mismatch");
-        if(mcint is not null && mcint.AddressFamily != socket.AddressFamily) throw new NotSupportedException("Multicast interface address family mismatch");
+        if (groupToJoin.AddressFamily != socket.AddressFamily) throw new NotSupportedException("Group address family mismatch");
+        if (mcint is not null && mcint.AddressFamily != socket.AddressFamily) throw new NotSupportedException("Multicast interface address family mismatch");
 
         socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, true);
 
-        switch(socket.AddressFamily)
+        switch (socket.AddressFamily)
         {
             case InterNetwork:
                 socket.SetSocketOption(IP, AddMembership, CreateMulticastOptionIPv4(socket, groupToJoin.Address, mcint));
                 socket.Bind(new IPEndPoint(Any, groupToJoin.Port));
 
-                if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
                     //  IP_MULTICAST_ALL (since Linux 2.6.31)
                     //  This option can be used to modify the delivery policy of multicast messages to sockets 
@@ -121,14 +110,14 @@ public static class SocketBuilderExtensions
 
     private static MulticastOption CreateMulticastOptionIPv4(Socket socket, IPAddress groupToJoin, IPAddress mcint)
     {
-        if(mcint is not null)
+        if (mcint is not null)
         {
             Span<byte> bytes = stackalloc byte[4];
             _ = mcint.TryWriteBytes(bytes, out _);
             // Address from range 0.x.x.x must be interpreted as interface index
             return bytes[0] == 0
-                ? new MulticastOption(groupToJoin, ReadInt32BigEndian(bytes))
-                : new MulticastOption(groupToJoin, mcint);
+                ? new(groupToJoin, ReadInt32BigEndian(bytes))
+                : new(groupToJoin, mcint);
         }
 
         var iface = (int)socket.GetSocketOption(IP, MulticastInterface)!;
@@ -136,7 +125,7 @@ public static class SocketBuilderExtensions
         // If most significant byte (in network order) is zero in the
         // mcast interface, it represents interface index rather than IP address
         return (HostToNetworkOrder(iface) & 0xFF000000) == 0x00000000
-            ? new MulticastOption(groupToJoin, HostToNetworkOrder(iface))
-            : new MulticastOption(groupToJoin, new IPAddress(iface));
+            ? new(groupToJoin, HostToNetworkOrder(iface))
+            : new(groupToJoin, new IPAddress(iface));
     }
 }

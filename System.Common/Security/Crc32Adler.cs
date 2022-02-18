@@ -74,10 +74,11 @@ public static class Crc32Adler
     public static uint Compute(ReadOnlySpan<byte> span)
     {
         var crc = 0xffffffffu;
-        foreach(var ch in span)
+        foreach (var ch in span)
         {
-            crc = crc32Table[(ch ^ crc) & 0xff] ^ crc >> 8;
+            crc = crc32Table[(ch ^ crc) & 0xff] ^ (crc >> 8);
         }
+
         return crc ^ 0xffffffffu;
     }
 }

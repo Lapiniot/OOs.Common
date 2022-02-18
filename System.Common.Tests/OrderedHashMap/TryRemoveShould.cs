@@ -93,12 +93,10 @@ public class TryRemoveShould
     }
 
     [TestMethod]
-    public void ThrowArgumentNullExceptionGivenKeyNull()
-    {
+    public void ThrowArgumentNullExceptionGivenKeyNull() =>
         _ = Assert.ThrowsException<ArgumentNullException>(() =>
         {
             var map = new OrderedHashMap<string, string>();
             return map.TryRemove(null, out _);
         });
-    }
 }

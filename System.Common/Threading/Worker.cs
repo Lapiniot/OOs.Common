@@ -11,6 +11,8 @@ public abstract class Worker : IAsyncDisposable
     private CancelableOperationScope cancelableOperation;
     private int disposed;
 
+    public bool IsRunning => Volatile.Read(ref cancelableOperation) != null;
+
     /// <summary>
     /// Must be implemented by derived type and represents actual asynchronous operation to be run on background
     /// </summary>
@@ -53,24 +55,6 @@ public abstract class Worker : IAsyncDisposable
         return StopCoreAsync();
     }
 
-    public bool IsRunning => Volatile.Read(ref cancelableOperation) != null;
-
-    #region Implementation of IAsyncDisposable
-
-    public virtual async ValueTask DisposeAsync()
-    {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
-
-        GC.SuppressFinalize(this);
-
-        using(semaphore)
-        {
-            await StopCoreAsync().ConfigureAwait(false);
-        }
-    }
-
-    #endregion
-
     [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     private async Task StopCoreAsync()
     {
@@ -78,7 +62,7 @@ public abstract class Worker : IAsyncDisposable
 
         try
         {
-            await using(cancelableOperation)
+            await using (cancelableOperation)
             {
                 cancelableOperation = null;
             }
@@ -95,9 +79,25 @@ public abstract class Worker : IAsyncDisposable
 
     protected void CheckDisposed()
     {
-        if(Volatile.Read(ref disposed) != 0)
+        if (Volatile.Read(ref disposed) != 0)
         {
             throw new ObjectDisposedException(nameof(Worker));
         }
     }
+
+    #region Implementation of IAsyncDisposable
+
+    public virtual async ValueTask DisposeAsync()
+    {
+        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
+        GC.SuppressFinalize(this);
+
+        using (semaphore)
+        {
+            await StopCoreAsync().ConfigureAwait(false);
+        }
+    }
+
+    #endregion
 }

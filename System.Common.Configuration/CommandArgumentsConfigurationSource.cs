@@ -13,8 +13,6 @@ public class CommandArgumentsConfigurationSource : IConfigurationSource
         this.strict = strict;
     }
 
-    public IConfigurationProvider Build(IConfigurationBuilder builder)
-    {
-        return new CommandArgumentsConfigurationProvider(args, "args", strict);
-    }
+    public IConfigurationProvider Build(IConfigurationBuilder builder) =>
+        new CommandArgumentsConfigurationProvider(args, "args", strict);
 }

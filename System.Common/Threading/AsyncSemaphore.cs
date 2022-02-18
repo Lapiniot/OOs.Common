@@ -18,19 +18,19 @@ public class AsyncSemaphore
 
     public AsyncSemaphore(int initialCount, int maxCount = int.MaxValue)
     {
-        if(initialCount < 0 || initialCount > maxCount)
+        if (initialCount < 0 || initialCount > maxCount)
         {
             throw new ArgumentOutOfRangeException(nameof(initialCount), initialCount, AsyncSemaphoreCtorInitialCountWrong);
         }
 
-        if(maxCount <= 0)
+        if (maxCount <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxCount), maxCount, AsyncSemaphoreCtorMaxCountWrong);
         }
 
         currentCount = initialCount;
         this.maxCount = maxCount;
-        syncRoot = new object();
+        syncRoot = new();
     }
 
     public int MaxCount => maxCount;
@@ -39,14 +39,14 @@ public class AsyncSemaphore
 
     public ValueTask WaitAsync(CancellationToken cancellationToken = default)
     {
-        if(cancellationToken.IsCancellationRequested)
+        if (cancellationToken.IsCancellationRequested)
         {
             return ValueTask.FromCanceled(cancellationToken);
         }
 
-        lock(syncRoot)
+        lock (syncRoot)
         {
-            if(currentCount > 0)
+            if (currentCount > 0)
             {
                 currentCount--;
                 return ValueTask.CompletedTask;
@@ -57,7 +57,7 @@ public class AsyncSemaphore
             var node = new WaiterNode();
             node.Bind(cancellationToken);
 
-            if(head is null)
+            if (head is null)
             {
                 head = tail = node;
             }
@@ -66,7 +66,7 @@ public class AsyncSemaphore
                 tail = tail!.Next = node;
             }
 
-            return new ValueTask(node, node.Version);
+            return new(node, node.Version);
         }
     }
 
@@ -75,16 +75,16 @@ public class AsyncSemaphore
 
     public void Release(int releaseCount)
     {
-        lock(syncRoot)
+        lock (syncRoot)
         {
-            if(currentCount + releaseCount - waitersCount > maxCount)
+            if (currentCount + releaseCount - waitersCount > maxCount)
             {
                 throw new SemaphoreFullException();
             }
 
-            while(waitersCount > 0 && releaseCount > 0 && head is not null)
+            while (waitersCount > 0 && releaseCount > 0 && head is not null)
             {
-                if(head.TrySetComplete()) releaseCount--;
+                if (head.TrySetComplete()) releaseCount--;
                 head = head.Next;
                 waitersCount--;
             }
@@ -99,16 +99,13 @@ public class AsyncSemaphore
         private ManualResetValueTaskSourceCore<bool> core;
         private CancellationTokenRegistration? registration;
 
-        public WaiterNode()
-        {
-            core = new ManualResetValueTaskSourceCore<bool> { RunContinuationsAsynchronously = true };
-        }
+        public WaiterNode() => core = new() { RunContinuationsAsynchronously = true };
 
         public short Version => core.Version;
 
         public WaiterNode? Next { get; set; }
 
-        public void Reset()
+        private void Reset()
         {
             ResetPendingCancellation();
             core.Reset();
@@ -119,7 +116,7 @@ public class AsyncSemaphore
         {
             ResetPendingCancellation();
 
-            if(cancellationToken != default)
+            if (cancellationToken != default)
             {
                 registration = cancellationToken.UnsafeRegister(
                     static (state, token) => ((WaiterNode)state!).TrySetCanceled(token),
@@ -129,7 +126,7 @@ public class AsyncSemaphore
 
         public bool TrySetComplete()
         {
-            if(Interlocked.CompareExchange(ref completed, 1, 0) == 0)
+            if (Interlocked.CompareExchange(ref completed, 1, 0) == 0)
             {
                 ResetPendingCancellation();
                 core.SetResult(true);
@@ -139,13 +136,13 @@ public class AsyncSemaphore
             return false;
         }
 
-        public bool TrySetCanceled(CancellationToken cancellationToken) =>
+        private bool TrySetCanceled(CancellationToken cancellationToken) =>
             TrySetException(ExceptionDispatchInfo.SetCurrentStackTrace(
                 new OperationCanceledException(cancellationToken)));
 
-        public bool TrySetException(Exception error)
+        private bool TrySetException(Exception error)
         {
-            if(Interlocked.CompareExchange(ref completed, 1, 0) == 0)
+            if (Interlocked.CompareExchange(ref completed, 1, 0) == 0)
             {
                 ResetPendingCancellation();
                 core.SetException(error);
@@ -161,7 +158,7 @@ public class AsyncSemaphore
             var local = registration;
             registration = null;
 
-            if(local.HasValue)
+            if (local.HasValue)
             {
                 local.Value.Dispose();
             }

@@ -7,8 +7,5 @@ public static class CorrelationIdGenerator
     private static long current = DateTimeOffset.UtcNow.Ticks;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long GetNext()
-    {
-        return Interlocked.Increment(ref current);
-    }
+    public static long GetNext() => Interlocked.Increment(ref current);
 }

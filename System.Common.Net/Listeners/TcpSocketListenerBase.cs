@@ -6,8 +6,8 @@ namespace System.Net.Listeners;
 public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnection>
 {
     private readonly int backlog;
-    private readonly Action<Socket> configureListening;
     private readonly Action<Socket> configureAccepted;
+    private readonly Action<Socket> configureListening;
     private readonly IPEndPoint endPoint;
 
     protected TcpSocketListenerBase(IPEndPoint endPoint, int backlog = 100,
@@ -24,23 +24,26 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnectio
 
     protected IPEndPoint EndPoint => endPoint;
 
+    protected abstract INetworkConnection CreateConnection(Socket acceptedSocket);
+
     #region Implementation of IAsyncEnumerable<INetworkConnection>
 
     public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-        if(endPoint.AddressFamily == AddressFamily.InterNetworkV6)
+        if (endPoint.AddressFamily == AddressFamily.InterNetworkV6)
         {
             // Allow IPv4 clients for backward compatibility, if endPoint designates IPv6 address
             socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
         }
+
         configureListening?.Invoke(socket);
 
         socket.Bind(endPoint);
         socket.Listen(backlog);
 
-        while(!cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             Socket acceptedSocket = null;
             INetworkConnection connection;
@@ -51,7 +54,7 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnectio
                 configureAccepted?.Invoke(acceptedSocket);
                 connection = CreateConnection(acceptedSocket);
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 acceptedSocket?.Dispose();
                 yield break;
@@ -62,7 +65,7 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnectio
                 throw;
             }
 
-            if(connection is not null)
+            if (connection is not null)
             {
                 yield return connection;
             }
@@ -70,6 +73,4 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnectio
     }
 
     #endregion
-
-    protected abstract INetworkConnection CreateConnection(Socket acceptedSocket);
 }

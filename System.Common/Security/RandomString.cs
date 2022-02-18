@@ -12,7 +12,7 @@ public static class RandomString
     {
         var bytes = length <= 256 ? stackalloc byte[length] : new byte[length];
 
-        for(var i = 0; i < bytes.Length; i++)
+        for (var i = 0; i < bytes.Length; i++)
         {
             bytes[i] = (byte)RandomNumberGenerator.GetInt32(minCharCode, maxCharCode + 1);
         }
@@ -22,11 +22,11 @@ public static class RandomString
 
     public static string Generate(int length, string alphabet)
     {
-        if(string.IsNullOrWhiteSpace(alphabet)) throw new ArgumentException($"'{nameof(alphabet)}' cannot be null or whitespace.", nameof(alphabet));
+        if (string.IsNullOrWhiteSpace(alphabet)) throw new ArgumentException($"'{nameof(alphabet)}' cannot be null or whitespace.", nameof(alphabet));
 
         var bytes = length <= 256 ? stackalloc byte[length] : new byte[length];
 
-        for(var i = 0; i < bytes.Length; i++)
+        for (var i = 0; i < bytes.Length; i++)
         {
             bytes[i] = (byte)alphabet[RandomNumberGenerator.GetInt32(0, alphabet.Length)];
         }

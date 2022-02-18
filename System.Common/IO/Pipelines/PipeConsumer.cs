@@ -22,7 +22,7 @@ public abstract class PipeConsumer : ActivityObject
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
-        cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource = new();
 
         consumer = StartConsumerAsync(cancellationTokenSource.Token);
 
@@ -31,7 +31,7 @@ public abstract class PipeConsumer : ActivityObject
 
     protected override async Task StoppingAsync()
     {
-        using(cancellationTokenSource)
+        using (cancellationTokenSource)
         {
             cancellationTokenSource.Cancel();
 
@@ -43,17 +43,17 @@ public abstract class PipeConsumer : ActivityObject
     {
         try
         {
-            while(!token.IsCancellationRequested)
+            while (!token.IsCancellationRequested)
             {
                 var result = await reader.ReadAsync(token).ConfigureAwait(false);
 
                 var buffer = result.Buffer;
 
-                if(buffer.Length > 0)
+                if (buffer.Length > 0)
                 {
                     Consume(in buffer, out var consumed);
 
-                    if(consumed > 0)
+                    if (consumed > 0)
                     {
                         reader.AdvanceTo(buffer.GetPosition(consumed));
                         continue;
@@ -63,7 +63,7 @@ public abstract class PipeConsumer : ActivityObject
                     reader.AdvanceTo(buffer.Start, buffer.End);
                 }
 
-                if(result.IsCompleted || result.IsCanceled)
+                if (result.IsCompleted || result.IsCanceled)
                 {
                     // However we couldn't get more data, because writer end has already completed writing. 
                     // So we better terminate reading in order to avoid potential "dead" loop
@@ -71,7 +71,7 @@ public abstract class PipeConsumer : ActivityObject
                 }
             }
         }
-        catch(OperationCanceledException)
+        catch (OperationCanceledException)
         {
             // Expected
         }

@@ -2,16 +2,16 @@
 
 public sealed class CancelableOperationScope : IAsyncCancelable
 {
+    private readonly Task completion;
     private readonly CancellationTokenSource jointCts;
     private readonly CancellationTokenSource localCts;
-    private readonly Task completion;
     private int disposed;
 
     private CancelableOperationScope(Func<CancellationToken, Task> operation, CancellationToken stoppingToken)
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        localCts = new CancellationTokenSource();
+        localCts = new();
 
         var token = stoppingToken != default
             ? (jointCts = CancellationTokenSource.CreateLinkedTokenSource(localCts.Token, stoppingToken)).Token
@@ -23,17 +23,15 @@ public sealed class CancelableOperationScope : IAsyncCancelable
         }
         catch
         {
-            using(localCts)
-            using(jointCts) { }
+            using (localCts)
+            using (jointCts) { }
 
             throw;
         }
     }
 
-    public static CancelableOperationScope Start(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default)
-    {
-        return new(operation, stoppingToken);
-    }
+    public static CancelableOperationScope Start(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default) =>
+        new(operation, stoppingToken);
 
     #region Implementation of IAsyncCancelable
 
@@ -47,17 +45,17 @@ public sealed class CancelableOperationScope : IAsyncCancelable
 
     public async ValueTask DisposeAsync()
     {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
 
-        using(localCts)
-        using(jointCts)
+        using (localCts)
+        using (jointCts)
         {
             try
             {
                 localCts.Cancel();
                 await completion.ConfigureAwait(false);
             }
-            catch(OperationCanceledException) { }
+            catch (OperationCanceledException) { }
         }
     }
 

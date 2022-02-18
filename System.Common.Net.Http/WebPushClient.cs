@@ -1,6 +1,5 @@
 using System.Buffers.Binary;
 using System.Globalization;
-using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using static System.Text.Encoding;
 
@@ -21,13 +20,13 @@ public class WebPushClient : IDisposable
         ArgumentNullException.ThrowIfNull(publicKey);
         ArgumentNullException.ThrowIfNull(privateKey);
 
-        if(string.IsNullOrEmpty(jwtSubject)) throw new ArgumentException($"'{nameof(jwtSubject)}' cannot be null or empty.", nameof(jwtSubject));
-        if(jwtExpires <= 0) throw new ArgumentException($"{nameof(jwtExpires)} must be greater than zero");
+        if (string.IsNullOrEmpty(jwtSubject)) throw new ArgumentException($"'{nameof(jwtSubject)}' cannot be null or empty.", nameof(jwtSubject));
+        if (jwtExpires <= 0) throw new ArgumentException($"{nameof(jwtExpires)} must be greater than zero");
 
         this.client = client;
         subject = jwtSubject;
         expires = jwtExpires;
-        tokenHandler = new JwtTokenHandler(publicKey, privateKey);
+        tokenHandler = new(publicKey, privateKey);
         cryptoKey = Encoders.ToBase64String(publicKey);
     }
 
@@ -38,7 +37,7 @@ public class WebPushClient : IDisposable
         ArgumentNullException.ThrowIfNull(authKey);
         ArgumentNullException.ThrowIfNull(payload);
 
-        if(ttl <= 0) throw new ArgumentException($"{nameof(ttl)} must be greater then zero");
+        if (ttl <= 0) throw new ArgumentException($"{nameof(ttl)} must be greater then zero");
 
         var token = new JwtToken
         {
@@ -60,10 +59,10 @@ public class WebPushClient : IDisposable
         {
             Headers =
             {
-                {"Authorization", $"WebPush {tokenHandler.Serialize(token)}"},
-                {"Encryption", $"salt={Encoders.ToBase64String(salt)}"},
-                {"Crypto-Key", $"dh={Encoders.ToBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}"},
-                {"TTL", ttl.ToString(CultureInfo.InvariantCulture)}
+                { "Authorization", $"WebPush {tokenHandler.Serialize(token)}" },
+                { "Encryption", $"salt={Encoders.ToBase64String(salt)}" },
+                { "Crypto-Key", $"dh={Encoders.ToBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}" },
+                { "TTL", ttl.ToString(CultureInfo.InvariantCulture) }
             },
             Content = content
         };
@@ -71,17 +70,15 @@ public class WebPushClient : IDisposable
         _ = response.EnsureSuccessStatusCode();
     }
 
-    private static HttpContent CreateHttpContent(byte[] content)
-    {
-        return new ByteArrayContent(content)
+    private static HttpContent CreateHttpContent(byte[] content) =>
+        new ByteArrayContent(content)
         {
             Headers =
             {
-                ContentType = new MediaTypeHeaderValue("application/octet-stream"),
-                ContentEncoding = {"aesgcm"}
+                ContentType = new("application/octet-stream"),
+                ContentEncoding = { "aesgcm" }
             }
         };
-    }
 
     private static byte[] EncryptPayload(byte[] data, byte[] key, byte[] nonce)
     {
@@ -137,11 +134,13 @@ public class WebPushClient : IDisposable
         return buffer;
     }
 
+    #region Implementation of IDisposable
+
     protected virtual void Dispose(bool disposing)
     {
-        if(disposed) return;
+        if (disposed) return;
 
-        if(disposing)
+        if (disposing)
         {
             tokenHandler.Dispose();
         }
@@ -154,4 +153,6 @@ public class WebPushClient : IDisposable
         Dispose(true);
         GC.SuppressFinalize(this);
     }
+
+    #endregion
 }

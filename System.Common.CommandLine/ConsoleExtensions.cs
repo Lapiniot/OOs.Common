@@ -7,22 +7,22 @@ public static class ConsoleExtensions
     public static string ReadPassword(bool echoInput = true)
     {
         var sb = new StringBuilder();
-        while(true)
+        while (true)
         {
             var ch = Console.ReadKey(true);
-            switch(ch.Key)
+            switch (ch.Key)
             {
                 case ConsoleKey.Enter: return sb.ToString();
                 case ConsoleKey.Escape: return null;
                 case ConsoleKey.Backspace:
-                    if(sb.Length > 0) _ = sb.Remove(sb.Length - 1, 1);
+                    if (sb.Length > 0) _ = sb.Remove(sb.Length - 1, 1);
                     break;
                 default:
                     _ = sb.Append(ch.KeyChar);
                     break;
             }
 
-            if(!echoInput) continue;
+            if (!echoInput) continue;
 
             var (_, top) = Console.GetCursorPosition();
             Console.SetCursorPosition(0, top);

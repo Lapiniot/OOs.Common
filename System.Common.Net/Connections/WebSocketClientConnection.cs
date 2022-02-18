@@ -8,16 +8,16 @@ namespace System.Net.Connections;
 
 public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSocket>
 {
-    private readonly string[] subProtocols;
     private readonly X509Certificate[] clientCertificates;
     private readonly TimeSpan? keepAliveInterval;
+    private readonly string[] subProtocols;
 
     public WebSocketClientConnection(Uri remoteUri, string[] subProtocols, X509Certificate[] clientCertificates = null, TimeSpan? keepAliveInterval = null)
         : base(null)
     {
         ArgumentNullException.ThrowIfNull(remoteUri);
         ArgumentNullException.ThrowIfNull(subProtocols);
-        if(subProtocols.Length == 0) throw new ArgumentException(NoWsSubProtocol);
+        if (subProtocols.Length == 0) throw new ArgumentException(NoWsSubProtocol);
 
         RemoteUri = remoteUri;
         this.subProtocols = subProtocols;
@@ -33,17 +33,17 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
     {
         var socket = new ClientWebSocket();
 
-        foreach(var subProtocol in SubProtocols)
+        foreach (var subProtocol in SubProtocols)
         {
             socket.Options.AddSubProtocol(subProtocol);
         }
 
-        if(clientCertificates is not null)
+        if (clientCertificates is not null)
         {
             socket.Options.ClientCertificates.AddRange(clientCertificates);
         }
 
-        if(keepAliveInterval.HasValue)
+        if (keepAliveInterval.HasValue)
         {
             socket.Options.KeepAliveInterval = keepAliveInterval.Value;
         }
@@ -53,19 +53,16 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
             await socket.ConnectAsync(RemoteUri, cancellationToken).ConfigureAwait(false);
             Socket = socket;
         }
-        catch(WebSocketException wse) when(
+        catch (WebSocketException wse) when (
             wse.InnerException is HttpRequestException { InnerException: SocketException { SocketErrorCode: SocketError.HostNotFound } })
         {
             throw new HostNotFoundException(wse);
         }
-        catch(WebSocketException wse)
+        catch (WebSocketException wse)
         {
             throw new ServerUnavailableException(wse);
         }
     }
 
-    public override string ToString()
-    {
-        return $"{Id}-{nameof(WebSocketClientConnection)}";
-    }
+    public override string ToString() => $"{Id}-{nameof(WebSocketClientConnection)}";
 }

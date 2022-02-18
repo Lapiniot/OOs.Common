@@ -6,15 +6,10 @@ public class JwtToken
 {
     private readonly Dictionary<string, string> claims;
 
-    public JwtToken()
-    {
-        claims = new Dictionary<string, string>();
-    }
+    public JwtToken() => claims = new();
 
-    public JwtToken(IReadOnlyDictionary<string, string> claims)
-    {
-        this.claims = new Dictionary<string, string>(claims);
-    }
+    public JwtToken(IReadOnlyDictionary<string, string> claims) =>
+        this.claims = new(claims);
 
     public string Issuer
     {

@@ -18,8 +18,5 @@ public sealed class NetworkPipeReader : PipeProducer
         this.connection = connection;
     }
 
-    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        return connection.ReceiveAsync(buffer, cancellationToken);
-    }
+    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken) => connection.ReceiveAsync(buffer, cancellationToken);
 }

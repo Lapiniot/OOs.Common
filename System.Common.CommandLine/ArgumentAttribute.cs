@@ -11,10 +11,7 @@ public sealed class ArgumentAttribute : Attribute, IArgumentMetadata
         Type = type ?? throw new ArgumentException($"{nameof(type)} cannot be null");
     }
 
-    public ArgumentAttribute(string name, Type type, string shortName) : this(name, type)
-    {
-        ShortName = shortName;
-    }
+    public ArgumentAttribute(string name, Type type, string shortName) : this(name, type) => ShortName = shortName;
 
     public string Name { get; }
 

@@ -12,25 +12,19 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
     public OrderedHashMap(IEnumerable<KeyValuePair<TKey, TValue>> collection) : this()
     {
         ArgumentNullException.ThrowIfNull(collection);
-        foreach(var (key, value) in collection)
+        foreach (var (key, value) in collection)
         {
             AddNode(key, value);
         }
     }
 
-    public OrderedHashMap(int capacity)
-    {
-        map = new Dictionary<TKey, Node>(capacity);
-    }
+    public OrderedHashMap(int capacity) => map = new(capacity);
 
-    public OrderedHashMap()
-    {
-        map = new Dictionary<TKey, Node>();
-    }
+    public OrderedHashMap() => map = new();
 
     public TValue AddOrUpdate(TKey key, TValue addValue, TValue updateValue)
     {
-        lock(syncLock)
+        lock (syncLock)
         {
             return map.TryGetValue(key, out var node)
                 ? node.Value = updateValue
@@ -40,14 +34,14 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
 
     public bool TryRemove(TKey key, out TValue value)
     {
-        lock(syncLock)
+        lock (syncLock)
         {
-            if(map.Remove(key, out var node))
+            if (map.Remove(key, out var node))
             {
-                if(node.Next != null) node.Next.Prev = node.Prev;
-                if(node.Prev != null) node.Prev.Next = node.Next;
-                if(head == node) head = node.Next;
-                if(tail == node) tail = node.Prev;
+                if (node.Next != null) node.Next.Prev = node.Prev;
+                if (node.Prev != null) node.Prev.Next = node.Next;
+                if (head == node) head = node.Next;
+                if (tail == node) tail = node.Prev;
                 value = node.Value;
                 return true;
             }
@@ -59,7 +53,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
 
     public void TrimExcess()
     {
-        lock(syncLock)
+        lock (syncLock)
         {
             map.TrimExcess();
         }
@@ -74,7 +68,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
             Next = null
         };
         head ??= node;
-        if(tail != null) tail.Next = node;
+        if (tail != null) tail.Next = node;
         tail = node;
         map.Add(key, node);
         return node;
@@ -89,20 +83,11 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
 
     #region Implementation of IEnumerable
 
-    public Enumerator GetEnumerator()
-    {
-        return new Enumerator(this);
-    }
+    public Enumerator GetEnumerator() => new(this);
 
-    IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator()
-    {
-        return new Enumerator(this);
-    }
+    IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator() => new Enumerator(this);
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return new Enumerator(this);
-    }
+    IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
 
     public struct Enumerator : IEnumerator<TValue>
     {
@@ -135,12 +120,12 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
 
         public bool MoveNext()
         {
-            switch(state)
+            switch (state)
             {
                 case Init:
                     Monitor.Enter(map.syncLock, ref locked);
                     node = map.head;
-                    if(node is not null)
+                    if (node is not null)
                     {
                         state = InProgress;
                         return true;
@@ -153,7 +138,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
                     }
                 case InProgress:
                     node = node.Next;
-                    if(node is null)
+                    if (node is null)
                     {
                         state = Done;
                         ReleaseLock();
@@ -170,7 +155,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReleaseLock()
         {
-            if(!locked) return;
+            if (!locked) return;
             locked = false;
             Monitor.Exit(map.syncLock);
         }

@@ -30,25 +30,25 @@ public class ArgumentParser
         arguments = args;
         extras = unknown;
 
-        var comparer = new ComparerAdapter<string>((x1, x2) => CompareByLength(x1, x2));
+        var comparer = new ComparerAdapter<string>(static (x1, x2) => CompareByLength(x1, x2));
 
         var smap = new SortedDictionary<string, IArgumentMetadata>(comparer);
         var nmap = new SortedDictionary<string, IArgumentMetadata>();
 
-        foreach(var item in schema)
+        foreach (var item in schema)
         {
             nmap.Add(item.Name, item);
 
-            if(item.ShortName != null) smap.Add(item.ShortName, item);
+            if (item.ShortName != null) smap.Add(item.ShortName, item);
         }
 
         command = commands.SingleOrDefault(c => c.IsDefault)?.Name;
 
-        if(tokens.Count == 0) return;
+        if (tokens.Count == 0) return;
 
         var arg = tokens.Peek();
 
-        if(!arg.StartsWith('-') && !arg.StartsWith('/'))
+        if (!arg.StartsWith('-') && !arg.StartsWith('/'))
         {
             var name = arg;
 
@@ -57,15 +57,15 @@ public class ArgumentParser
             _ = tokens.Dequeue();
         }
 
-        while(tokens.Count > 0)
+        while (tokens.Count > 0)
         {
             arg = tokens.Dequeue();
 
-            if(arg.StartsWith("--", false, InvariantCulture))
+            if (arg.StartsWith("--", false, InvariantCulture))
             {
                 AddByName(arg[2..], nmap, args);
             }
-            else if(arg[0] is '-' or '/')
+            else if (arg[0] is '-' or '/')
             {
                 AddByShortName(arg[1..], tokens, smap, args);
             }
@@ -85,14 +85,14 @@ public class ArgumentParser
 
     private void AddByShortName(string arg, Queue<string> queue, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
     {
-        if(metadata.TryGetValue(arg, out var def))
+        if (metadata.TryGetValue(arg, out var def))
         {
             // Try parse as exact match
             var type = def.Type;
 
-            if(type == typeof(bool))
+            if (type == typeof(bool))
             {
-                if(queue.TryPeek(out var str) && TryParseBoolean(str, out var value))
+                if (queue.TryPeek(out var str) && TryParseBoolean(str, out var value))
                 {
                     arguments[arg] = value;
                     _ = queue.Dequeue();
@@ -113,13 +113,13 @@ public class ArgumentParser
         {
             // Try parse as argument+value concatenated
 
-            if(TryParseAsJointKeyValuePair(arg, metadata, arguments)) return;
+            if (TryParseAsJointKeyValuePair(arg, metadata, arguments)) return;
 
             // Try to parse as switches only concatenated
 
-            if(TryParseJointSwitchesArgument(arg, metadata, arguments)) return;
+            if (TryParseJointSwitchesArgument(arg, metadata, arguments)) return;
 
-            if(strict) throw new ArgumentException($"Invalid argument '{arg}'");
+            if (strict) throw new ArgumentException($"Invalid argument '{arg}'");
 
             arguments[arg] = queue.TryPeek(out var next) && next[0] is not ('/' or '-') ? queue.Dequeue() : "";
         }
@@ -127,20 +127,20 @@ public class ArgumentParser
 
     private static bool TryParseAsJointKeyValuePair(string arg, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
     {
-        foreach(var (key, def) in metadata)
+        foreach (var (key, def) in metadata)
         {
             var type = def.Type;
 
-            if(!arg.StartsWith(key, false, InvariantCulture)) continue;
+            if (!arg.StartsWith(key, false, InvariantCulture)) continue;
 
-            if(type != typeof(bool))
+            if (type != typeof(bool))
             {
                 var value = arg[key.Length..];
                 arguments[key] = type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture);
                 return true;
             }
 
-            if(!TryParseBoolean(arg[key.Length..], out var b)) continue;
+            if (!TryParseBoolean(arg[key.Length..], out var b)) continue;
 
             arguments[key] = b;
 
@@ -159,23 +159,23 @@ public class ArgumentParser
         {
             match = false;
 
-            foreach(var (key, value) in metadata)
+            foreach (var (key, value) in metadata)
             {
-                if(value.Type != typeof(bool)) continue;
+                if (value.Type != typeof(bool)) continue;
 
-                if(!arg.StartsWith(key, false, InvariantCulture)) continue;
+                if (!arg.StartsWith(key, false, InvariantCulture)) continue;
 
                 _ = keys.Add(key);
                 arg = arg[key.Length..];
                 match = true;
 
-                if(arg.Length == 0) break;
+                if (arg.Length == 0) break;
             }
-        } while(match && arg.Length > 0);
+        } while (match && arg.Length > 0);
 
-        if(arg.Length > 0) return false;
+        if (arg.Length > 0) return false;
 
-        foreach(var k in keys)
+        foreach (var k in keys)
         {
             arguments[k] = true;
         }
@@ -189,9 +189,9 @@ public class ArgumentParser
 
         var key = pair[0];
 
-        if(!metadata.TryGetValue(key, out var def))
+        if (!metadata.TryGetValue(key, out var def))
         {
-            if(strict) throw new ArgumentException($"Invalid argument '{key}'");
+            if (strict) throw new ArgumentException($"Invalid argument '{key}'");
             arguments[key] = pair.Length > 1 ? pair[1] : "";
             return;
         }
@@ -199,7 +199,7 @@ public class ArgumentParser
         key = def.Name;
         var type = def.Type;
 
-        if(type == typeof(bool))
+        if (type == typeof(bool))
         {
             arguments[key] = pair.Length == 1
                 ? true
@@ -209,7 +209,7 @@ public class ArgumentParser
         }
         else
         {
-            if(pair.Length == 2)
+            if (pair.Length == 2)
             {
                 var value = pair[1];
                 arguments[key] = type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture);

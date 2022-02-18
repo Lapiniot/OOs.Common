@@ -27,19 +27,14 @@ public class WebSocketListener : IAsyncEnumerable<INetworkConnection>
         this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
     { }
 
+    public override string ToString() => $"{nameof(WebSocketListener)}: {string.Join(", ", prefixes)} ({string.Join(", ", subProtocols)})";
+
     #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
-    public IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-    {
-        return new WebSocketEnumerator(prefixes, subProtocols, keepAliveInterval, receiveBufferSize, cancellationToken);
-    }
+    public IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
+        new WebSocketEnumerator(prefixes, subProtocols, keepAliveInterval, receiveBufferSize, cancellationToken);
 
     #endregion
-
-    public override string ToString()
-    {
-        return $"{nameof(WebSocketListener)}: {string.Join(", ", prefixes)} ({string.Join(", ", subProtocols)})";
-    }
 
     private class WebSocketEnumerator : IAsyncEnumerator<INetworkConnection>
     {
@@ -61,9 +56,16 @@ public class WebSocketListener : IAsyncEnumerable<INetworkConnection>
             this.cancellationToken = cancellationToken;
             shouldMatchSubProtocol = subProtocols is { Length: > 0 };
 
-            listener = new HttpListener();
-            foreach(var prefix in prefixes) listener.Prefixes.Add(prefix);
+            listener = new();
+            foreach (var prefix in prefixes) listener.Prefixes.Add(prefix);
             listener.Start();
+        }
+
+        private static void Close(HttpListenerResponse response, string statusDescription = "Bad request", int statusCode = 400)
+        {
+            response.StatusCode = statusCode;
+            response.StatusDescription = statusDescription;
+            response.Close();
         }
 
         #region Implementation of IAsyncDisposable
@@ -76,24 +78,17 @@ public class WebSocketListener : IAsyncEnumerable<INetworkConnection>
 
         #endregion
 
-        private static void Close(HttpListenerResponse response, string statusDescription = "Bad request", int statusCode = 400)
-        {
-            response.StatusCode = statusCode;
-            response.StatusDescription = statusDescription;
-            response.Close();
-        }
-
         #region Implementation of IAsyncEnumerator<out INetworkConnection>
 
         public async ValueTask<bool> MoveNextAsync()
         {
             try
             {
-                while(!cancellationToken.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     var context = await listener.GetContextAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
 
-                    if(!context.Request.IsWebSocketRequest)
+                    if (!context.Request.IsWebSocketRequest)
                     {
                         Close(context.Response, Strings.WebSocketHandshakeExpected);
                         continue;
@@ -101,9 +96,9 @@ public class WebSocketListener : IAsyncEnumerable<INetworkConnection>
 
                     var subProtocol = context.Request.Headers["Sec-WebSocket-Protocol"];
 
-                    if(shouldMatchSubProtocol)
+                    if (shouldMatchSubProtocol)
                     {
-                        if(string.IsNullOrEmpty(subProtocol))
+                        if (string.IsNullOrEmpty(subProtocol))
                         {
                             Close(context.Response, Strings.NoWsSubProtocol);
                             continue;
@@ -111,7 +106,7 @@ public class WebSocketListener : IAsyncEnumerable<INetworkConnection>
 
                         var headers = subProtocol.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
                         subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
-                        if(subProtocol is null)
+                        if (subProtocol is null)
                         {
                             Close(context.Response, Strings.NotSupportedWsSubProtocol);
                             continue;
@@ -132,7 +127,7 @@ public class WebSocketListener : IAsyncEnumerable<INetworkConnection>
                     }
                 }
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 listener.Stop();
             }

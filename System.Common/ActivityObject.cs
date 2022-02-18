@@ -13,29 +13,13 @@ public abstract class ActivityObject : IAsyncDisposable
 
     protected bool IsRunning { get; private set; }
 
-    #region Implementation of IAsyncDisposable
-
-    public virtual async ValueTask DisposeAsync()
-    {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
-
-        GC.SuppressFinalize(this);
-
-        using(semaphore)
-        {
-            await StopActivityCoreAsync().ConfigureAwait(false);
-        }
-    }
-
-    #endregion
-
     protected abstract Task StartingAsync(CancellationToken cancellationToken);
 
     protected abstract Task StoppingAsync();
 
     protected void CheckState(bool state, [CallerMemberName] string callerName = null)
     {
-        if(IsRunning != state)
+        if (IsRunning != state)
         {
             throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
         }
@@ -43,7 +27,7 @@ public abstract class ActivityObject : IAsyncDisposable
 
     protected void CheckDisposed()
     {
-        if(Volatile.Read(ref disposed) != 0)
+        if (Volatile.Read(ref disposed) != 0)
         {
             throw new ObjectDisposedException(nameof(ActivityObject));
         }
@@ -53,13 +37,13 @@ public abstract class ActivityObject : IAsyncDisposable
     {
         CheckDisposed();
 
-        if(!IsRunning)
+        if (!IsRunning)
         {
             await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
             try
             {
-                if(!IsRunning)
+                if (!IsRunning)
                 {
                     await StartingAsync(cancellationToken).ConfigureAwait(false);
 
@@ -81,13 +65,13 @@ public abstract class ActivityObject : IAsyncDisposable
 
     private async Task StopActivityCoreAsync()
     {
-        if(IsRunning)
+        if (IsRunning)
         {
             await semaphore.WaitAsync().ConfigureAwait(false);
 
             try
             {
-                if(IsRunning)
+                if (IsRunning)
                 {
                     await StoppingAsync().ConfigureAwait(false);
                 }
@@ -99,4 +83,20 @@ public abstract class ActivityObject : IAsyncDisposable
             }
         }
     }
+
+    #region Implementation of IAsyncDisposable
+
+    public virtual async ValueTask DisposeAsync()
+    {
+        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+
+        GC.SuppressFinalize(this);
+
+        using (semaphore)
+        {
+            await StopActivityCoreAsync().ConfigureAwait(false);
+        }
+    }
+
+    #endregion
 }

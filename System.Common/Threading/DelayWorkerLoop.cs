@@ -19,10 +19,7 @@ public sealed class DelayWorkerLoop : Worker
         this.maxIterations = maxIterations;
     }
 
-    public void ResetDelay()
-    {
-        Volatile.Read(ref resetSource)?.Cancel();
-    }
+    public void ResetDelay() => Volatile.Read(ref resetSource)?.Cancel();
 
     #region Overrides of WorkerBase
 
@@ -32,7 +29,7 @@ public sealed class DelayWorkerLoop : Worker
 
         try
         {
-            while(!stoppingToken.IsCancellationRequested && (maxIterations == Infinite || iteration < maxIterations))
+            while (!stoppingToken.IsCancellationRequested && (maxIterations == Infinite || iteration < maxIterations))
             {
                 try
                 {
@@ -40,9 +37,9 @@ public sealed class DelayWorkerLoop : Worker
                     await asyncWork(stoppingToken).ConfigureAwait(false);
                     iteration++;
                 }
-                catch(OperationCanceledException)
+                catch (OperationCanceledException)
                 {
-                    if(stoppingToken.IsCancellationRequested) break;
+                    if (stoppingToken.IsCancellationRequested) break;
                     linkedSource.Dispose();
                     ResetCancellationState(out tokenSource, out linkedSource).Dispose();
                 }
@@ -57,7 +54,7 @@ public sealed class DelayWorkerLoop : Worker
 
         CancellationTokenSource ResetCancellationState(out CancellationTokenSource resetTokenSource, out CancellationTokenSource linkedTokenSource)
         {
-            resetTokenSource = new CancellationTokenSource();
+            resetTokenSource = new();
             linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, resetTokenSource.Token);
             return Interlocked.Exchange(ref resetSource, resetTokenSource);
         }

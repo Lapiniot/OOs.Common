@@ -21,7 +21,6 @@ public class ObjectPoolRentShould
         Assert.AreEqual(1, MockObject.ConstructorInvocations);
     }
 
-
     [TestMethod]
     [DoNotParallelize]
     public void ReturnExistingInstanceIfPoolIsNotEmpty()
@@ -48,7 +47,7 @@ public class ObjectPoolRentShould
         const int maxCapacity = 8;
         var pool = new ObjectPool<MockObject>(maxCapacity);
         var instances = new MockObject[maxCapacity];
-        for(var i = 0; i < instances.Length; i++) pool.Return(instances[i] = new MockObject());
+        for (var i = 0; i < instances.Length; i++) pool.Return(instances[i] = new());
         MockObject.ResetCounter();
 
         // Act
@@ -62,7 +61,10 @@ public class ObjectPoolRentShould
             },
             acc =>
             {
-                lock(actual) actual.AddRange(acc);
+                lock (actual)
+                {
+                    actual.AddRange(acc);
+                }
             });
 
         // Assert
@@ -74,10 +76,7 @@ public class ObjectPoolRentShould
     {
         private static int constructorInvocations;
 
-        public MockObject()
-        {
-            Interlocked.Increment(ref constructorInvocations);
-        }
+        public MockObject() => Interlocked.Increment(ref constructorInvocations);
 
         internal static int ConstructorInvocations => Volatile.Read(ref constructorInvocations);
 

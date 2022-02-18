@@ -26,9 +26,9 @@ public class Arguments
         var argumentByNameComparer = new EqualityComparerAdapter<ArgumentAttribute>((c1, c2) =>
             string.Equals(c1.Name, c2.Name, StringComparison.OrdinalIgnoreCase));
         var schema = Assembly.GetEntryAssembly()?
-             .GetCustomAttributes<ArgumentAttribute>()
-             .Distinct(argumentByNameComparer)
-             .ToArray() ?? Array.Empty<ArgumentAttribute>();
+            .GetCustomAttributes<ArgumentAttribute>()
+            .Distinct(argumentByNameComparer)
+            .ToArray() ?? Array.Empty<ArgumentAttribute>();
 
         var commandByNameComparer = new EqualityComparerAdapter<CommandAttribute>((c1, c2) =>
             string.Equals(c1.Name, c2.Name, StringComparison.OrdinalIgnoreCase));
@@ -41,6 +41,6 @@ public class Arguments
 
         parser.Parse(queue, out var command, out var parameters, out var extras);
 
-        return new Arguments(command, parameters, extras);
+        return new(command, parameters, extras);
     }
 }

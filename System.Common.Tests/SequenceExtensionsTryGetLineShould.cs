@@ -11,9 +11,9 @@ public class SequenceExtensionsTryGetLineShould
     {
         var sequence = new ReadOnlySequence<byte>(new byte[]
         {
-                0x00, 0x11, 0x22, 0x33,
-                (byte)'\r', (byte)'\n',
-                0x33, 0x22, 0x11, 0x00
+            0x00, 0x11, 0x22, 0x33,
+            (byte)'\r', (byte)'\n',
+            0x33, 0x22, 0x11, 0x00
         });
 
         var actual = sequence.TryReadLine(out var line);
@@ -144,8 +144,8 @@ public class SequenceExtensionsTryGetLineShould
     {
         var sequence = new ReadOnlySequence<byte>(new byte[]
         {
-                0x00, 0x11, 0x22, 0x33,
-                0x33, 0x22, 0x11, 0x00
+            0x00, 0x11, 0x22, 0x33,
+            0x33, 0x22, 0x11, 0x00
         });
 
         var actual = sequence.TryReadLine(out var line);
@@ -159,9 +159,9 @@ public class SequenceExtensionsTryGetLineShould
     {
         var sequence = new ReadOnlySequence<byte>(new byte[]
         {
-                0x00, 0x11, 0x22, 0x33,
-                (byte)'\r', 0x00,
-                0x33, 0x22, 0x11, 0x00
+            0x00, 0x11, 0x22, 0x33,
+            (byte)'\r', 0x00,
+            0x33, 0x22, 0x11, 0x00
         });
 
         var actual = sequence.TryReadLine(out var line);
@@ -175,9 +175,9 @@ public class SequenceExtensionsTryGetLineShould
     {
         var sequence = new ReadOnlySequence<byte>(new byte[]
         {
-                0x00, 0x11, 0x22, 0x33,
-                (byte)'\n', 0x00,
-                0x33, 0x22, 0x11, 0x00
+            0x00, 0x11, 0x22, 0x33,
+            (byte)'\n', 0x00,
+            0x33, 0x22, 0x11, 0x00
         });
 
         var actual = sequence.TryReadLine(out var line);
@@ -191,9 +191,9 @@ public class SequenceExtensionsTryGetLineShould
     {
         var sequence = new ReadOnlySequence<byte>(new byte[]
         {
-                0x00, 0x11, 0x22, 0x33,
-                (byte)'\r', 0x00, (byte)'\n',
-                0x33, 0x22, 0x11, 0x00
+            0x00, 0x11, 0x22, 0x33,
+            (byte)'\r', 0x00, (byte)'\n',
+            0x33, 0x22, 0x11, 0x00
         });
 
         var actual = sequence.TryReadLine(out var line);

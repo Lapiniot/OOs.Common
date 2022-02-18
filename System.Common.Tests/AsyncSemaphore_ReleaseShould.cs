@@ -88,7 +88,7 @@ public class AsyncSemaphore_ReleaseShould
         var semaphore = new AsyncSemaphore(initialCount);
         var waiters = new List<ValueTask>(waitersCount);
 #pragma warning disable CA2012 // Use ValueTasks correctly
-        for(var i = 0; i < waitersCount; i++) waiters.Add(semaphore.WaitAsync());
+        for (var i = 0; i < waitersCount; i++) waiters.Add(semaphore.WaitAsync());
 #pragma warning restore CA2012 // Use ValueTasks correctly
 
         // Act

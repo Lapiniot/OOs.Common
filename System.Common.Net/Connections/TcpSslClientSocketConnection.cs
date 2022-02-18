@@ -1,18 +1,17 @@
-using System.Net.Sockets;
 using System.Net.Connections.Exceptions;
 using System.Net.Security;
+using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-
 using static System.Net.Sockets.SocketError;
 
 namespace System.Net.Connections;
 
 public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
 {
-    private readonly string machineName;
-    private readonly SslProtocols enabledSslProtocols;
     private readonly X509Certificate[] certificates;
+    private readonly SslProtocols enabledSslProtocols;
+    private readonly string machineName;
     private SslStream sslStream;
 
     public TcpSslClientSocketConnection(IPEndPoint endPoint, string machineName,
@@ -45,7 +44,7 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
         {
             await sslStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
+        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
             throw new ConnectionClosedException(se);
@@ -60,7 +59,7 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
         {
             return await sslStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
+        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
             throw new ConnectionClosedException(se);
@@ -75,7 +74,7 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
 
         try
         {
-            sslStream = new SslStream(networkStream, false);
+            sslStream = new(networkStream, false);
 
             try
             {
@@ -85,16 +84,16 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
                     EnabledSslProtocols = enabledSslProtocols
                 };
 
-                if(certificates is not null)
+                if (certificates is not null)
                 {
-                    options.ClientCertificates = new X509CertificateCollection(certificates);
+                    options.ClientCertificates = new(certificates);
                 }
 
                 await sslStream.AuthenticateAsClientAsync(options, cancellationToken).ConfigureAwait(false);
             }
             catch
             {
-                await using(sslStream.ConfigureAwait(false))
+                await using (sslStream.ConfigureAwait(false))
                 {
                     sslStream = null;
                     throw;
@@ -103,7 +102,7 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
         }
         catch
         {
-            await using(networkStream.ConfigureAwait(false))
+            await using (networkStream.ConfigureAwait(false))
             {
                 throw;
             }
@@ -118,15 +117,12 @@ public sealed class TcpSslClientSocketConnection : TcpClientSocketConnection
         }
         finally
         {
-            if(sslStream is not null)
+            if (sslStream is not null)
             {
                 await sslStream.DisposeAsync().ConfigureAwait(false);
             }
         }
     }
 
-    public override string ToString()
-    {
-        return $"{nameof(TcpSslClientSocketConnection)}: {Socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
-    }
+    public override string ToString() => $"{nameof(TcpSslClientSocketConnection)}: {Socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
 }

@@ -7,11 +7,9 @@ namespace System.Net;
 
 public static class NetworkInterfaceExtensions
 {
-    public static NetworkInterface FindBestMulticastInterface()
-    {
-        return GetAllNetworkInterfaces().FirstOrDefault(i => IsActiveMulticastEnabled(i))
-            ?? throw new InvalidOperationException("No valid network interface with multicast support found.");
-    }
+    public static NetworkInterface FindBestMulticastInterface() =>
+        GetAllNetworkInterfaces().FirstOrDefault(static i => IsActiveMulticastEnabled(i))
+        ?? throw new InvalidOperationException("No valid network interface with multicast support found.");
 
     public static int GetIndex(this NetworkInterface networkInterface, AddressFamily addressFamily)
     {
@@ -41,42 +39,30 @@ public static class NetworkInterfaceExtensions
                networkInterface.OperationalStatus == OperationalStatus.Up;
     }
 
-    public static NetworkInterface FindByAddress(string adapterAddress)
-    {
-        return IPAddress.TryParse(adapterAddress, out var address)
+    public static NetworkInterface FindByAddress(string adapterAddress) =>
+        IPAddress.TryParse(adapterAddress, out var address)
             ? GetAllNetworkInterfaces().FirstOrDefault(i => i.GetIPProperties().UnicastAddresses.Any(ua => ua.Address.Equals(address)))
             : null;
-    }
 
-    public static NetworkInterface FindByName(string adapterName)
-    {
-        return GetAllNetworkInterfaces().FirstOrDefault(i => i.Name == adapterName);
-    }
+    public static NetworkInterface FindByName(string adapterName) =>
+        GetAllNetworkInterfaces().FirstOrDefault(i => i.Name == adapterName);
 
-    public static NetworkInterface FindById(string adapterId)
-    {
-        return GetAllNetworkInterfaces().FirstOrDefault(i => i.Id == adapterId);
-    }
+    public static NetworkInterface FindById(string adapterId) =>
+        GetAllNetworkInterfaces().FirstOrDefault(i => i.Id == adapterId);
 
-    public static IEnumerable<NetworkInterface> GetActiveExternalInterfaces(this IEnumerable<NetworkInterface> interfaces)
-    {
-        return interfaces.Where(ni =>
+    public static IEnumerable<NetworkInterface> GetActiveExternalInterfaces(this IEnumerable<NetworkInterface> interfaces) =>
+        interfaces.Where(static ni =>
             ni.OperationalStatus == OperationalStatus.Up &&
             ni.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
             ni.NetworkInterfaceType != NetworkInterfaceType.Unknown &&
             ni.NetworkInterfaceType != NetworkInterfaceType.Tunnel &&
             ni.GetIPProperties().GatewayAddresses.Count > 0);
-    }
 
-    public static IPAddress FindExternalIPv4Address(this IEnumerable<NetworkInterface> interfaces)
-    {
-        return interfaces.FirstOrDefault(i => i.Supports(NetworkInterfaceComponent.IPv4))?.GetIPProperties()
-            .UnicastAddresses.FirstOrDefault(a => a.Address.AddressFamily == InterNetwork)?.Address;
-    }
+    public static IPAddress FindExternalIPv4Address(this IEnumerable<NetworkInterface> interfaces) =>
+        interfaces.FirstOrDefault(static i => i.Supports(NetworkInterfaceComponent.IPv4))?.GetIPProperties()
+            .UnicastAddresses.FirstOrDefault(static a => a.Address.AddressFamily == InterNetwork)?.Address;
 
-    public static IPAddress FindExternalIPv6Address(this IEnumerable<NetworkInterface> interfaces)
-    {
-        return interfaces.FirstOrDefault(i => i.Supports(NetworkInterfaceComponent.IPv6))?.GetIPProperties()
-            .UnicastAddresses.FirstOrDefault(a => a.Address.AddressFamily == InterNetworkV6)?.Address;
-    }
+    public static IPAddress FindExternalIPv6Address(this IEnumerable<NetworkInterface> interfaces) =>
+        interfaces.FirstOrDefault(static i => i.Supports(NetworkInterfaceComponent.IPv6))?.GetIPProperties()
+            .UnicastAddresses.FirstOrDefault(static a => a.Address.AddressFamily == InterNetworkV6)?.Address;
 }

@@ -12,8 +12,8 @@ public class TcpClientSocketConnection : NetworkConnection
 {
     private readonly string hostNameOrAddress;
     private readonly int port;
-    private Socket socket;
     private long disposed;
+    private Socket socket;
 
     public TcpClientSocketConnection(IPEndPoint ipEndPoint)
     {
@@ -25,7 +25,7 @@ public class TcpClientSocketConnection : NetworkConnection
     {
         ArgumentNullException.ThrowIfNull(hostNameOrAddress);
 
-        if(hostNameOrAddress.Length == 0) throw new ArgumentException(NotEmptyExpected, nameof(hostNameOrAddress));
+        if (hostNameOrAddress.Length == 0) throw new ArgumentException(NotEmptyExpected, nameof(hostNameOrAddress));
         this.hostNameOrAddress = hostNameOrAddress;
         this.port = port;
     }
@@ -39,7 +39,7 @@ public class TcpClientSocketConnection : NetworkConnection
         {
             await socket.SendAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
+        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
             throw new ConnectionClosedException(se);
@@ -52,7 +52,7 @@ public class TcpClientSocketConnection : NetworkConnection
         {
             return await socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
+        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
             throw new ConnectionClosedException(se);
@@ -61,11 +61,11 @@ public class TcpClientSocketConnection : NetworkConnection
 
     public override async ValueTask DisposeAsync()
     {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
 
         GC.SuppressFinalize(this);
 
-        using(socket)
+        using (socket)
         {
             try
             {
@@ -73,7 +73,7 @@ public class TcpClientSocketConnection : NetworkConnection
             }
             finally
             {
-                if(socket.Connected)
+                if (socket.Connected)
                 {
                     socket.Shutdown(SocketShutdown.Both);
                 }
@@ -81,37 +81,32 @@ public class TcpClientSocketConnection : NetworkConnection
         }
     }
 
-    protected override async Task StoppingAsync()
-    {
+    protected override async Task StoppingAsync() =>
         await socket.DisconnectAsync(true).ConfigureAwait(false);
-    }
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
         try
         {
-            if(RemoteEndPoint is null)
+            if (RemoteEndPoint is null)
             {
                 var addresses = await GetHostAddressesAsync(hostNameOrAddress, cancellationToken).ConfigureAwait(false);
-                RemoteEndPoint = new IPEndPoint(addresses[0], port);
+                RemoteEndPoint = new(addresses[0], port);
             }
 
-            socket ??= new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, Tcp);
+            socket ??= new(RemoteEndPoint.AddressFamily, SocketType.Stream, Tcp);
 
             await socket.ConnectAsync(RemoteEndPoint, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode == HostNotFound)
+        catch (SocketException se) when (se.SocketErrorCode == HostNotFound)
         {
             throw new HostNotFoundException(se);
         }
-        catch(SocketException se)
+        catch (SocketException se)
         {
             throw new ServerUnavailableException(se);
         }
     }
 
-    public override string ToString()
-    {
-        return $"{nameof(TcpClientSocketConnection)}: {socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
-    }
+    public override string ToString() => $"{nameof(TcpClientSocketConnection)}: {socket?.RemoteEndPoint?.ToString() ?? "Not connected"}";
 }

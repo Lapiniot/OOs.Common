@@ -7,8 +7,8 @@ namespace System.Net.Connections;
 
 public sealed class TcpServerSocketConnection : INetworkConnection
 {
-    private readonly Socket socket;
     private readonly EndPoint remoteEndPoint;
+    private readonly Socket socket;
     private int disposed;
 
     public TcpServerSocketConnection(Socket acceptedSocket)
@@ -19,8 +19,11 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
     }
 
-    public bool IsConnected => socket.Connected;
     public Socket Socket => socket;
+
+    public override string ToString() => $"{Id}-{nameof(TcpServerSocketConnection)}-{remoteEndPoint}";
+
+    public bool IsConnected => socket.Connected;
     public string Id { get; }
 
     public async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
@@ -29,7 +32,7 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         {
             await socket.SendAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
+        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             throw new ConnectionClosedException(se);
         }
@@ -41,7 +44,7 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         {
             return await socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
         }
-        catch(SocketException se) when(se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
+        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             throw new ConnectionClosedException(se);
         }
@@ -49,14 +52,14 @@ public sealed class TcpServerSocketConnection : INetworkConnection
 
     public ValueTask DisposeAsync()
     {
-        if(Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
+        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
         {
             return ValueTask.CompletedTask;
         }
 
-        using(socket)
+        using (socket)
         {
-            if(socket.Connected)
+            if (socket.Connected)
             {
                 socket.Shutdown(SocketShutdown.Both);
             }
@@ -65,18 +68,7 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         return ValueTask.CompletedTask;
     }
 
-    public Task ConnectAsync(CancellationToken cancellationToken = default)
-    {
-        return Task.CompletedTask;
-    }
+    public Task ConnectAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 
-    public async Task DisconnectAsync()
-    {
-        await socket.DisconnectAsync(false).ConfigureAwait(false);
-    }
-
-    public override string ToString()
-    {
-        return $"{Id}-{nameof(TcpServerSocketConnection)}-{remoteEndPoint}";
-    }
+    public async Task DisconnectAsync() => await socket.DisconnectAsync(false).ConfigureAwait(false);
 }

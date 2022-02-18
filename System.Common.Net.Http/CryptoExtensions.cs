@@ -34,33 +34,27 @@ public static class CryptoExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ECParameters ImportECParameters(byte[] publicKey, byte[] privateKey)
-    {
-        return new ECParameters
+    public static ECParameters ImportECParameters(byte[] publicKey, byte[] privateKey) =>
+        new()
         {
             Curve = ECCurve.NamedCurves.nistP256,
             Q = GetECPoint(publicKey),
             D = privateKey
         };
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static (byte[] PublicKey, byte[] PrivateKey) ExportECParameters(ECParameters parameters)
-    {
-        return (GetBytes(parameters.Q), parameters.D);
-    }
+    public static (byte[] PublicKey, byte[] PrivateKey) ExportECParameters(ECParameters parameters) =>
+        (GetBytes(parameters.Q), parameters.D);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ECPoint GetECPoint(byte[] publicKey)
-    {
-        return publicKey is null
-            ? new ECPoint()
+    public static ECPoint GetECPoint(byte[] publicKey) =>
+        publicKey is null
+            ? new()
             : new ECPoint
             {
                 X = publicKey.AsSpan(1, 32).ToArray(),
                 Y = publicKey.AsSpan(33, 32).ToArray()
             };
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] GetBytes(ECPoint point)

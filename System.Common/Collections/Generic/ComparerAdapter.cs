@@ -10,8 +10,5 @@ public sealed class ComparerAdapter<T> : Comparer<T>
         this.compare = compare;
     }
 
-    public override int Compare(T x, T y)
-    {
-        return compare(x, y);
-    }
+    public override int Compare(T x, T y) => compare(x, y);
 }

@@ -4,6 +4,8 @@ namespace System.Policies;
 
 public abstract class RetryPolicy : IRetryPolicy
 {
+    protected abstract bool ShouldRetry(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
+
     #region Implementation of IRetryPolicy
 
     public async Task<T> RetryAsync<T>(Func<CancellationToken, Task<T>> operation, CancellationToken cancellationToken)
@@ -14,21 +16,21 @@ public abstract class RetryPolicy : IRetryPolicy
         var delay = TimeSpan.Zero;
         var startedAt = DateTime.UtcNow;
 
-        while(true)
+        while (true)
         {
             try
             {
-                return await operation(cancellationToken)                    // This is a protection step for the operations that do not handle cancellation properly by themselves.
+                return await operation(cancellationToken) // This is a protection step for the operations that do not handle cancellation properly by themselves.
                     .WaitAsync(cancellationToken)
                     .ConfigureAwait(false);
             }
-            catch(OperationCanceledException oce) when(oce.CancellationToken == cancellationToken)
+            catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationToken)
             {
                 throw;
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
-                if(!ShouldRetry(exception, attempt, DateTime.UtcNow - startedAt, ref delay))
+                if (!ShouldRetry(exception, attempt, DateTime.UtcNow - startedAt, ref delay))
                 {
                     throw;
                 }
@@ -41,6 +43,4 @@ public abstract class RetryPolicy : IRetryPolicy
     }
 
     #endregion
-
-    protected abstract bool ShouldRetry(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
 }

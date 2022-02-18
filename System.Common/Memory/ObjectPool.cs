@@ -9,7 +9,7 @@ public sealed class ObjectPool<T> where T : class, new()
 
     public ObjectPool(int capacity = 32)
     {
-        if(capacity <= 0)
+        if (capacity <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(capacity));
         }
@@ -26,9 +26,9 @@ public sealed class ObjectPool<T> where T : class, new()
 
     public T Rent()
     {
-        if(!bag.TryDequeue(out var value))
+        if (!bag.TryDequeue(out var value))
         {
-            return new T();
+            return new();
         }
 
         Interlocked.Increment(ref capacity);
@@ -39,7 +39,7 @@ public sealed class ObjectPool<T> where T : class, new()
     {
         ArgumentNullException.ThrowIfNull(instance);
 
-        if(InterlockedExtensions.CompareDecrement(ref capacity, 0) is not 0)
+        if (InterlockedExtensions.CompareDecrement(ref capacity, 0) is not 0)
         {
             bag.Enqueue(instance);
         }
