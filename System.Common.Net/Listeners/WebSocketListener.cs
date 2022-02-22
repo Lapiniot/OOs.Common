@@ -3,7 +3,7 @@ using System.Net.Properties;
 
 namespace System.Net.Listeners;
 
-public class WebSocketListener : IAsyncEnumerable<INetworkConnection>
+public sealed class WebSocketListener : IAsyncEnumerable<INetworkConnection>
 {
     private const int ReceiveBufferSize = 16384;
     private const int KeepAliveSeconds = 120;

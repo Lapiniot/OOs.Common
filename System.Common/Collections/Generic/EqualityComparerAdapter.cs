@@ -1,6 +1,6 @@
 namespace System.Collections.Generic;
 
-public class EqualityComparerAdapter<T> : EqualityComparer<T>
+public sealed class EqualityComparerAdapter<T> : EqualityComparer<T>
 {
     private readonly Func<T, T, bool> equals;
 

@@ -17,7 +17,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
 
     #region Implementation of IAsyncDisposable
 
-    public override async ValueTask DisposeAsync()
+    public sealed override async ValueTask DisposeAsync()
     {
         if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
 
@@ -31,7 +31,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
 
     #endregion
 
-    protected override Task StoppingAsync() =>
+    protected sealed override Task StoppingAsync() =>
         Socket switch
         {
             { State: Open } => Socket.CloseAsync(NormalClosure, "Good bye.", default),
@@ -41,7 +41,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
 
     #region Implementation of INetworkConnection
 
-    public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
+    public sealed override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
         try
         {
@@ -55,7 +55,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
         }
     }
 
-    public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public sealed override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
         try
         {

@@ -1,6 +1,6 @@
 namespace System.Policies;
 
-public class ConditionalRetryPolicy : RetryPolicy
+public sealed class ConditionalRetryPolicy : RetryPolicy
 {
     private readonly IEnumerable<RepeatCondition> conditions;
 

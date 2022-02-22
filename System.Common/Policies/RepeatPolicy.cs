@@ -23,7 +23,7 @@ public abstract class RepeatPolicy : IRepeatPolicy
                 try
                 {
                     await operation(cancellationToken)
-                        // This is a protection step for the operations that do not handle cancellation properly by themselves.
+                    // This is a protection step for the operations that do not handle cancellation properly by themselves.
                         .WaitAsync(cancellationToken)
                         .ConfigureAwait(false);
 

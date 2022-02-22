@@ -2,7 +2,7 @@
 
 public delegate bool RepeatCondition(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
 
-public class ConditionalRepeatPolicy : RepeatPolicy
+public sealed class ConditionalRepeatPolicy : RepeatPolicy
 {
     private readonly IEnumerable<RepeatCondition> conditions;
 
