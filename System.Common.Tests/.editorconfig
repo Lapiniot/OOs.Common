@@ -5,3 +5,16 @@ dotnet_diagnostic.CA1707.severity = none
 
 # CS3016: Arrays as attribute arguments is not CLS-compliant
 dotnet_diagnostic.CS3016.severity = none
+
+[*.{cs,vb}]
+
+# Naming rules
+
+dotnet_naming_style.pascal_case_underscore_tolerant.required_prefix = 
+dotnet_naming_style.pascal_case_underscore_tolerant.required_suffix = 
+dotnet_naming_style.pascal_case_underscore_tolerant.word_separator = _
+dotnet_naming_style.pascal_case_underscore_tolerant.capitalization = pascal_case
+
+dotnet_naming_rule.types_should_be_pascal_case_underscore_tolerant.severity = suggestion
+dotnet_naming_rule.types_should_be_pascal_case_underscore_tolerant.symbols = types
+dotnet_naming_rule.types_should_be_pascal_case_underscore_tolerant.style = pascal_case_underscore_tolerant

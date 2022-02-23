@@ -95,10 +95,12 @@ dotnet_naming_style.pascal_case.required_suffix =
 dotnet_naming_style.pascal_case.word_separator = 
 dotnet_naming_style.pascal_case.capitalization = pascal_case
 
-dotnet_naming_style.pascal_case.required_prefix = 
-dotnet_naming_style.pascal_case.required_suffix = 
-dotnet_naming_style.pascal_case.word_separator = 
-dotnet_naming_style.pascal_case.capitalization = pascal_case
+dotnet_naming_style.pascal_case_underscore_tolerant.required_prefix = 
+dotnet_naming_style.pascal_case_underscore_tolerant.required_suffix = 
+dotnet_naming_style.pascal_case_underscore_tolerant.word_separator = _
+dotnet_naming_style.pascal_case_underscore_tolerant.capitalization = pascal_case
+
+# DotNet general preferences
 
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_style_coalesce_expression = true:suggestion
@@ -132,6 +134,8 @@ dotnet_style_qualification_for_field = false:silent
 dotnet_style_qualification_for_property = false:silent
 dotnet_style_qualification_for_method = false:silent
 dotnet_style_qualification_for_event = false:silent
+
+# C# language specific preferences
 
 [*.cs]
 csharp_indent_labels = one_less_than_current

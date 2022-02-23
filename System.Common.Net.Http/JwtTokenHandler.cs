@@ -19,18 +19,18 @@ public class JwtTokenHandler : IDisposable
     {
         ArgumentNullException.ThrowIfNull(token);
 
-        const DSASignatureFormat signatureFormat = DSASignatureFormat.IeeeP1363FixedFieldConcatenation;
+        const DSASignatureFormat SignatureFormat = DSASignatureFormat.IeeeP1363FixedFieldConcatenation;
+        const string JwtInfo = "{\"typ\":\"JWT\",\"alg\":\"ES256\"}";
 
-        const string jwtInfo = "{\"typ\":\"JWT\",\"alg\":\"ES256\"}";
-        var maxJwtInfoSize = Base64.GetMaxEncodedToUtf8Length(jwtInfo.Length);
+        var maxJwtInfoSize = Base64.GetMaxEncodedToUtf8Length(JwtInfo.Length);
         var maxJwtDataSize = Base64.GetMaxEncodedToUtf8Length(
             2 + token.Claims.Sum(p => 6 + UTF8.GetMaxByteCount(p.Key.Length) + UTF8.GetMaxByteCount(p.Value.Length)));
-        var maxJwtSignatureSize = Base64.GetMaxEncodedToUtf8Length(ecdsa.GetMaxSignatureSize(signatureFormat));
+        var maxJwtSignatureSize = Base64.GetMaxEncodedToUtf8Length(ecdsa.GetMaxSignatureSize(SignatureFormat));
 
         // Encode JWT header part
         var bufWriter = new ArrayBufferWriter<byte>(maxJwtInfoSize + maxJwtDataSize + maxJwtSignatureSize + 2);
         var buffer = bufWriter.GetSpan(bufWriter.FreeCapacity);
-        var total = UTF8.GetBytes(jwtInfo, buffer);
+        var total = UTF8.GetBytes(JwtInfo, buffer);
         total = Base64EncodeInPlace(buffer, total);
         buffer[total++] = 0x2E;
         bufWriter.Advance(total);
@@ -49,7 +49,7 @@ public class JwtTokenHandler : IDisposable
         buffer[total++] = 0x2E;
 
         // Sign and encode signature part
-        if (!ecdsa.TrySignData(buffer[..(total - 1)], buffer[total..], HashAlgorithmName.SHA256, signatureFormat, out var bytesWritten))
+        if (!ecdsa.TrySignData(buffer[..(total - 1)], buffer[total..], HashAlgorithmName.SHA256, SignatureFormat, out var bytesWritten))
         {
             throw new InvalidOperationException("Signature computation failed");
         }

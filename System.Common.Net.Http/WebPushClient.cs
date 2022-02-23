@@ -99,9 +99,9 @@ public class WebPushClient : IDisposable
 
     private static byte[] GeneratePseudoRandomKey(byte[] key)
     {
-        const string str = "Content-Encoding: auth\0";
-        Span<byte> buffer = stackalloc byte[str.Length + 1];
-        _ = ASCII.GetBytes(str, buffer);
+        const string HeaderStr = "Content-Encoding: auth\0";
+        Span<byte> buffer = stackalloc byte[HeaderStr.Length + 1];
+        _ = ASCII.GetBytes(HeaderStr, buffer);
         buffer[^1] = 0x01;
         return HMACSHA256.HashData(key, buffer);
     }

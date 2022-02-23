@@ -16,10 +16,10 @@ public class ObjectPoolReturnShould
     public void AddToStoreIfCapacityIsAboveZero()
     {
         // Arrange
-        const int maxCapacity = 2;
+        const int MaxCapacity = 2;
         var instance1 = new object();
         var instance2 = new object();
-        var pool = new ObjectPool<object>(maxCapacity);
+        var pool = new ObjectPool<object>(MaxCapacity);
 
         // Act
         pool.Return(instance1);
@@ -35,8 +35,8 @@ public class ObjectPoolReturnShould
     public void DiscardValueIfCapacityIsAlreadyZero()
     {
         // Arrange
-        const int maxCapacity = 2;
-        var pool = new ObjectPool<object>(maxCapacity);
+        const int MaxCapacity = 2;
+        var pool = new ObjectPool<object>(MaxCapacity);
         var instance1 = new object();
         var instance2 = new object();
         var instance3 = new object();
@@ -55,15 +55,15 @@ public class ObjectPoolReturnShould
     public void AddToStoreNoMoreThanCapacityAndDiscardExcessInvokedInParallel()
     {
         // Arrange
-        const int maxCapacity = 3;
+        const int MaxCapacity = 3;
         var instances = new object[] { new(), new(), new(), new(), new() };
-        var pool = new ObjectPool<object>(maxCapacity);
+        var pool = new ObjectPool<object>(MaxCapacity);
 
         // Act
         Parallel.ForEach(instances, instance => pool.Return(instance));
 
         // Assert
         var rented = new[] { pool.Rent(), pool.Rent(), pool.Rent(), pool.Rent(), pool.Rent() };
-        Assert.AreEqual(maxCapacity, instances.Intersect(rented).Count());
+        Assert.AreEqual(MaxCapacity, instances.Intersect(rented).Count());
     }
 }

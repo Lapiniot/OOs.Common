@@ -86,10 +86,10 @@ public static class SocketBuilderExtensions
                     //  If set to 1, the socket will receive messages from all the groups that have been joined 
                     //  globally on the whole system. Otherwise, it will deliver messages only from the groups that
                     //  have been explicitly joined (for example via the IP_ADD_MEMBERSHIP option) on this particular socket
-                    const int IP_MULTICAST_All = 49;
+                    const int IP_MULTICAST_ALL = 49;
                     Span<int> value = stackalloc int[1];
                     value[0] = 0;
-                    socket.SetRawSocketOption(0, IP_MULTICAST_All, MemoryMarshal.AsBytes(value));
+                    socket.SetRawSocketOption(0, IP_MULTICAST_ALL, MemoryMarshal.AsBytes(value));
                 }
 
                 break;
