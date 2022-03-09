@@ -27,23 +27,28 @@ public class AsyncSemaphore_WaitAsyncShould
         using var cts = new CancellationTokenSource();
 
         // Act 1
-        var task = semaphore.WaitAsync(cts.Token);
+        var task1 = semaphore.WaitAsync(default);
+        var task2 = semaphore.WaitAsync(default);
+        var task3 = semaphore.WaitAsync(cts.Token);
+        var task4 = semaphore.WaitAsync(default);
 
         // Assert 1
-        Assert.IsNotNull(task);
-        Assert.IsFalse(task.IsCompleted);
+        Assert.IsNotNull(task3);
+        Assert.IsFalse(task3.IsCompleted);
         Assert.AreEqual(0, semaphore.CurrentCount);
 
         // Act 2
         cts.Cancel();
         semaphore.Release();
+        semaphore.Release();
+        semaphore.Release();
 
         // Assert 2
-        await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => await task.ConfigureAwait(false)).ConfigureAwait(false);
+        await Assert.ThrowsExceptionAsync<TaskCanceledException>(async () => await task3.ConfigureAwait(false)).ConfigureAwait(false);
     }
 
     [TestMethod]
-    public void ReturnTaskWhichTransitsToCompleted_WhenCurrentCountZeroAndCancellationRequestedAfterReleaseCalled()
+    public async Task ReturnTaskWhichTransitsToCompleted_WhenCurrentCountZeroAndCancellationRequestedAfterReleaseCalled()
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0);
@@ -62,7 +67,7 @@ public class AsyncSemaphore_WaitAsyncShould
         cts.Cancel();
 
         // Assert 2
-        Assert.IsTrue(task.IsCompletedSuccessfully);
+        await task.ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -111,10 +116,10 @@ public class AsyncSemaphore_WaitAsyncShould
     {
         // Arrange
         var semaphore = new AsyncSemaphore(initialCount);
-        var tasks = new List<ValueTask>();
+        var tasks = new List<Task>();
 
         // Act
-        Parallel.For(0, iterations, () => new List<ValueTask>(), (_, _, result) =>
+        Parallel.For(0, iterations, () => new List<Task>(), (_, _, result) =>
         {
 #pragma warning disable CA2012 // Use ValueTasks correctly
             result.Add(semaphore.WaitAsync());
