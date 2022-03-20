@@ -31,7 +31,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
 
     #endregion
 
-    protected sealed override Task StoppingAsync() =>
+    protected override Task StoppingAsync() =>
         Socket switch
         {
             { State: Open } => Socket.CloseAsync(NormalClosure, "Good bye.", default),

@@ -2,7 +2,7 @@
 
 namespace System.Net.Connections;
 
-public sealed class WebSocketServerConnection : WebSocketConnection<WebSocket>
+public class WebSocketServerConnection : WebSocketConnection<WebSocket>
 {
     private readonly IPEndPoint remoteEndPoint;
 
