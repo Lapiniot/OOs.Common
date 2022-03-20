@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using static System.Properties.Strings;
 using static System.Threading.Tasks.TaskCreationOptions;
 
@@ -6,28 +7,23 @@ namespace System.Threading;
 
 #nullable enable
 
-public class AsyncSemaphore
+public sealed class AsyncSemaphore
 {
-    private static Action<object?, CancellationToken>? cancelCallback;
     private readonly int maxCount;
     private readonly bool runContinuationsAsynchronously;
     private readonly object syncRoot;
+    private Action<object?, CancellationToken>? cancelCallback;
     private int currentCount;
     private WaiterNode? head;
     private WaiterNode? tail;
-    private int waitersCount;
 
     public AsyncSemaphore(int initialCount, int maxCount = int.MaxValue, bool runContinuationsAsynchronously = true)
     {
         if (initialCount < 0 || initialCount > maxCount)
-        {
             throw new ArgumentOutOfRangeException(nameof(initialCount), initialCount, AsyncSemaphoreCtorInitialCountWrong);
-        }
 
         if (maxCount <= 0)
-        {
             throw new ArgumentOutOfRangeException(nameof(maxCount), maxCount, AsyncSemaphoreCtorMaxCountWrong);
-        }
 
         currentCount = initialCount;
         this.maxCount = maxCount;
@@ -37,45 +33,34 @@ public class AsyncSemaphore
 
     public int MaxCount => maxCount;
 
-    public int CurrentCount => Volatile.Read(ref currentCount) + waitersCount;
+    public int CurrentCount
+    {
+        get
+        {
+            var current = Volatile.Read(ref currentCount);
+            return current >= 0 ? current : 0;
+        }
+    }
 
     public Task WaitAsync(CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
-        {
             return Task.FromCanceled(cancellationToken);
-        }
 
         if (Interlocked.Decrement(ref currentCount) >= 0)
-        {
             return Task.CompletedTask;
-        }
 
         lock (syncRoot)
         {
             var waiter = new WaiterNode(runContinuationsAsynchronously);
+            Enqueue(waiter);
 
-            waitersCount++;
-
-            if (head is null)
+            if (cancellationToken != CancellationToken.None)
             {
-                head = tail = waiter;
-            }
-            else
-            {
-                waiter.Prev = tail;
-                tail = tail!.Next = waiter;
+                waiter.CtReg = cancellationToken.UnsafeRegister(cancelCallback ??= CancelWaiter, waiter);
             }
 
-            return cancellationToken == default ? waiter.Task : WaitCoreAsync(waiter, cancellationToken);
-        }
-    }
-
-    private async Task WaitCoreAsync(WaiterNode waiter, CancellationToken cancellationToken)
-    {
-        using (cancellationToken.UnsafeRegister(cancelCallback ??= CancelWaiter, waiter))
-        {
-            await waiter.Task.ConfigureAwait(false);
+            return waiter.Task;
         }
     }
 
@@ -83,37 +68,16 @@ public class AsyncSemaphore
     {
         var waiter = (WaiterNode)state!;
 
-        if (!waiter.TrySetCanceled(token)) return;
-
-        Interlocked.Increment(ref currentCount);
-
-        lock (syncRoot)
+        if (waiter.TrySetCanceled(token))
         {
-            var prev = waiter.Prev;
-            if (prev is not null)
+            Interlocked.Increment(ref currentCount);
+
+            lock (syncRoot)
             {
-                prev.Next = waiter.Next;
+                TryRemove(waiter);
             }
 
-            var next = waiter.Next;
-            if (next is not null)
-            {
-                next.Prev = waiter.Prev;
-            }
-
-            if (head == waiter)
-            {
-                head = waiter.Next;
-            }
-
-            if (tail == waiter)
-            {
-                tail = waiter.Prev;
-            }
-
-            waiter.Prev = waiter.Next = null;
-
-            waitersCount--;
+            waiter.CtReg.Dispose();
         }
     }
 
@@ -122,52 +86,102 @@ public class AsyncSemaphore
 
     public void Release(int releaseCount)
     {
-        var current = Interlocked.Add(ref currentCount, releaseCount);
-        if (current > maxCount)
+        int localCount;
+        var sw = new SpinWait();
+
+        while (true)
         {
-            Interlocked.Add(ref currentCount, -releaseCount);
-            throw new SemaphoreFullException();
+            localCount = currentCount;
+
+            if (localCount + releaseCount > maxCount)
+                throw new SemaphoreFullException();
+
+            if (Interlocked.CompareExchange(ref currentCount, localCount + releaseCount, localCount) == localCount)
+                break;
+
+            sw.SpinOnce(sleep1Threshold: -1);
         }
 
-        if (current <= 0)
+        if (localCount >= 0)
+            return;
+
+        lock (syncRoot)
         {
-            lock (syncRoot)
+            while (releaseCount > 0 && TryDequeue(out var waiter))
             {
-                while (releaseCount-- > 0)
+                if (waiter.TrySetResult())
                 {
-                    var waiter = head;
-
-                    if (waiter is null) continue;
-
-                    waiter.TrySetResult();
-
-                    head = waiter.Next;
-                    waiter.Next = null;
-
-                    if (head is not null)
-                    {
-                        head.Prev = null;
-                    }
-
-                    if (tail == waiter)
-                    {
-                        tail = null;
-                    }
-
-                    waitersCount--;
+                    waiter.CtReg.Dispose();
+                    releaseCount--;
                 }
             }
         }
     }
 
-    private class WaiterNode : TaskCompletionSource
+    private void Enqueue(WaiterNode waiter)
+    {
+        if (head is null)
+        {
+            head = tail = waiter;
+        }
+        else
+        {
+            waiter.Prev = tail;
+            tail = tail!.Next = waiter;
+        }
+    }
+
+    private bool TryRemove(WaiterNode waiter)
+    {
+        if (waiter is { Next: null, Prev: null } && waiter != head)
+            return false;
+
+        var prev = waiter.Prev;
+        if (prev is not null)
+            prev.Next = waiter.Next;
+
+        var next = waiter.Next;
+        if (next is not null)
+            next.Prev = waiter.Prev;
+
+        if (head == waiter)
+            head = waiter.Next;
+
+        if (tail == waiter)
+            tail = waiter.Prev;
+
+        waiter.Prev = waiter.Next = null;
+
+        return true;
+    }
+
+    private bool TryDequeue([NotNullWhen(true)] out WaiterNode? waiter)
+    {
+        waiter = head;
+
+        if (waiter is null)
+            return false;
+
+        head = waiter.Next;
+        waiter.Next = waiter.Prev = null;
+
+        if (head is not null)
+            head.Prev = null;
+
+        if (tail == waiter)
+            tail = null;
+
+        return true;
+    }
+
+    private sealed class WaiterNode : TaskCompletionSource
     {
         public WaiterNode(bool runContinuationsAsynchronously) :
             base(runContinuationsAsynchronously ? RunContinuationsAsynchronously : None)
         { }
 
         public WaiterNode? Next { get; set; }
-
         public WaiterNode? Prev { get; set; }
+        public CancellationTokenRegistration CtReg { get; set; }
     }
 }

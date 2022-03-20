@@ -20,7 +20,7 @@ public class AsyncSemaphore_WaitAsyncShould
     }
 
     [TestMethod]
-    public async Task ReturnTaskWhichTransitsToCancelled_WhenCurrentCountZeroAndCancellationRequestedBeforeReleaseCalled()
+    public void ReturnTaskWhichTransitsToCancelled_WhenCurrentCountZeroAndCancellationRequestedBeforeReleaseCalled()
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0);
@@ -28,27 +28,25 @@ public class AsyncSemaphore_WaitAsyncShould
 
         // Act 1
         var task1 = semaphore.WaitAsync(default);
-        var task2 = semaphore.WaitAsync(default);
-        var task3 = semaphore.WaitAsync(cts.Token);
-        var task4 = semaphore.WaitAsync(default);
+        var task2 = semaphore.WaitAsync(cts.Token);
 
         // Assert 1
-        Assert.IsNotNull(task3);
-        Assert.IsFalse(task3.IsCompleted);
+        Assert.IsFalse(task1.IsCompleted);
+        Assert.IsFalse(task2.IsCompleted);
         Assert.AreEqual(0, semaphore.CurrentCount);
 
         // Act 2
         cts.Cancel();
-        semaphore.Release();
-        semaphore.Release();
-        semaphore.Release();
+        semaphore.Release(2);
 
         // Assert 2
-        await Assert.ThrowsExceptionAsync<TaskCanceledException>(async () => await task3.ConfigureAwait(false)).ConfigureAwait(false);
+        Assert.IsTrue(task1.IsCompletedSuccessfully);
+        Assert.IsTrue(task2.IsCanceled);
+        Assert.AreEqual(1, semaphore.CurrentCount);
     }
 
     [TestMethod]
-    public async Task ReturnTaskWhichTransitsToCompleted_WhenCurrentCountZeroAndCancellationRequestedAfterReleaseCalled()
+    public void ReturnTaskWhichTransitsToCompleted_WhenCurrentCountZeroAndCancellationRequestedAfterReleaseCalled()
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0);
@@ -60,14 +58,13 @@ public class AsyncSemaphore_WaitAsyncShould
         // Assert 1
         Assert.IsNotNull(task);
         Assert.IsFalse(task.IsCompleted);
-        Assert.AreEqual(0, semaphore.CurrentCount);
 
         // Act 2
         semaphore.Release();
         cts.Cancel();
 
         // Assert 2
-        await task.ConfigureAwait(false);
+        Assert.IsTrue(task.IsCompletedSuccessfully);
     }
 
     [TestMethod]
