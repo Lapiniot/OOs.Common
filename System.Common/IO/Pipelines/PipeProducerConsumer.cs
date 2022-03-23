@@ -40,8 +40,10 @@ public abstract class PipeProducerConsumer : ActivityObject
     {
         try
         {
-            while (!cancellationToken.IsCancellationRequested)
+            while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var buffer = writer.GetMemory();
 
                 var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
@@ -75,8 +77,10 @@ public abstract class PipeProducerConsumer : ActivityObject
     {
         try
         {
-            while (!cancellationToken.IsCancellationRequested)
+            while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
 
                 var buffer = result.Buffer;

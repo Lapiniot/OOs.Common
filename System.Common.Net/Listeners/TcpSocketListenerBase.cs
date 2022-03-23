@@ -43,8 +43,10 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<NetworkConnection
         socket.Bind(endPoint);
         socket.Listen(backlog);
 
-        while (!cancellationToken.IsCancellationRequested)
+        while (true)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             Socket acceptedSocket = null;
             NetworkConnection connection;
 

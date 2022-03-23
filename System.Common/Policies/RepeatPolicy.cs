@@ -16,8 +16,10 @@ public abstract class RepeatPolicy : IRepeatPolicy
         var delay = TimeSpan.Zero;
         var startedAt = DateTime.UtcNow;
 
-        while (!cancellationToken.IsCancellationRequested)
+        while (true)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 try

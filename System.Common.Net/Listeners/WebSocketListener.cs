@@ -84,8 +84,10 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
         {
             try
             {
-                while (!cancellationToken.IsCancellationRequested)
+                while (true)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     var context = await listener.GetContextAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
 
                     if (!context.Request.IsWebSocketRequest)

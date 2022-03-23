@@ -29,17 +29,18 @@ public sealed class DelayWorkerLoop : Worker
 
         try
         {
-            while (!stoppingToken.IsCancellationRequested && (maxIterations == Infinite || iteration < maxIterations))
+            while (maxIterations == Infinite || iteration < maxIterations)
             {
+                stoppingToken.ThrowIfCancellationRequested();
+
                 try
                 {
                     await Task.Delay(delay, linkedSource.Token).ConfigureAwait(false);
                     await asyncWork(stoppingToken).ConfigureAwait(false);
                     iteration++;
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (!stoppingToken.IsCancellationRequested)
                 {
-                    if (stoppingToken.IsCancellationRequested) break;
                     linkedSource.Dispose();
                     ResetCancellationState(out tokenSource, out linkedSource).Dispose();
                 }

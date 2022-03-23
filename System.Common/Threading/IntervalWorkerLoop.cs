@@ -17,8 +17,9 @@ public sealed class IntervalWorkerLoop : Worker
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        while (true)
         {
+            stoppingToken.ThrowIfCancellationRequested();
             await asyncWork(stoppingToken).ConfigureAwait(false);
             await Delay(interval, stoppingToken).ConfigureAwait(false);
         }

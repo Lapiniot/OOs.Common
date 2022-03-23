@@ -124,8 +124,10 @@ public abstract class PipeProducer : IAsyncDisposable
     {
         try
         {
-            while (!token.IsCancellationRequested)
+            while (true)
             {
+                token.ThrowIfCancellationRequested();
+
                 var buffer = pipeWriter.GetMemory();
 
                 var received = await ReceiveAsync(buffer, token).ConfigureAwait(false);

@@ -43,8 +43,10 @@ public abstract class PipeConsumer : ActivityObject
     {
         try
         {
-            while (!token.IsCancellationRequested)
+            while (true)
             {
+                token.ThrowIfCancellationRequested();
+
                 var result = await reader.ReadAsync(token).ConfigureAwait(false);
 
                 var buffer = result.Buffer;
