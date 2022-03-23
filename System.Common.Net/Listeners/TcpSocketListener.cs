@@ -11,7 +11,7 @@ public sealed class TcpSocketListener : TcpSocketListenerBase
         base(endPoint, backlog, configureListening, configureAccepted)
     { }
 
-    protected override INetworkConnection CreateConnection(Socket acceptedSocket) => new TcpServerSocketConnection(acceptedSocket);
+    protected override NetworkConnection CreateConnection(Socket acceptedSocket) => new TcpServerSocketConnection(acceptedSocket);
 
     public override string ToString() => $"{nameof(TcpSocketListener)} {{tcp://{EndPoint}}}";
 }

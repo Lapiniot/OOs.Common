@@ -3,7 +3,7 @@ using System.Net.Properties;
 
 namespace System.Net.Listeners;
 
-public sealed class WebSocketListener : IAsyncEnumerable<INetworkConnection>
+public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
 {
     private const int ReceiveBufferSize = 16384;
     private const int KeepAliveSeconds = 120;
@@ -31,12 +31,12 @@ public sealed class WebSocketListener : IAsyncEnumerable<INetworkConnection>
 
     #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
-    public IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
+    public IAsyncEnumerator<NetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
         new WebSocketEnumerator(prefixes, subProtocols, keepAliveInterval, receiveBufferSize, cancellationToken);
 
     #endregion
 
-    private class WebSocketEnumerator : IAsyncEnumerator<INetworkConnection>
+    private class WebSocketEnumerator : IAsyncEnumerator<NetworkConnection>
     {
         private readonly CancellationToken cancellationToken;
         private readonly TimeSpan keepAliveInterval;
@@ -135,7 +135,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<INetworkConnection>
             return false;
         }
 
-        public INetworkConnection Current { get; private set; }
+        public NetworkConnection Current { get; private set; }
 
         #endregion
     }

@@ -5,7 +5,7 @@ using static System.Net.Sockets.SocketError;
 
 namespace System.Net.Connections;
 
-public sealed class TcpServerSocketConnection : INetworkConnection
+public sealed class TcpServerSocketConnection : NetworkConnection
 {
     private readonly EndPoint remoteEndPoint;
     private readonly Socket socket;
@@ -16,17 +16,11 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         ArgumentNullException.ThrowIfNull(acceptedSocket);
         socket = acceptedSocket;
         remoteEndPoint = socket.RemoteEndPoint;
-        Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
     }
-
-    public Socket Socket => socket;
 
     public override string ToString() => $"{Id}-{nameof(TcpServerSocketConnection)}-{remoteEndPoint}";
 
-    public bool IsConnected => socket.Connected;
-    public string Id { get; }
-
-    public async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
+    public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
         try
         {
@@ -38,7 +32,7 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         }
     }
 
-    public async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
         try
         {
@@ -50,7 +44,7 @@ public sealed class TcpServerSocketConnection : INetworkConnection
         }
     }
 
-    public ValueTask DisposeAsync()
+    public override ValueTask DisposeAsync()
     {
         if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0)
         {
@@ -65,10 +59,10 @@ public sealed class TcpServerSocketConnection : INetworkConnection
             }
         }
 
-        return ValueTask.CompletedTask;
+        return base.DisposeAsync();
     }
 
-    public Task ConnectAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+    protected override Task StartingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    public async Task DisconnectAsync() => await socket.DisconnectAsync(false).ConfigureAwait(false);
+    protected override async Task StoppingAsync() => await socket.DisconnectAsync(false).ConfigureAwait(false);
 }

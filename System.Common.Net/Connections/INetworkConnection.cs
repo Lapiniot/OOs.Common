@@ -7,13 +7,13 @@ namespace System.Net.Connections;
 public interface INetworkConnection : IConnectedObject, IAsyncDisposable
 {
     /// <summary>
-    /// Correlation ID of current connection instance (used for debug and tracing purpose primarily).
+    /// Correlation ID of the current connection (used for debugging and tracing purpose primarily).
     /// </summary>
     /// <value>correlation ID value</value>
     public string Id { get; }
 
     /// <summary>
-    /// Sends data to other party
+    /// Sends data to the other party
     /// </summary>
     /// <param name="buffer">Memory buffer containing data to send</param>
     /// <param name="cancellationToken">Cancellation token</param>

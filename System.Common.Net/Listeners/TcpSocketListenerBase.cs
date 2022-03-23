@@ -3,7 +3,7 @@ using System.Net.Sockets;
 
 namespace System.Net.Listeners;
 
-public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnection>
+public abstract class TcpSocketListenerBase : IAsyncEnumerable<NetworkConnection>
 {
     private readonly int backlog;
     private readonly Action<Socket> configureAccepted;
@@ -24,11 +24,11 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnectio
 
     protected IPEndPoint EndPoint => endPoint;
 
-    protected abstract INetworkConnection CreateConnection(Socket acceptedSocket);
+    protected abstract NetworkConnection CreateConnection(Socket acceptedSocket);
 
     #region Implementation of IAsyncEnumerable<INetworkConnection>
 
-    public async IAsyncEnumerator<INetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    public async IAsyncEnumerator<NetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
@@ -46,7 +46,7 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<INetworkConnectio
         while (!cancellationToken.IsCancellationRequested)
         {
             Socket acceptedSocket = null;
-            INetworkConnection connection;
+            NetworkConnection connection;
 
             try
             {

@@ -34,7 +34,7 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
 
     public override string ToString() => $"{nameof(TcpSslSocketListener)} {{tcps://{EndPoint}}}";
 
-    protected override INetworkConnection CreateConnection(Socket acceptedSocket) =>
+    protected override NetworkConnection CreateConnection(Socket acceptedSocket) =>
         new TcpSslServerSocketConnection(acceptedSocket, options);
 
     public void Dispose()
