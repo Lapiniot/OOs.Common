@@ -11,7 +11,7 @@ public abstract class Worker : IAsyncDisposable
     private CancelableOperationScope cancelableOperation;
     private int disposed;
 
-    public bool IsRunning => Volatile.Read(ref cancelableOperation) != null;
+    public bool IsRunning => cancelableOperation is not null;
 
     /// <summary>
     /// Must be implemented by derived type and represents actual asynchronous operation to be run on background
@@ -31,18 +31,18 @@ public abstract class Worker : IAsyncDisposable
 
         await semaphore.WaitAsync(stoppingToken).ConfigureAwait(false);
 
-        CancelableOperationScope captured;
+        CancelableOperationScope operation;
 
         try
         {
-            captured = cancelableOperation ??= CancelableOperationScope.Start(ct => ExecuteAsync(ct), stoppingToken);
+            operation = cancelableOperation ??= CancelableOperationScope.Start(ct => ExecuteAsync(ct), stoppingToken);
         }
         finally
         {
             _ = semaphore.Release();
         }
 
-        await captured.Completion.ConfigureAwait(false);
+        await operation.Completion.ConfigureAwait(false);
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public abstract class Worker : IAsyncDisposable
 
     protected void CheckDisposed()
     {
-        if (Volatile.Read(ref disposed) != 0)
+        if (disposed != 0)
         {
             throw new ObjectDisposedException(nameof(Worker));
         }
