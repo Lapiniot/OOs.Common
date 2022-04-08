@@ -1,7 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Connections.Exceptions;
 using System.Net.Sockets;
 using static System.Net.Sockets.SocketFlags;
 using static System.Net.Sockets.SocketError;
+using static System.Net.Sockets.ProtocolType;
 
 namespace System.Net.Connections;
 
@@ -59,4 +61,37 @@ public abstract class TcpSocketConnection : NetworkConnection
     }
 
     public override string ToString() => $"{Id}-TCP-{remoteEndPoint}";
+
+    protected static async Task<IPEndPoint> ResolveRemoteEndPointAsync(string hostNameOrAddress, int port, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var addresses = await Dns.GetHostAddressesAsync(hostNameOrAddress, cancellationToken).ConfigureAwait(false);
+            return new(addresses[0], port);
+        }
+        catch (SocketException se) when (se.SocketErrorCode == HostNotFound)
+        {
+            throw new HostNotFoundException(se);
+        }
+    }
+
+    protected async Task ConnectAsClientAsync([NotNull] IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (socket is not null && socket.AddressFamily != remoteEndPoint.AddressFamily)
+            {
+                socket.Close();
+                socket = null;
+            }
+
+            socket ??= new(remoteEndPoint.AddressFamily, SocketType.Stream, Tcp);
+            await socket.ConnectAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
+            RemoteEndPoint = remoteEndPoint;
+        }
+        catch (SocketException se)
+        {
+            throw new ServerUnavailableException(se);
+        }
+    }
 }
