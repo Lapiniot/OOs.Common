@@ -13,6 +13,22 @@ public abstract class TcpSocketConnection : NetworkConnection
     private IPEndPoint remoteEndPoint;
     private int disposed;
 
+    protected TcpSocketConnection()
+    { }
+
+    protected TcpSocketConnection(Socket acceptedSocket)
+    {
+        ArgumentNullException.ThrowIfNull(acceptedSocket);
+        Socket = acceptedSocket;
+        RemoteEndPoint = (IPEndPoint)acceptedSocket.RemoteEndPoint;
+    }
+
+    protected TcpSocketConnection(IPEndPoint remoteEndPoint)
+    {
+        ArgumentNullException.ThrowIfNull(remoteEndPoint);
+        this.remoteEndPoint = remoteEndPoint;
+    }
+
     protected Socket Socket { get => socket; set => socket = value; }
     public IPEndPoint RemoteEndPoint { get => remoteEndPoint; protected set => remoteEndPoint = value; }
 
