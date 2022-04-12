@@ -20,7 +20,7 @@ public class JwtTokenHandler : IDisposable
         ArgumentNullException.ThrowIfNull(token);
 
         const DSASignatureFormat SignatureFormat = DSASignatureFormat.IeeeP1363FixedFieldConcatenation;
-        const string JwtInfo = "{\"typ\":\"JWT\",\"alg\":\"ES256\"}";
+        const string JwtInfo = /*lang=json,strict*/ @"{""typ"":""JWT"",""alg"":""ES256""}";
 
         var maxJwtInfoSize = Base64.GetMaxEncodedToUtf8Length(JwtInfo.Length);
         var maxJwtDataSize = Base64.GetMaxEncodedToUtf8Length(
