@@ -5,10 +5,11 @@ public sealed class ArgumentAttribute : Attribute, IArgumentMetadata
 {
     public ArgumentAttribute(string name, Type type)
     {
-        Name = !string.IsNullOrEmpty(name)
-            ? name
-            : throw new ArgumentException($"{nameof(name)} cannot be null or empty");
-        Type = type ?? throw new ArgumentException($"{nameof(type)} cannot be null");
+        Verify.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNull(type);
+
+        Name = name;
+        Type = type;
     }
 
     public ArgumentAttribute(string name, Type type, string shortName) : this(name, type) => ShortName = shortName;

@@ -19,9 +19,8 @@ public class WebPushClient : IDisposable
         ArgumentNullException.ThrowIfNull(client);
         ArgumentNullException.ThrowIfNull(publicKey);
         ArgumentNullException.ThrowIfNull(privateKey);
-
-        if (string.IsNullOrEmpty(jwtSubject)) throw new ArgumentException($"'{nameof(jwtSubject)}' cannot be null or empty.", nameof(jwtSubject));
-        if (jwtExpires <= 0) throw new ArgumentException($"{nameof(jwtExpires)} must be greater than zero");
+        Verify.ThrowIfNullOrEmpty(jwtSubject);
+        Verify.ThrowIfLessThan(jwtExpires, 1);
 
         this.client = client;
         subject = jwtSubject;
@@ -36,8 +35,7 @@ public class WebPushClient : IDisposable
         ArgumentNullException.ThrowIfNull(clientPublicKey);
         ArgumentNullException.ThrowIfNull(authKey);
         ArgumentNullException.ThrowIfNull(payload);
-
-        if (ttl <= 0) throw new ArgumentException($"{nameof(ttl)} must be greater then zero");
+        Verify.ThrowIfLessThan(ttl, 1);
 
         var token = new JwtToken
         {

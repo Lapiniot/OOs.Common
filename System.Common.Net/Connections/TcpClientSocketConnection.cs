@@ -1,5 +1,3 @@
-using static System.Net.Properties.Strings;
-
 namespace System.Net.Connections;
 
 public sealed class TcpClientSocketConnection : TcpSocketConnection
@@ -10,17 +8,19 @@ public sealed class TcpClientSocketConnection : TcpSocketConnection
     public TcpClientSocketConnection(IPEndPoint remoteEndPoint) : base(remoteEndPoint)
     { }
 
-    public TcpClientSocketConnection(string hostNameOrAddress, int port) : base()
+    public TcpClientSocketConnection(string hostNameOrAddress, int port)
     {
-        if (string.IsNullOrEmpty(hostNameOrAddress)) throw new ArgumentException(NotEmptyExpected, nameof(hostNameOrAddress));
+        Verify.ThrowIfNullOrEmpty(hostNameOrAddress);
+
         this.hostNameOrAddress = hostNameOrAddress;
         this.port = port;
     }
 
-    protected override async Task StartingAsync(CancellationToken cancellationToken) =>
-        await ConnectAsClientAsync(RemoteEndPoint ??
-            await ResolveRemoteEndPointAsync(hostNameOrAddress, port, cancellationToken).ConfigureAwait(false),
-            cancellationToken).ConfigureAwait(false);
+    protected override async Task StartingAsync(CancellationToken cancellationToken)
+    {
+        var remoteEndPoint = RemoteEndPoint ?? await ResolveRemoteEndPointAsync(hostNameOrAddress, port, cancellationToken).ConfigureAwait(false);
+        await ConnectAsClientAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
+    }
 
     public override string ToString() => $"{Id}-TCP-{RemoteEndPoint?.ToString() ?? "Not connected"}";
 }

@@ -1,4 +1,3 @@
-using System.Net.Properties;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -10,14 +9,14 @@ public sealed class TcpSslClientSocketConnection : TcpSslSocketConnection
     private readonly X509Certificate[] certificates;
     private readonly SslProtocols enabledSslProtocols;
     private readonly string hostNameOrAddress;
-    private readonly int port;
     private readonly string machineName;
+    private readonly int port;
 
     public TcpSslClientSocketConnection(IPEndPoint remoteEndPoint, string machineName,
         SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null) :
         base(remoteEndPoint)
     {
-        ArgumentNullException.ThrowIfNull(machineName);
+        Verify.ThrowIfNullOrEmpty(machineName);
 
         this.machineName = machineName;
         this.enabledSslProtocols = enabledSslProtocols;
@@ -25,10 +24,9 @@ public sealed class TcpSslClientSocketConnection : TcpSslSocketConnection
     }
 
     public TcpSslClientSocketConnection(string hostNameOrAddress, int port, string machineName = null,
-        SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null) :
-        base()
+        SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null)
     {
-        if (string.IsNullOrEmpty(hostNameOrAddress)) throw new ArgumentException(Strings.NotEmptyExpected, nameof(hostNameOrAddress));
+        Verify.ThrowIfNullOrEmpty(hostNameOrAddress);
 
         this.hostNameOrAddress = hostNameOrAddress;
         this.port = port;
@@ -45,7 +43,7 @@ public sealed class TcpSslClientSocketConnection : TcpSslSocketConnection
         }
 
         await ConnectAsClientAsync(RemoteEndPoint ??
-            await ResolveRemoteEndPointAsync(hostNameOrAddress, port, cancellationToken).ConfigureAwait(false),
+                                   await ResolveRemoteEndPointAsync(hostNameOrAddress, port, cancellationToken).ConfigureAwait(false),
             cancellationToken).ConfigureAwait(false);
 
         SslStream = CreateSslStream(Socket);

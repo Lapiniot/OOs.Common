@@ -6,4 +6,8 @@
     <RootNamespace>System.Net.Http</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\System.Common\System.Common.csproj" />
+  </ItemGroup>
+
 </Project>
