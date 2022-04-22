@@ -27,7 +27,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
         this(prefixes, subProtocols, TimeSpan.FromSeconds(KeepAliveSeconds), ReceiveBufferSize)
     { }
 
-    public override string ToString() => $"{nameof(WebSocketListener)}: {string.Join(", ", prefixes)} ({string.Join(", ", subProtocols)})";
+    public override string ToString() => $"{nameof(WebSocketListener)} ({string.Join(";", prefixes)}) ({string.Join(";", subProtocols)})";
 
     #region Implementation of IAsyncEnumerable<out INetworkConnection>
 

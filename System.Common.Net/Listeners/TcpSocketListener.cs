@@ -13,5 +13,5 @@ public sealed class TcpSocketListener : TcpSocketListenerBase
 
     protected override NetworkConnection CreateConnection(Socket acceptedSocket) => new TcpServerSocketConnection(acceptedSocket);
 
-    public override string ToString() => $"{nameof(TcpSocketListener)} {{tcp://{EndPoint}}}";
+    public override string ToString() => $"{nameof(TcpSocketListener)} (tcp://{EndPoint})";
 }

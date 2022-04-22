@@ -64,5 +64,5 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
         }
     }
 
-    public override string ToString() => $"{Id}-{nameof(WebSocketClientConnection)}";
+    public override string ToString() => $"{Id}-WS ({RemoteUri})";
 }

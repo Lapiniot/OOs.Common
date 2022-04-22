@@ -32,7 +32,7 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
         };
     }
 
-    public override string ToString() => $"{nameof(TcpSslSocketListener)} {{tcps://{EndPoint}}}";
+    public override string ToString() => $"{nameof(TcpSslSocketListener)} (tcps://{EndPoint})";
 
     protected override NetworkConnection CreateConnection(Socket acceptedSocket) =>
         new TcpSslServerSocketConnection(acceptedSocket, options);

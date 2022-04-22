@@ -73,5 +73,5 @@ public sealed class TcpSslClientSocketConnection : TcpSslSocketConnection
         }
     }
 
-    public override string ToString() => $"{Id}-TCP.SSL-{RemoteEndPoint?.ToString() ?? "Not connected"}";
+    public override string ToString() => $"{Id}-TCP.SSL ({RemoteEndPoint?.ToString() ?? "Not connected"})";
 }

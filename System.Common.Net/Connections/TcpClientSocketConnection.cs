@@ -22,5 +22,5 @@ public sealed class TcpClientSocketConnection : TcpSocketConnection
         await ConnectAsClientAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
     }
 
-    public override string ToString() => $"{Id}-TCP-{RemoteEndPoint?.ToString() ?? "Not connected"}";
+    public override string ToString() => $"{Id}-TCP ({RemoteEndPoint?.ToString() ?? "Not connected"})";
 }

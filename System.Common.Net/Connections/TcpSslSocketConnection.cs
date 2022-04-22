@@ -67,7 +67,7 @@ public abstract class TcpSslSocketConnection : TcpSocketConnection
         }
     }
 
-    public override string ToString() => $"{Id}-TCP.SSL-{RemoteEndPoint}";
+    public override string ToString() => $"{Id}-TCP.SSL ({RemoteEndPoint})";
 
     protected static SslStream CreateSslStream(Socket socket)
     {

@@ -76,7 +76,7 @@ public abstract class TcpSocketConnection : NetworkConnection
         }
     }
 
-    public override string ToString() => $"{Id}-TCP-{remoteEndPoint}";
+    public override string ToString() => $"{Id}-TCP ({remoteEndPoint})";
 
     protected static async Task<IPEndPoint> ResolveRemoteEndPointAsync(string hostNameOrAddress, int port, CancellationToken cancellationToken)
     {

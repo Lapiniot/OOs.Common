@@ -11,7 +11,7 @@ public class WebSocketServerConnection : WebSocketConnection<WebSocket>
 
     public IPEndPoint RemoteEndPoint => remoteEndPoint;
 
-    public override string ToString() => $"{Id}-{nameof(WebSocketServerConnection)}-{remoteEndPoint}";
+    public override string ToString() => $"{Id}-WS ({remoteEndPoint})";
 
     protected override Task StartingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
