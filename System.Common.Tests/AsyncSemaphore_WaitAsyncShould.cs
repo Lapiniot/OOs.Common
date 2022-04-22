@@ -27,7 +27,7 @@ public class AsyncSemaphore_WaitAsyncShould
         using var cts = new CancellationTokenSource();
 
         // Act 1
-        var task1 = semaphore.WaitAsync(default);
+        var task1 = semaphore.WaitAsync(CancellationToken.None);
         var task2 = semaphore.WaitAsync(cts.Token);
 
         // Assert 1

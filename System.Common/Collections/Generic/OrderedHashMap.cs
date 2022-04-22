@@ -125,29 +125,25 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
                 case Init:
                     Monitor.Enter(map.syncLock, ref locked);
                     node = map.head;
+
                     if (node is not null)
                     {
                         state = InProgress;
                         return true;
                     }
-                    else
-                    {
-                        state = Done;
-                        ReleaseLock();
-                        return false;
-                    }
+
+                    state = Done;
+                    ReleaseLock();
+                    return false;
                 case InProgress:
                     node = node.Next;
-                    if (node is null)
-                    {
-                        state = Done;
-                        ReleaseLock();
-                        return false;
-                    }
-                    else
-                    {
-                        return true;
-                    }
+
+                    if (node is not null) return true;
+
+                    state = Done;
+                    ReleaseLock();
+                    return false;
+
                 default: return false;
             }
         }

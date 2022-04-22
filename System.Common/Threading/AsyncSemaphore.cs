@@ -68,17 +68,16 @@ public sealed class AsyncSemaphore
     {
         var waiter = (WaiterNode)state!;
 
-        if (waiter.TrySetCanceled(token))
+        if (!waiter.TrySetCanceled(token)) return;
+
+        Interlocked.Increment(ref currentCount);
+
+        lock (syncRoot)
         {
-            Interlocked.Increment(ref currentCount);
-
-            lock (syncRoot)
-            {
-                TryRemove(waiter);
-            }
-
-            waiter.CtReg.Dispose();
+            TryRemove(waiter);
         }
+
+        waiter.CtReg.Dispose();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -99,7 +98,7 @@ public sealed class AsyncSemaphore
             if (Interlocked.CompareExchange(ref currentCount, localCount + releaseCount, localCount) == localCount)
                 break;
 
-            sw.SpinOnce(sleep1Threshold: -1);
+            sw.SpinOnce(-1);
         }
 
         if (localCount >= 0)
@@ -109,11 +108,9 @@ public sealed class AsyncSemaphore
         {
             while (releaseCount > 0 && TryDequeue(out var waiter))
             {
-                if (waiter.TrySetResult())
-                {
-                    waiter.CtReg.Dispose();
-                    releaseCount--;
-                }
+                if (!waiter.TrySetResult()) continue;
+                waiter.CtReg.Dispose();
+                releaseCount--;
             }
         }
     }
@@ -131,10 +128,9 @@ public sealed class AsyncSemaphore
         }
     }
 
-    private bool TryRemove(WaiterNode waiter)
+    private void TryRemove(WaiterNode waiter)
     {
-        if (waiter is { Next: null, Prev: null } && waiter != head)
-            return false;
+        if (waiter is { Next: null, Prev: null } && waiter != head) return;
 
         var prev = waiter.Prev;
         if (prev is not null)
@@ -151,8 +147,6 @@ public sealed class AsyncSemaphore
             tail = waiter.Prev;
 
         waiter.Prev = waiter.Next = null;
-
-        return true;
     }
 
     private bool TryDequeue([NotNullWhen(true)] out WaiterNode? waiter)

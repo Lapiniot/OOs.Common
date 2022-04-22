@@ -9,9 +9,9 @@ namespace System.Net.Connections;
 
 public abstract class TcpSocketConnection : NetworkConnection
 {
-    private Socket socket;
-    private IPEndPoint remoteEndPoint;
     private int disposed;
+    private IPEndPoint remoteEndPoint;
+    private Socket socket;
 
     protected TcpSocketConnection()
     { }
@@ -91,19 +91,19 @@ public abstract class TcpSocketConnection : NetworkConnection
         }
     }
 
-    protected async Task ConnectAsClientAsync([NotNull] IPEndPoint remoteEndPoint, CancellationToken cancellationToken)
+    protected async Task ConnectAsClientAsync([NotNull] IPEndPoint endPoint, CancellationToken cancellationToken)
     {
         try
         {
-            if (socket is not null && socket.AddressFamily != remoteEndPoint.AddressFamily)
+            if (socket is not null && socket.AddressFamily != endPoint.AddressFamily)
             {
                 socket.Close();
                 socket = null;
             }
 
-            socket ??= new(remoteEndPoint.AddressFamily, SocketType.Stream, Tcp);
-            await socket.ConnectAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
-            RemoteEndPoint = remoteEndPoint;
+            socket ??= new(endPoint.AddressFamily, SocketType.Stream, Tcp);
+            await socket.ConnectAsync(endPoint, cancellationToken).ConfigureAwait(false);
+            RemoteEndPoint = endPoint;
         }
         catch (SocketException se)
         {
