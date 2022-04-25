@@ -20,6 +20,14 @@ public static class Verify
         }
     }
 
+    public static void ThrowIfEmpty(ReadOnlyMemory<byte> argument, [CallerArgumentExpression("argument")] string argumentName = null)
+    {
+        if (argument.IsEmpty)
+        {
+            throw new ArgumentException("Cannot be empty.", argumentName);
+        }
+    }
+
     public static void ThrowIfNullOrEmpty(Array argument, [CallerArgumentExpression("argument")] string argumentName = null)
     {
         ArgumentNullException.ThrowIfNull(argument);
