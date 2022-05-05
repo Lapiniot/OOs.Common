@@ -20,7 +20,7 @@ public class WebPushClient : IDisposable
         ArgumentNullException.ThrowIfNull(publicKey);
         ArgumentNullException.ThrowIfNull(privateKey);
         Verify.ThrowIfNullOrEmpty(jwtSubject);
-        Verify.ThrowIfLessThan(jwtExpires, 1);
+        Verify.ThrowIfLess(jwtExpires, 1);
 
         this.client = client;
         subject = jwtSubject;
@@ -35,7 +35,7 @@ public class WebPushClient : IDisposable
         ArgumentNullException.ThrowIfNull(clientPublicKey);
         ArgumentNullException.ThrowIfNull(authKey);
         ArgumentNullException.ThrowIfNull(payload);
-        Verify.ThrowIfLessThan(ttl, 1);
+        Verify.ThrowIfLess(ttl, 1);
 
         var token = new JwtToken
         {
