@@ -1,27 +1,65 @@
 ﻿#nullable enable
+using System.Diagnostics.CodeAnalysis;
+
 namespace System.Threading;
 
 public class AsyncCountdownEvent
 {
-    private int signals;
+    private readonly TaskCompletionSource completionSource;
+    private readonly int initialCount;
+    private  int currentCount;
 
     public AsyncCountdownEvent(int signalCount)
     {
-        Verify.ThrowIfLessThan(signalCount, 0);
-        signals = signalCount;
+        Verify.ThrowIfLess(signalCount, 0);
+        currentCount = initialCount = signalCount;
+        completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (currentCount is 0) completionSource.TrySetResult();
     }
+
+    public int CurrentCount => currentCount;
+
+    public int InitialCount => initialCount;
 
     public void AddCount() => AddCount(1);
 
-    public void AddCount(int signalCount) => Interlocked.Add(ref signals, signalCount);
+    public void AddCount(int signalCount) => throw new NotImplementedException();
 
-    public void Signal() => Interlocked.Decrement(ref signals);
+    public void Signal() => Signal(1);
 
-    public void Signal(int signalCount) => Interlocked.Add(ref signals, -signalCount);
+    public bool Signal(int signalCount)
+    {
+        Verify.ThrowIfLessOrEqual(signalCount, 0);
 
-    public Task WaitAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        var sw = new SpinWait();
+
+        while (true)
+        {
+            var current = currentCount;
+
+            if (current < signalCount) ThrowDecrementBelowZero();
+
+            if (Interlocked.CompareExchange(ref currentCount, current - signalCount, current) == current)
+            {
+                if (current != signalCount) return false;
+                completionSource.TrySetResult();
+                return true;
+            }
+
+            sw.SpinOnce(-1);
+        }
+    }
+
+    public Task WaitAsync(CancellationToken cancellationToken = default) =>
+        cancellationToken == default
+            ? completionSource.Task
+            : completionSource.Task.WaitAsync(cancellationToken);
+
 
     public void Reset() => throw new NotImplementedException();
 
     public void Reset(int signalCount) => throw new NotImplementedException();
+
+    [DoesNotReturn]
+    private static void ThrowDecrementBelowZero() => throw new InvalidOperationException("Invalid attempt made to decrement the event's count below zero.");
 }
