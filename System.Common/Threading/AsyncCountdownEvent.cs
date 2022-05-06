@@ -7,7 +7,7 @@ public class AsyncCountdownEvent
 {
     private readonly TaskCompletionSource completionSource;
     private readonly int initialCount;
-    private  int currentCount;
+    private int currentCount;
 
     public AsyncCountdownEvent(int signalCount)
     {
@@ -17,7 +17,7 @@ public class AsyncCountdownEvent
         if (currentCount is 0) completionSource.TrySetResult();
     }
 
-    public int CurrentCount => currentCount;
+    public int CurrentCount => Volatile.Read(ref currentCount);
 
     public int InitialCount => initialCount;
 
@@ -25,8 +25,21 @@ public class AsyncCountdownEvent
 
     public void AddCount(int signalCount) => throw new NotImplementedException();
 
-    public void Signal() => Signal(1);
+    /// <summary>
+    /// Signals current <see cref="AsyncCountdownEvent" /> instance, decrementing <see cref="CurrentCount" /> by one.
+    /// </summary>
+    /// <returns><see langword="true" /> if signal caused the <see cref="CurrentCount" /> to reach zero and the event was set, otherwise <see langword="false" />.</returns>
+    /// <remarks>Method is thread-safe.</remarks>
+    public bool Signal() => Signal(1);
 
+    /// <summary>
+    /// Signals current <see cref="AsyncCountdownEvent" /> instance, decrementing <see cref="CurrentCount" /> by specified <paramref name="signalCount" /> value.
+    /// </summary>
+    /// <param name="signalCount">Number of signals.</param>
+    /// <returns><see langword="true" /> if signal caused the <see cref="CurrentCount" /> to reach zero and the event was set, otherwise <see langword="false" />.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">If <paramref name="signalCount" /> is less than 1.</exception>
+    /// <exception cref="InvalidOperationException">If <paramref name="signalCount" /> is greater than current <see cref="CurrentCount" /> or event was already set.</exception>
+    /// <remarks>Method is thread-safe.</remarks>
     public bool Signal(int signalCount)
     {
         Verify.ThrowIfLessOrEqual(signalCount, 0);
@@ -37,7 +50,7 @@ public class AsyncCountdownEvent
         {
             var current = currentCount;
 
-            if (current < signalCount) ThrowDecrementBelowZero();
+            if (signalCount > current) ThrowDecrementBelowZero();
 
             if (Interlocked.CompareExchange(ref currentCount, current - signalCount, current) == current)
             {
@@ -54,7 +67,6 @@ public class AsyncCountdownEvent
         cancellationToken == default
             ? completionSource.Task
             : completionSource.Task.WaitAsync(cancellationToken);
-
 
     public void Reset() => throw new NotImplementedException();
 
