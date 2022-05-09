@@ -30,7 +30,28 @@ public class AsyncCountdownEvent
 
     public void AddCount() => AddCount(1);
 
-    public void AddCount(int signalCount) => throw new NotImplementedException();
+    public void AddCount(int signalCount)
+    {
+        Verify.ThrowIfLessOrEqual(signalCount, 0);
+
+        var sw = new SpinWait();
+
+        while (true)
+        {
+            var current = currentCount;
+
+            if (current <= 0)
+                ThrowEventAlreadySet();
+
+            if (current > int.MaxValue - signalCount)
+                ThrowIncrementAlreadyMax();
+
+            if (Interlocked.CompareExchange(ref currentCount, current + signalCount, current) == current)
+                break;
+
+            sw.SpinOnce(-1);
+        }
+    }
 
     /// <summary>
     /// Signals current <see cref="AsyncCountdownEvent" /> instance, decrementing <see cref="CurrentCount" /> by one.
@@ -72,7 +93,8 @@ public class AsyncCountdownEvent
         {
             var current = currentCount;
 
-            if (signalCount > current) ThrowDecrementBelowZero();
+            if (signalCount > current)
+                ThrowDecrementBelowZero();
 
             if (Interlocked.CompareExchange(ref currentCount, current - signalCount, current) == current)
             {
@@ -95,5 +117,14 @@ public class AsyncCountdownEvent
     public void Reset(int signalCount) => throw new NotImplementedException();
 
     [DoesNotReturn]
-    private static void ThrowDecrementBelowZero() => throw new InvalidOperationException("Invalid attempt made to decrement the event's count below zero.");
+    private static void ThrowDecrementBelowZero() =>
+        throw new InvalidOperationException("Invalid attempt made to decrement the event's count below zero.");
+
+    [DoesNotReturn]
+    private static void ThrowEventAlreadySet() =>
+        throw new InvalidOperationException("The event is already signaled and cannot be incremented.");
+
+    [DoesNotReturn]
+    private static void ThrowIncrementAlreadyMax() =>
+        throw new InvalidOperationException("The increment operation would cause the CurrentCount to overflow.");
 }
