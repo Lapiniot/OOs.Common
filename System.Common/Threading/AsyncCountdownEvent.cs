@@ -17,7 +17,14 @@ public class AsyncCountdownEvent
         if (currentCount is 0) completionSource.TrySetResult();
     }
 
-    public int CurrentCount => Volatile.Read(ref currentCount);
+    public int CurrentCount
+    {
+        get
+        {
+            var current = Volatile.Read(ref currentCount);
+            return current > 0 ? current : 0;
+        }
+    }
 
     public int InitialCount => initialCount;
 
@@ -30,7 +37,22 @@ public class AsyncCountdownEvent
     /// </summary>
     /// <returns><see langword="true" /> if signal caused the <see cref="CurrentCount" /> to reach zero and the event was set, otherwise <see langword="false" />.</returns>
     /// <remarks>Method is thread-safe.</remarks>
-    public bool Signal() => Signal(1);
+    public bool Signal()
+    {
+        if (currentCount < 1) ThrowDecrementBelowZero();
+
+        switch (Interlocked.Decrement(ref currentCount))
+        {
+            case 0:
+                completionSource.TrySetResult();
+                return true;
+            case < 0:
+                ThrowDecrementBelowZero();
+                break;
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Signals current <see cref="AsyncCountdownEvent" /> instance, decrementing <see cref="CurrentCount" /> by specified <paramref name="signalCount" /> value.
