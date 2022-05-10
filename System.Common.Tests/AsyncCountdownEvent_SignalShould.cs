@@ -20,7 +20,7 @@ public class AsyncCountdownEvent_SignalShould
         Assert.ThrowsException<InvalidOperationException>(() => new AsyncCountdownEvent(0).Signal(1));
 
     [TestMethod]
-    public void DecrementsCountButDoesNotSetEvent_GivenSignalsLessThenCurrentCount()
+    public void DecrementCountButDoNotSetEvent_GivenSignalsLessThenCurrentCount()
     {
         var cde = new AsyncCountdownEvent(2);
 
@@ -31,7 +31,7 @@ public class AsyncCountdownEvent_SignalShould
     }
 
     [TestMethod]
-    public void DecrementsCountAndSetsEvent_GivenSignalsEqualToCurrentCount()
+    public void DecrementCountAndSetEvent_GivenSignalsEqualToCurrentCount()
     {
         var cde = new AsyncCountdownEvent(2);
 

@@ -3,20 +3,34 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace System.Threading;
 
+/// <summary>
+/// Represents synchronization primitive that is signaled when its counter reaches zero. 
+/// </summary>
+/// <remarks>It is effectively <seealso cref="CountdownEvent"/> analog optimized for async. programming.</remarks>
 public class AsyncCountdownEvent
 {
-    private readonly TaskCompletionSource completionSource;
-    private readonly int initialCount;
+    private TaskCompletionSource completionSource;
+    private int initialCount;
     private int currentCount;
 
+    /// <summary>
+    /// Initializes new instance of <see cref="AsyncCountdownEvent"/>.
+    /// </summary>
+    /// <param name="signalCount">The number of signals initially required to set the event.</param>
+    /// <exception cref="ArgumentOutOfRangeException">When the value of <paramref name="signalCount"/> is less or equal to zero.</exception>
     public AsyncCountdownEvent(int signalCount)
     {
         Verify.ThrowIfLess(signalCount, 0);
         currentCount = initialCount = signalCount;
         completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (currentCount is 0) completionSource.TrySetResult();
+        if (currentCount is 0)
+            completionSource.SetResult();
     }
 
+    /// <summary>
+    /// Gets the number of remaining sigmnals required to set the event.
+    /// </summary>
+    /// <value>The number of remaining sigmnals required to set the event.</value>
     public int CurrentCount
     {
         get
@@ -26,10 +40,28 @@ public class AsyncCountdownEvent
         }
     }
 
+    /// <summary>
+    /// Gets the number of signals initially required to set the event.
+    /// </summary>
+    /// <value>The number of signals initially required to set the event.</value>
     public int InitialCount => initialCount;
 
+    /// <summary>
+    /// Increments <see cref="CurrentCount" /> by one.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">When the event is already signaled and cannot be incremented.</exception>
+    /// <exception cref="InvalidOperationException">The increment operation would cause the <see cref="CurrentCount"/> to overflow.</exception>
+    /// <remarks>Method is thread-safe.</remarks>
     public void AddCount() => AddCount(1);
 
+    /// <summary>
+    /// Increments <see cref="CurrentCount" /> by a <paramref name="signalCount" /> value.
+    /// </summary>
+    /// <param name="signalCount">The value by wich to increment.</param>
+    /// <exception cref="ArgumentOutOfRangeException">If <paramref name="signalCount"/> is less or equal 0.</exception>
+    /// <exception cref="InvalidOperationException">When the event is already signaled and cannot be incremented.</exception>
+    /// <exception cref="InvalidOperationException">The increment operation would cause the <see cref="CurrentCount"/> to overflow.</exception>
+    /// <remarks>Method is thread-safe.</remarks>
     public void AddCount(int signalCount)
     {
         Verify.ThrowIfLessOrEqual(signalCount, 0);
@@ -56,7 +88,8 @@ public class AsyncCountdownEvent
     /// <summary>
     /// Signals current <see cref="AsyncCountdownEvent" /> instance, decrementing <see cref="CurrentCount" /> by one.
     /// </summary>
-    /// <returns><see langword="true" /> if signal caused the <see cref="CurrentCount" /> to reach zero and the event was set, otherwise <see langword="false" />.</returns>
+    /// <returns><see langword="true" /> if signal caused the <see cref="CurrentCount" /> to reach zero and 
+    /// the event was set, otherwise <see langword="false" />.</returns>
     /// <remarks>Method is thread-safe.</remarks>
     public bool Signal()
     {
@@ -76,12 +109,15 @@ public class AsyncCountdownEvent
     }
 
     /// <summary>
-    /// Signals current <see cref="AsyncCountdownEvent" /> instance, decrementing <see cref="CurrentCount" /> by specified <paramref name="signalCount" /> value.
+    /// Signals current <see cref="AsyncCountdownEvent" /> instance, decrementing <see cref="CurrentCount" /> 
+    /// by specified <paramref name="signalCount" /> value.
     /// </summary>
     /// <param name="signalCount">Number of signals.</param>
-    /// <returns><see langword="true" /> if signal caused the <see cref="CurrentCount" /> to reach zero and the event was set, otherwise <see langword="false" />.</returns>
+    /// <returns><see langword="true" /> if signal caused the <see cref="CurrentCount" /> to reach zero and the event was set, 
+    /// otherwise <see langword="false" />.</returns>
     /// <exception cref="ArgumentOutOfRangeException">If <paramref name="signalCount" /> is less than 1.</exception>
-    /// <exception cref="InvalidOperationException">If <paramref name="signalCount" /> is greater than current <see cref="CurrentCount" /> or event was already set.</exception>
+    /// <exception cref="InvalidOperationException">If <paramref name="signalCount" /> is greater than current <see cref="CurrentCount" /> 
+    /// or event was already set.</exception>
     /// <remarks>Method is thread-safe.</remarks>
     public bool Signal(int signalCount)
     {
@@ -107,14 +143,40 @@ public class AsyncCountdownEvent
         }
     }
 
+    /// <summary>
+    /// Asynchronously waits until <see cref="CurrentCount"/> reaches zero so event is signaled.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task which is completed when <see cref="CurrentCount"/> reaches zero.</returns>
     public Task WaitAsync(CancellationToken cancellationToken = default) =>
         cancellationToken == default
             ? completionSource.Task
             : completionSource.Task.WaitAsync(cancellationToken);
 
-    public void Reset() => throw new NotImplementedException();
+    /// <summary>
+    /// Resets the <see cref="CurrentCount"/> to a specified <see cref="InitialCount"/> value.
+    /// </summary>
+    /// <remarks>Attention: method is not thread-safe.</remarks>
+    public void Reset() => Reset(initialCount);
 
-    public void Reset(int signalCount) => throw new NotImplementedException();
+    /// <summary>
+    /// Resets the <see cref="CurrentCount"/> to a specified <paramref name="signalCount"/> value.
+    /// </summary>
+    /// <param name="signalCount">The number of signals required to set the event.</param>
+    /// <exception cref="ArgumentOutOfRangeException">When <paramref name="signalCount"/> is less than zero.</exception>
+    /// <remarks>Attention: method is not thread-safe.</remarks>
+    public void Reset(int signalCount)
+    {
+        Verify.ThrowIfLess(signalCount, 0);
+
+        currentCount = initialCount = signalCount;
+
+        if (completionSource.Task.IsCompleted)
+            completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        if (signalCount == 0)
+            completionSource.SetResult();
+    }
 
     [DoesNotReturn]
     private static void ThrowDecrementBelowZero() =>

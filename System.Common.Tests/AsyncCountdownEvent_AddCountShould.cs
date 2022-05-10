@@ -20,7 +20,7 @@ public class AsyncCountdownEvent_AddCountShould
         Assert.ThrowsException<InvalidOperationException>(() => new AsyncCountdownEvent(1).AddCount(int.MaxValue));
 
     [TestMethod]
-    public void IncrementCurrentCountButDoesNotsetEvent()
+    public void IncrementCurrentCountButDoNotSetEvent()
     {
         var cde = new AsyncCountdownEvent(1);
 

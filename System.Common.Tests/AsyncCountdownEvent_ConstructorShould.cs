@@ -13,7 +13,7 @@ public class AsyncCountdownEvent_ConstructorShould
     }
 
     [TestMethod]
-    public void SetCompleteState_GivenZeroValue()
+    public void SetEventImmidiately_GivenZeroValue()
     {
         var cde = new AsyncCountdownEvent(0);
         var task = cde.WaitAsync();
@@ -22,7 +22,7 @@ public class AsyncCountdownEvent_ConstructorShould
     }
 
     [TestMethod]
-    public void SetIncompleteState_GivenPositiveValue()
+    public void NotSetEventImmidiately_GivenPositiveValue()
     {
         var cde = new AsyncCountdownEvent(1);
         var task = cde.WaitAsync();

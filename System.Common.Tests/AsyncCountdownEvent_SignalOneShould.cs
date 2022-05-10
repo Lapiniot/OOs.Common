@@ -8,7 +8,7 @@ public class AsyncCountdownEvent_SignalOneShould
         Assert.ThrowsException<InvalidOperationException>(() => new AsyncCountdownEvent(0).Signal());
 
     [TestMethod]
-    public void DecrementsCountButDoesNotSetEvent_WhenCurrentCountIsGreaterThanOne()
+    public void DecrementCountButDoNotSetEvent_WhenCurrentCountIsGreaterThanOne()
     {
         var cde = new AsyncCountdownEvent(2);
 
@@ -19,7 +19,7 @@ public class AsyncCountdownEvent_SignalOneShould
     }
 
     [TestMethod]
-    public void DecrementsCountAndSetsEvent_WhenCurrentCountEqualsOne()
+    public void DecrementCountAndSetEvent_WhenCurrentCountEqualsOne()
     {
         var cde = new AsyncCountdownEvent(1);
 
