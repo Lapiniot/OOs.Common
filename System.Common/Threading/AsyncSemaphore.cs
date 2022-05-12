@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using static System.Properties.Strings;
 using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Threading;
@@ -19,11 +18,8 @@ public sealed class AsyncSemaphore
 
     public AsyncSemaphore(int initialCount, int maxCount = int.MaxValue, bool runContinuationsAsynchronously = true)
     {
-        if (initialCount < 0 || initialCount > maxCount)
-            throw new ArgumentOutOfRangeException(nameof(initialCount), initialCount, AsyncSemaphoreCtorInitialCountWrong);
-
-        if (maxCount <= 0)
-            throw new ArgumentOutOfRangeException(nameof(maxCount), maxCount, AsyncSemaphoreCtorMaxCountWrong);
+        Verify.ThrowIfLessOrEqual(maxCount, 0);
+        Verify.ThrowIfNotInRange(initialCount, 0, maxCount);
 
         currentCount = initialCount;
         this.maxCount = maxCount;
@@ -85,23 +81,25 @@ public sealed class AsyncSemaphore
 
     public void Release(int releaseCount)
     {
-        int localCount;
+        Verify.ThrowIfLess(releaseCount, 1);
+
+        int current;
         var sw = new SpinWait();
 
         while (true)
         {
-            localCount = currentCount;
+            current = currentCount;
 
-            if (localCount + releaseCount > maxCount)
-                throw new SemaphoreFullException();
+            if (current > maxCount - releaseCount)
+                ThrowSempahoreFull();
 
-            if (Interlocked.CompareExchange(ref currentCount, localCount + releaseCount, localCount) == localCount)
+            if (Interlocked.CompareExchange(ref currentCount, current + releaseCount, current) == current)
                 break;
 
             sw.SpinOnce(-1);
         }
 
-        if (localCount >= 0)
+        if (current >= 0)
             return;
 
         lock (syncRoot)
@@ -167,6 +165,9 @@ public sealed class AsyncSemaphore
 
         return true;
     }
+
+    [DoesNotReturn]
+    private static void ThrowSempahoreFull() => throw new SemaphoreFullException();
 
     private sealed class WaiterNode : TaskCompletionSource
     {

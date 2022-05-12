@@ -138,6 +138,7 @@ public class AsyncSemaphore_WaitAsyncShould
         Assert.AreEqual(expectedPendingTasks, actualPendingTasks);
 
         // Proper cleanup
-        semaphore.Release(actualPendingTasks);
+        if (actualPendingTasks > 0)
+            semaphore.Release(actualPendingTasks);
     }
 }

@@ -15,14 +15,17 @@ public class AsyncSemaphore_ReleaseShould
     }
 
     [TestMethod]
-    public void RetainCurrentCount_GivenZeroReleaseCount()
+    public void ThrowArgumentOutOfRangeException_GivenNegativeReleaseCount()
     {
-        // Arrange
         var semaphore = new AsyncSemaphore(1);
-        // Act
-        semaphore.Release(0);
-        // Assert
-        Assert.AreEqual(1, semaphore.CurrentCount);
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => semaphore.Release(-1));
+    }
+
+    [TestMethod]
+    public void ThrowArgumentOutOfRangeException_GivenZeroReleaseCount()
+    {
+        var semaphore = new AsyncSemaphore(1);
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => semaphore.Release(0));
     }
 
     [TestMethod]
@@ -42,22 +45,6 @@ public class AsyncSemaphore_ReleaseShould
         Assert.IsTrue(task2.IsCompletedSuccessfully);
     }
 
-    [TestMethod]
-    public void DoNotCompleteWaitingTask_GivenZeroReleaseCount()
-    {
-        // Arrange
-        var semaphore = new AsyncSemaphore(0);
-        var task = semaphore.WaitAsync();
-
-        // Act
-        semaphore.Release(0);
-
-        // Assert
-        Assert.IsFalse(task.IsCompleted);
-
-        // Proper cleanup
-        semaphore.Release();
-    }
 
     [TestMethod]
     public void ThrowSemaphoreFullException_GivenReleaseCountResultingCurrentCountGreaterThanMaxCount()
@@ -102,6 +89,7 @@ public class AsyncSemaphore_ReleaseShould
         Assert.AreEqual(expectedCurrentCount, semaphore.CurrentCount);
 
         // Proper cleanup
-        semaphore.Release(actualPendingCount);
+        if (actualPendingCount > 0)
+            semaphore.Release(actualPendingCount);
     }
 }
