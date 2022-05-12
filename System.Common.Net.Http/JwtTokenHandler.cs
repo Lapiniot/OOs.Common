@@ -20,18 +20,17 @@ public class JwtTokenHandler : IDisposable
         ArgumentNullException.ThrowIfNull(token);
 
         const DSASignatureFormat SignatureFormat = DSASignatureFormat.IeeeP1363FixedFieldConcatenation;
-        const string JwtInfo = /*lang=json,strict*/ @"{""typ"":""JWT"",""alg"":""ES256""}";
+        byte[] JwtInfo = /*lang=json,strict*/ """{"typ":"JWT","alg":"ES256"}""";
 
-        var maxJwtInfoSize = Base64.GetMaxEncodedToUtf8Length(JwtInfo.Length);
         var maxJwtDataSize = Base64.GetMaxEncodedToUtf8Length(
             2 + token.Claims.Sum(p => 6 + UTF8.GetMaxByteCount(p.Key.Length) + UTF8.GetMaxByteCount(p.Value.Length)));
         var maxJwtSignatureSize = Base64.GetMaxEncodedToUtf8Length(ecdsa.GetMaxSignatureSize(SignatureFormat));
 
         // Encode JWT header part
-        var bufWriter = new ArrayBufferWriter<byte>(maxJwtInfoSize + maxJwtDataSize + maxJwtSignatureSize + 2);
+        var bufWriter = new ArrayBufferWriter<byte>(JwtInfo.Length + maxJwtDataSize + maxJwtSignatureSize + 2);
         var buffer = bufWriter.GetSpan(bufWriter.FreeCapacity);
-        var total = UTF8.GetBytes(JwtInfo, buffer);
-        total = Base64EncodeInPlace(buffer, total);
+        JwtInfo.CopyTo(buffer);
+        var total = Base64EncodeInPlace(buffer, JwtInfo.Length);
         buffer[total++] = 0x2E;
         bufWriter.Advance(total);
 
@@ -60,7 +59,7 @@ public class JwtTokenHandler : IDisposable
 
     protected virtual int Base64EncodeInPlace(Span<byte> buffer, int length)
     {
-        _ = Base64.EncodeToUtf8InPlace(buffer, length, out var written);
+        Base64.EncodeToUtf8InPlace(buffer, length, out var written);
         var encoded = buffer[..written].TrimEnd((byte)0x3D);
 
         for (var i = 0; i < encoded.Length; i++)

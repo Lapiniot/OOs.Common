@@ -120,10 +120,12 @@ public class WebPushClient : IDisposable
         var len = label.Length;
         var buffer = new byte[18 + len + 1 + 5 + 1 + 2 + clientPublicKey.Length + 2 + serverPublicKey.Length];
         var span = buffer.AsSpan();
-        _ = UTF8.GetBytes("Content-Encoding: ", span);
-        _ = UTF8.GetBytes(label, span[18..]);
+        byte[] header = "Content-Encoding: ";
+        header.CopyTo(span);
+        UTF8.GetBytes(label, span[18..]);
         span[18 + len] = 0;
-        _ = UTF8.GetBytes("P-256", span[(19 + len)..]);
+        byte[] p256 = "P-256";
+        p256.CopyTo(span[(19 + len)..]);
         span[24 + len] = 0;
         BinaryPrimitives.WriteUInt16BigEndian(span[(25 + len)..], (ushort)clientPublicKey.Length);
         clientPublicKey.CopyTo(span[(27 + len)..]);
