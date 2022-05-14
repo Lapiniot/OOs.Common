@@ -1,5 +1,4 @@
 ﻿using System.Net.Connections;
-using System.Net.Properties;
 
 namespace System.Net.Listeners;
 
@@ -92,7 +91,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
 
                     if (!context.Request.IsWebSocketRequest)
                     {
-                        Close(context.Response, Strings.WebSocketHandshakeExpected);
+                        Close(context.Response, "Only Web Socket handshake requests are supported.");
                         continue;
                     }
 
@@ -102,7 +101,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
                     {
                         if (string.IsNullOrEmpty(subProtocol))
                         {
-                            Close(context.Response, Strings.NoWsSubProtocol);
+                            Close(context.Response, "At least one sub-protocol must be specified.");
                             continue;
                         }
 
@@ -110,7 +109,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
                         subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
                         if (subProtocol is null)
                         {
-                            Close(context.Response, Strings.NotSupportedWsSubProtocol);
+                            Close(context.Response, "Not supported sub-protocol(s).");
                             continue;
                         }
                     }
