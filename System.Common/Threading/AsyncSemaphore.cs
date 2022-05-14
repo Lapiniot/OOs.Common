@@ -91,7 +91,7 @@ public sealed class AsyncSemaphore
             current = currentCount;
 
             if (current > maxCount - releaseCount)
-                ThrowSempahoreFull();
+                ThrowSemaphoreFull();
 
             if (Interlocked.CompareExchange(ref currentCount, current + releaseCount, current) == current)
                 break;
@@ -167,7 +167,7 @@ public sealed class AsyncSemaphore
     }
 
     [DoesNotReturn]
-    private static void ThrowSempahoreFull() => throw new SemaphoreFullException();
+    private static void ThrowSemaphoreFull() => throw new SemaphoreFullException();
 
     private sealed class WaiterNode : TaskCompletionSource
     {

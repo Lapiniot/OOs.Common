@@ -10,11 +10,7 @@ public sealed class GenericPool<T>
 
     public GenericPool(Func<T> factory, int capacity = 32)
     {
-        if (capacity <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(capacity));
-        }
-
+        Verify.ThrowIfLessOrEqual(capacity, 0);
         this.factory = factory;
         this.capacity = capacity;
     }

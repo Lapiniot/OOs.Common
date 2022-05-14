@@ -1,4 +1,3 @@
-using System.Net.Connections.Exceptions;
 using System.Net.Security;
 using System.Net.Sockets;
 using static System.Net.Sockets.SocketError;
@@ -22,7 +21,7 @@ public abstract class TcpSslSocketConnection : TcpSocketConnection
 
     public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
-        CheckState(true);
+        CheckState();
 
         try
         {
@@ -31,13 +30,13 @@ public abstract class TcpSslSocketConnection : TcpSocketConnection
         catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionClosedException(se);
+            ThrowConnectionClosed(se);
         }
     }
 
     public override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
-        CheckState(true);
+        CheckState();
 
         try
         {
@@ -46,7 +45,8 @@ public abstract class TcpSslSocketConnection : TcpSocketConnection
         catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionClosedException(se);
+            ThrowConnectionClosed(se);
+            return 0;
         }
     }
 

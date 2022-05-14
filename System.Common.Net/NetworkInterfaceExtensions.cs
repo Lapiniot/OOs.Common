@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using static System.Net.NetworkInformation.NetworkInterface;
@@ -8,8 +9,8 @@ namespace System.Net;
 public static class NetworkInterfaceExtensions
 {
     public static NetworkInterface FindBestMulticastInterface() =>
-        GetAllNetworkInterfaces().FirstOrDefault(static i => IsActiveMulticastEnabled(i))
-        ?? throw new InvalidOperationException("No valid network interface with multicast support found.");
+        GetAllNetworkInterfaces().FirstOrDefault(static iface => IsActiveMulticastEnabled(iface)) ??
+        ThrowNoMulticastInterface();
 
     public static int GetIndex(this NetworkInterface networkInterface, AddressFamily addressFamily)
     {
@@ -19,7 +20,7 @@ public static class NetworkInterfaceExtensions
         {
             InterNetwork => networkInterface.GetIPProperties().GetIPv4Properties().Index,
             InterNetworkV6 => networkInterface.GetIPProperties().GetIPv6Properties().Index,
-            _ => throw new ArgumentException("Unsupported address family")
+            _ => ThrowUnsupportedAddressFamily()
         };
     }
 
@@ -65,4 +66,12 @@ public static class NetworkInterfaceExtensions
     public static IPAddress FindExternalIPv6Address(this IEnumerable<NetworkInterface> interfaces) =>
         interfaces.FirstOrDefault(static i => i.Supports(NetworkInterfaceComponent.IPv6))?.GetIPProperties()
             .UnicastAddresses.FirstOrDefault(static a => a.Address.AddressFamily == InterNetworkV6)?.Address;
+
+    [DoesNotReturn]
+    private static NetworkInterface ThrowNoMulticastInterface() =>
+        throw new InvalidOperationException("No valid network interface with multicast support found.");
+
+    [DoesNotReturn]
+    private static int ThrowUnsupportedAddressFamily() =>
+        throw new ArgumentException("Address family is not supported.");
 }

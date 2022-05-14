@@ -3,16 +3,15 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace System;
 
+[SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
 public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 {
-    private bool disposed;
     private ConcurrentDictionary<IObserver<T>, Subscription> observers;
 
     public ObserversContainer() => observers = new();
 
     private void Unsubscribe(IObserver<T> observer) => observers?.TryRemove(observer, out _);
 
-    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void Notify(T value)
     {
         foreach (var (observer, _) in observers)
@@ -28,7 +27,6 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
         }
     }
 
-    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void NotifyError(Exception error)
     {
         foreach (var (observer, _) in observers)
@@ -44,7 +42,6 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
         }
     }
 
-    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void NotifyCompleted()
     {
         foreach (var (observer, _) in observers)
@@ -62,45 +59,26 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 
     #region IDisposable Support
 
-    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     public void Dispose()
     {
-        if (disposed) return;
+        var current = Interlocked.Exchange(ref observers, null);
 
-        var cached = Interlocked.Exchange(ref observers, null);
+        if (current is null) return;
 
-        if (cached != null)
+        foreach (var (observer, _) in current)
         {
-            foreach (var (observer, _) in cached)
+            try
             {
-                try
-                {
-                    observer.OnCompleted();
-                }
-                catch
-                {
-                    // ignored
-                }
+                observer.OnCompleted();
             }
-
-            cached.Clear();
+            catch
+            {
+                // ignored
+            }
         }
 
-        disposed = true;
+        current.Clear();
     }
-
-    #endregion
-
-    #region Implementation of IObservable<out T>
-
-    IDisposable IObservable<T>.Subscribe(IObserver<T> observer) => Subscribe(observer);
-
-    public Subscription Subscribe(IObserver<T> observer) =>
-        observers switch
-        {
-            null => throw new ObjectDisposedException("Container doesn't support subscription in the current state."),
-            _ => observers.GetOrAdd(observer, static (o, c) => new(o, c), this)
-        };
 
     #endregion
 
@@ -119,4 +97,17 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
         public void Dispose() => container.Unsubscribe(observer);
     }
 #pragma warning restore CA1034
+
+    #region Implementation of IObservable<out T>
+
+    IDisposable IObservable<T>.Subscribe(IObserver<T> observer) => Subscribe(observer);
+
+    public Subscription Subscribe(IObserver<T> observer)
+    {
+        Verify.ThrowIfObjectDisposed(observers is null, nameof(ObserversContainer<T>));
+
+        return observers!.GetOrAdd(observer, static (observer, container) => new(observer, container), this);
+    }
+
+    #endregion
 }

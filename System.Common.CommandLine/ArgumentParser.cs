@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using static System.String;
 using static System.Globalization.CultureInfo;
 
@@ -104,9 +105,10 @@ public class ArgumentParser
             }
             else
             {
-                arguments[arg] = queue.TryDequeue(out var value)
-                    ? type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture)
-                    : throw new ArgumentException($"No value was specified for argument {arg}");
+                if (queue.TryDequeue(out var value))
+                    arguments[arg] = type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture);
+                else
+                    ThrowMissingArgValue(arg);
             }
         }
         else
@@ -119,7 +121,7 @@ public class ArgumentParser
 
             if (TryParseJointSwitchesArgument(arg, metadata, arguments)) return;
 
-            if (strict) throw new ArgumentException($"Invalid argument '{arg}'");
+            if (strict) ThrowInvalidArg(arg);
 
             arguments[arg] = queue.TryPeek(out var next) && next[0] is not ('/' or '-') ? queue.Dequeue() : "";
         }
@@ -191,7 +193,7 @@ public class ArgumentParser
 
         if (!metadata.TryGetValue(key, out var def))
         {
-            if (strict) throw new ArgumentException($"Invalid argument '{key}'");
+            if (strict) ThrowInvalidArg(key);
             arguments[key] = pair.Length > 1 ? pair[1] : "";
             return;
         }
@@ -201,11 +203,9 @@ public class ArgumentParser
 
         if (type == typeof(bool))
         {
-            arguments[key] = pair.Length == 1
-                ? true
-                : (object)(TryParseBoolean(pair[1], out var b)
-                    ? b
-                    : throw new ArgumentException($"Invalid value for binary switch argument {key} Should be one of [True, False, true, false, 1, 0]"));
+            if (pair.Length == 1) arguments[key] = true;
+            else if (TryParseBoolean(pair[1], out var value)) arguments[key] = value;
+            else ThrowInvalidSwitchValue(key);
         }
         else
         {
@@ -216,7 +216,7 @@ public class ArgumentParser
             }
             else
             {
-                throw new ArgumentException($"Missing value for non-switch parameter {key}");
+                ThrowMissingArgValue(arg);
             }
         }
     }
@@ -236,4 +236,16 @@ public class ArgumentParser
             _ => false
         };
     }
+
+    [DoesNotReturn]
+    private static void ThrowMissingArgValue(string argName) =>
+        throw new ArgumentException($"No value was specified for argument '{argName}'.");
+
+    [DoesNotReturn]
+    private static void ThrowInvalidArg(string argName) =>
+        throw new ArgumentException($"Invalid argument '{argName}'.");
+
+    [DoesNotReturn]
+    private static void ThrowInvalidSwitchValue(string argName) =>
+        throw new ArgumentException($"Invalid value for binary switch argument '{argName}'. Should be one of [True, False, true, false, 1, 0].");
 }

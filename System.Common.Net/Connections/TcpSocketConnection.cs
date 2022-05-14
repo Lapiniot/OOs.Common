@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Connections.Exceptions;
 using System.Net.Sockets;
 using static System.Net.Sockets.SocketFlags;
 using static System.Net.Sockets.SocketError;
@@ -41,7 +40,7 @@ public abstract class TcpSocketConnection : NetworkConnection
         catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionClosedException(se);
+            ThrowConnectionClosed(se);
         }
     }
 
@@ -54,7 +53,8 @@ public abstract class TcpSocketConnection : NetworkConnection
         catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
             await StopActivityAsync().ConfigureAwait(false);
-            throw new ConnectionClosedException(se);
+            ThrowConnectionClosed(se);
+            return 0;
         }
     }
 
@@ -87,7 +87,8 @@ public abstract class TcpSocketConnection : NetworkConnection
         }
         catch (SocketException se) when (se.SocketErrorCode == HostNotFound)
         {
-            throw new HostNotFoundException(se);
+            ThrowHostNotFound(se);
+            return default;
         }
     }
 
@@ -107,7 +108,7 @@ public abstract class TcpSocketConnection : NetworkConnection
         }
         catch (SocketException se)
         {
-            throw new ServerUnavailableException(se);
+            ThrowServerUnavailable(se);
         }
     }
 }

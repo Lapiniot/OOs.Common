@@ -45,7 +45,6 @@ public class AsyncSemaphore_ReleaseShould
         Assert.IsTrue(task2.IsCompletedSuccessfully);
     }
 
-
     [TestMethod]
     public void ThrowSemaphoreFullException_GivenReleaseCountResultingCurrentCountGreaterThanMaxCount()
     {

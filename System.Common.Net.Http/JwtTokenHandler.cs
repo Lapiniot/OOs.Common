@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Buffers.Text;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -20,7 +21,7 @@ public class JwtTokenHandler : IDisposable
         ArgumentNullException.ThrowIfNull(token);
 
         const DSASignatureFormat SignatureFormat = DSASignatureFormat.IeeeP1363FixedFieldConcatenation;
-        byte[] JwtInfo = /*lang=json,strict*/ """{"typ":"JWT","alg":"ES256"}""";
+        var JwtInfo = /*lang=json,strict*/ """{"typ":"JWT","alg":"ES256"}"""u8;
 
         var maxJwtDataSize = Base64.GetMaxEncodedToUtf8Length(
             2 + token.Claims.Sum(p => 6 + UTF8.GetMaxByteCount(p.Key.Length) + UTF8.GetMaxByteCount(p.Value.Length)));
@@ -50,7 +51,7 @@ public class JwtTokenHandler : IDisposable
         // Sign and encode signature part
         if (!ecdsa.TrySignData(buffer[..(total - 1)], buffer[total..], HashAlgorithmName.SHA256, SignatureFormat, out var bytesWritten))
         {
-            throw new InvalidOperationException("Signature computation failed");
+            ThrowSignatureComputeFailed();
         }
 
         total += Base64EncodeInPlace(buffer[total..], bytesWritten);
@@ -74,6 +75,10 @@ public class JwtTokenHandler : IDisposable
 
         return encoded.Length;
     }
+
+    [DoesNotReturn]
+    private static void ThrowSignatureComputeFailed() =>
+        throw new InvalidOperationException("Signature computation failed");
 
     #region Implementation of IDisposable
 

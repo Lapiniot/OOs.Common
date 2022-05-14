@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using static System.Net.IPAddress;
 using static System.Net.Sockets.AddressFamily;
 using static System.Net.Sockets.SocketType;
@@ -43,8 +44,9 @@ public static class SocketBuilderExtensions
             case InterNetworkV6:
                 socket.SetSocketOption(IPv6, MulticastInterface, mcintIndex);
                 break;
-
-            default: throw new NotSupportedException("Unsupported address family");
+            default:
+                ThrowNotSupportedAddressFamily();
+                break;
         }
 
         socket.SetSocketOption(IP, MulticastTimeToLive, ttl);
@@ -67,8 +69,11 @@ public static class SocketBuilderExtensions
         ArgumentNullException.ThrowIfNull(socket);
         ArgumentNullException.ThrowIfNull(groupToJoin);
 
-        if (groupToJoin.AddressFamily != socket.AddressFamily) throw new NotSupportedException("Group address family mismatch");
-        if (mcint is not null && mcint.AddressFamily != socket.AddressFamily) throw new NotSupportedException("Multicast interface address family mismatch");
+        if (groupToJoin.AddressFamily != socket.AddressFamily)
+            ThrowGroupAddressFamilyMismatch();
+
+        if (mcint is not null && mcint.AddressFamily != socket.AddressFamily)
+            ThrowInterfaceAddressFamilyMismatch();
 
         socket.SetSocketOption(SocketOptionLevel.Socket, ReuseAddress, true);
 
@@ -101,8 +106,10 @@ public static class SocketBuilderExtensions
                         : (long)socket.GetSocketOption(IPv6, MulticastInterface)!));
                 socket.Bind(new IPEndPoint(IPv6Any, groupToJoin.Port));
                 break;
+
             default:
-                throw new ArgumentOutOfRangeException(nameof(socket), "Unsupported address family");
+                ThrowNotSupportedAddressFamily();
+                break;
         }
 
         return socket;
@@ -128,4 +135,16 @@ public static class SocketBuilderExtensions
             ? new(groupToJoin, HostToNetworkOrder(iface))
             : new(groupToJoin, new IPAddress(iface));
     }
+
+    [DoesNotReturn]
+    private static void ThrowNotSupportedAddressFamily() =>
+        throw new NotSupportedException("Unsupported address family.");
+
+    [DoesNotReturn]
+    private static void ThrowInterfaceAddressFamilyMismatch() =>
+        throw new InvalidOperationException("Multicast interface address family mismatch.");
+
+    [DoesNotReturn]
+    private static void ThrowGroupAddressFamilyMismatch() =>
+        throw new InvalidOperationException("Group address family mismatch.");
 }

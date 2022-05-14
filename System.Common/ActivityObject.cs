@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using static System.Verify;
 
 namespace System;
 
@@ -17,21 +18,9 @@ public abstract class ActivityObject : IAsyncDisposable
 
     protected abstract Task StoppingAsync();
 
-    protected void CheckState(bool state, [CallerMemberName] string callerName = null)
-    {
-        if (IsRunning != state)
-        {
-            throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
-        }
-    }
+    protected void CheckState([CallerMemberName] string callerName = null) => ThrowIfInvalidState(!IsRunning, callerName);
 
-    protected void CheckDisposed()
-    {
-        if (Volatile.Read(ref disposed) != 0)
-        {
-            throw new ObjectDisposedException(nameof(ActivityObject));
-        }
-    }
+    protected void CheckDisposed() => ThrowIfObjectDisposed(Volatile.Read(ref disposed) != 0, nameof(ActivityObject));
 
     protected async Task StartActivityAsync(CancellationToken cancellationToken)
     {

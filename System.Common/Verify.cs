@@ -80,6 +80,21 @@ public static class Verify
     }
 
     /// <summary>
+    /// Throws <see cref="ArgumentOutOfRangeException" /> if <paramref name="argument" /> is less then or equal to <paramref name="comparand" />
+    /// </summary>
+    /// <param name="argument">Argument to check</param>
+    /// <param name="comparand">Min. value to compare with</param>
+    /// <param name="argumentName">Argument name</param>
+    /// <exception cref="ArgumentOutOfRangeException">If <paramref name="argument" /> is less than or equal <paramref name="comparand" /></exception>
+    public static void ThrowIfLessOrEqual(double argument, double comparand, [CallerArgumentExpression("argument")] string argumentName = null)
+    {
+        if (argument <= comparand)
+        {
+            ThrowValueMustBeGreaterThan(argumentName, comparand);
+        }
+    }
+
+    /// <summary>
     /// Throws <see cref="ArgumentOutOfRangeException" /> if <paramref name="argument" /> is not in range [<paramref name="minVal" /> .. <paramref name="maxVal" />]
     /// </summary>
     /// <param name="argument">Argument to check</param>
@@ -91,6 +106,34 @@ public static class Verify
         if (argument < minVal || argument > maxVal)
         {
             ThrowValueMustBeInRange(argumentName, minVal, maxVal);
+        }
+    }
+
+    /// <summary>
+    /// Throws <see cref="InvalidOperationException" /> if <paramref name="condition" /> is <see langword="true" />.
+    /// </summary>
+    /// <param name="condition">Condition to check.</param>
+    /// <param name="callerName">Caller member name.</param>
+    /// <exception cref="InvalidOperationException">When <paramref name="condition" /> is <see langword="true" /></exception>
+    public static void ThrowIfInvalidState(bool condition, [CallerMemberName] string callerName = null)
+    {
+        if (condition)
+        {
+            ThrowInvalidState(callerName);
+        }
+    }
+
+    /// <summary>
+    /// Throws <see cref="ObjectDisposedException" /> if <paramref name="condition" /> is <see langword="true" />.
+    /// </summary>
+    /// <param name="condition">Condition to check.</param>
+    /// <param name="objectName">Object name.</param>
+    /// <exception cref="ObjectDisposedException">If <paramref name="condition" /> is <see langword="true" />.</exception>
+    public static void ThrowIfObjectDisposed(bool condition, string objectName)
+    {
+        if (condition)
+        {
+            ThrowObjectDisposed(objectName);
         }
     }
 
@@ -119,10 +162,22 @@ public static class Verify
         throw new ArgumentOutOfRangeException(argumentName, $"Value must be greater than {comparand}.");
 
     [DoesNotReturn]
+    public static void ThrowValueMustBeGreaterThan(string argumentName, double comparand) =>
+        throw new ArgumentOutOfRangeException(argumentName, $"Value must be greater than {comparand}.");
+
+    [DoesNotReturn]
     public static void ThrowValueMustBeGreaterThanOrEqual(string argumentName, int comparand) =>
         throw new ArgumentOutOfRangeException(argumentName, $"Value must be greater than or equal to {comparand}.");
 
     [DoesNotReturn]
     public static void ThrowValueMustBeInRange(string argumentName, int minComparand, int maxComparand) =>
         throw new ArgumentOutOfRangeException(argumentName, $"Value must be in range [{minComparand} .. {maxComparand}].");
+
+    [DoesNotReturn]
+    public static void ThrowInvalidState([CallerMemberName] string callerName = null) =>
+        throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
+
+    [DoesNotReturn]
+    public static void ThrowObjectDisposed(string objectName) =>
+        throw new ObjectDisposedException(objectName);
 }

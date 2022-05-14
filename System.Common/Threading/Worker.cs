@@ -77,13 +77,7 @@ public abstract class Worker : IAsyncDisposable
         }
     }
 
-    protected void CheckDisposed()
-    {
-        if (disposed != 0)
-        {
-            throw new ObjectDisposedException(nameof(Worker));
-        }
-    }
+    protected void CheckDisposed() => Verify.ThrowIfObjectDisposed(disposed != 0, nameof(Worker));
 
     #region Implementation of IAsyncDisposable
 

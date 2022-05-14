@@ -1,4 +1,3 @@
-using System.Net.Connections.Exceptions;
 using System.Net.WebSockets;
 using static System.Net.WebSockets.WebSocketError;
 using static System.Net.WebSockets.WebSocketState;
@@ -34,8 +33,8 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
     protected override Task StoppingAsync() =>
         Socket switch
         {
-            { State: Open } => Socket.CloseAsync(NormalClosure, "Good bye.", default),
-            { State: CloseReceived, CloseStatus: NormalClosure } => Socket.CloseOutputAsync(NormalClosure, "Good bye.", default),
+            { State: Open } => socket.CloseAsync(NormalClosure, "Good bye.", default),
+            { State: CloseReceived, CloseStatus: NormalClosure } => socket.CloseOutputAsync(NormalClosure, "Good bye.", default),
             _ => Task.CompletedTask
         };
 
@@ -51,7 +50,7 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
             wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
             wse.WebSocketErrorCode is InvalidState && socket.State is Aborted or Closed)
         {
-            throw new ConnectionClosedException(wse);
+            ThrowConnectionClosed(wse);
         }
     }
 
@@ -67,14 +66,15 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
             }
 
             await DisconnectAsync().ConfigureAwait(false);
-            return 0;
         }
         catch (WebSocketException wse) when (
             wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
             wse.WebSocketErrorCode is InvalidState && socket.State is Aborted or Closed)
         {
-            throw new ConnectionClosedException(wse);
+            ThrowConnectionClosed(wse);
         }
+
+        return 0;
     }
 
     #endregion

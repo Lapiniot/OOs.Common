@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Properties;
 
 namespace System.IO.Pipelines;
 
@@ -18,7 +17,14 @@ public abstract class PipeConsumer : ActivityObject
         this.reader = reader;
     }
 
-    public Task Completion => IsRunning ? consumer : throw new InvalidOperationException(Strings.InvalidStateNotStarted);
+    public Task Completion
+    {
+        get
+        {
+            Verify.ThrowIfInvalidState(!IsRunning);
+            return consumer;
+        }
+    }
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {

@@ -1,4 +1,4 @@
-using System.Properties;
+using static System.Verify;
 
 namespace System.IO.Pipelines;
 
@@ -29,9 +29,8 @@ public abstract class PipeProducer : IAsyncDisposable
         get
         {
             var currentProducer = Volatile.Read(ref producer);
-            return Interlocked.Read(ref stateGuard) != Started || currentProducer is null
-                ? throw new InvalidOperationException(Strings.InvalidStateNotStarted)
-                : currentProducer;
+            ThrowIfInvalidState(Interlocked.Read(ref stateGuard) != Started || currentProducer is null);
+            return currentProducer;
         }
     }
 
@@ -57,7 +56,8 @@ public abstract class PipeProducer : IAsyncDisposable
 
                 break;
             case Stopping:
-                throw new InvalidOperationException("Cannot start in this state, currently in stopping transition.");
+                ThrowInvalidState();
+                break;
         }
     }
 
@@ -115,10 +115,7 @@ public abstract class PipeProducer : IAsyncDisposable
         }
     }
 
-    protected void CheckDisposed()
-    {
-        if (disposed is 1) throw new InvalidOperationException(Strings.ObjectInstanceDisposed);
-    }
+    protected void CheckDisposed() => ThrowIfObjectDisposed(disposed is 1, nameof(PipeProducer));
 
     private async Task StartProducerAsync(PipeWriter pipeWriter, CancellationToken token)
     {
