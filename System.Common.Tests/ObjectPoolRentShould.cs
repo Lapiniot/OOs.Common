@@ -72,7 +72,7 @@ public class ObjectPoolRentShould
         Assert.AreEqual(2 * MaxCapacity, MockObject.ConstructorInvocations);
     }
 
-    private class MockObject
+    private sealed class MockObject
     {
         private static int constructorInvocations;
 

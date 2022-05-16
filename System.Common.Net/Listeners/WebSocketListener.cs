@@ -35,7 +35,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
 
     #endregion
 
-    private class WebSocketEnumerator : IAsyncEnumerator<NetworkConnection>
+    private sealed class WebSocketEnumerator : IAsyncEnumerator<NetworkConnection>
     {
         private readonly CancellationToken cancellationToken;
         private readonly TimeSpan keepAliveInterval;
