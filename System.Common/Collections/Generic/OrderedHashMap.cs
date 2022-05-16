@@ -99,13 +99,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         private int state;
         private bool locked;
 
-        internal Enumerator(OrderedHashMap<TKey, TValue> map)
-        {
-            node = null;
-            state = Init;
-            locked = false;
-            this.map = map;
-        }
+        internal Enumerator(OrderedHashMap<TKey, TValue> map) => this.map = map;
 
         public TValue Current => node.Value;
 
