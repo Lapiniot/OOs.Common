@@ -8,7 +8,7 @@ public class AsyncCountdownEvent_ResetShould
         Assert.ThrowsException<ArgumentOutOfRangeException>(() => new AsyncCountdownEvent(1).Reset(-1));
 
     [TestMethod]
-    public void SetEventImmidiately_GivenZeroValue()
+    public void SetEventImmediately_GivenZeroValue()
     {
         var cde = new AsyncCountdownEvent(1);
 
@@ -29,7 +29,7 @@ public class AsyncCountdownEvent_ResetShould
     }
 
     [TestMethod]
-    public void DoNotSetEventImmidiately_GivenPositiveValue()
+    public void DoNotSetEventImmediately_GivenPositiveValue()
     {
         var cde = new AsyncCountdownEvent(1);
 

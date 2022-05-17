@@ -28,9 +28,9 @@ public class AsyncCountdownEvent
     }
 
     /// <summary>
-    /// Gets the number of remaining sigmnals required to set the event.
+    /// Gets the number of remaining signals required to set the event.
     /// </summary>
-    /// <value>The number of remaining sigmnals required to set the event.</value>
+    /// <value>The number of remaining signals required to set the event.</value>
     public int CurrentCount
     {
         get
@@ -57,7 +57,7 @@ public class AsyncCountdownEvent
     /// <summary>
     /// Increments <see cref="CurrentCount" /> by a <paramref name="signalCount" /> value.
     /// </summary>
-    /// <param name="signalCount">The value by wich to increment.</param>
+    /// <param name="signalCount">The value increment.</param>
     /// <exception cref="ArgumentOutOfRangeException">If <paramref name="signalCount"/> is less or equal 0.</exception>
     /// <exception cref="InvalidOperationException">When the event is already signaled and cannot be incremented.</exception>
     /// <exception cref="InvalidOperationException">The increment operation would cause the <see cref="CurrentCount"/> to overflow.</exception>

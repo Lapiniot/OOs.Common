@@ -27,7 +27,7 @@ public class AsyncCountdownEvent_ResetDefaultShould
     }
 
     [TestMethod]
-    public void SetEventImmidiately_WhenInitialCountZero()
+    public void SetEventImmediately_WhenInitialCountZero()
     {
         var cde = new AsyncCountdownEvent(0);
 
