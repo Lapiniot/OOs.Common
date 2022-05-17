@@ -1,13 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <Import Project="../common.props" />
+  <PropertyGroup>
+    <RootNamespace>System.Net</RootNamespace>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <RootNamespace>System.Net</RootNamespace>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="../System.Common/System.Common.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../System.Common/System.Common.csproj" />
+  </ItemGroup>
 
 </Project>
