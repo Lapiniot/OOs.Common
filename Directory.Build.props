@@ -6,7 +6,7 @@
     <Authors>aossss@gmail.com</Authors>
     <Company>aossss@gmail.com</Company>
     <Copyright>© aossss@gmail.com, 2018</Copyright>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AnalysisLevel>preview</AnalysisLevel>
