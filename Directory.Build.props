@@ -6,13 +6,12 @@
     <Authors>aossss@gmail.com</Authors>
     <Company>aossss@gmail.com</Company>
     <Copyright>© aossss@gmail.com, 2018</Copyright>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.1</AssemblyVersion>
-    <FileVersion>1.0.0.1</FileVersion>
+    <Version>1.1.0</Version>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
-    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisLevel>preview</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>true</ImplicitUsings>
+    <EnablePreviewFeatures>true</EnablePreviewFeatures>
   </PropertyGroup>
 </Project>
