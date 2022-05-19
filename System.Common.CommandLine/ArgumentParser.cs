@@ -6,7 +6,7 @@ namespace System.Common.CommandLine;
 
 public class ArgumentParser
 {
-    private static readonly char[] quotes = { '"', '\'' };
+    private static readonly char[] Quotes = { '"', '\'' };
     private readonly IEnumerable<ICommandMetadata> commands;
     private readonly IEnumerable<IArgumentMetadata> schema;
     private readonly bool strict;
@@ -106,7 +106,7 @@ public class ArgumentParser
             else
             {
                 if (queue.TryDequeue(out var value))
-                    arguments[arg] = type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture);
+                    arguments[arg] = type == typeof(string) ? value.Trim(Quotes) : Convert.ChangeType(value, type, InvariantCulture);
                 else
                     ThrowMissingArgValue(arg);
             }
@@ -138,7 +138,7 @@ public class ArgumentParser
             if (type != typeof(bool))
             {
                 var value = arg[key.Length..];
-                arguments[key] = type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture);
+                arguments[key] = type == typeof(string) ? value.Trim(Quotes) : Convert.ChangeType(value, type, InvariantCulture);
                 return true;
             }
 
@@ -212,7 +212,7 @@ public class ArgumentParser
             if (pair.Length == 2)
             {
                 var value = pair[1];
-                arguments[key] = type == typeof(string) ? value.Trim(quotes) : Convert.ChangeType(value, type, InvariantCulture);
+                arguments[key] = type == typeof(string) ? value.Trim(Quotes) : Convert.ChangeType(value, type, InvariantCulture);
             }
             else
             {
