@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <RootNamespace>System</RootNamespace>
-  </PropertyGroup>
+    <PropertyGroup>
+        <RootNamespace>System</RootNamespace>
+    </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.IO.Pipelines" Version="7.0.0-preview.4.22229.4" />
