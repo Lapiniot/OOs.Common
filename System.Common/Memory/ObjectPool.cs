@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
 namespace System.Memory;
 
@@ -16,7 +16,7 @@ public sealed class ObjectPool<T> where T : class, new()
 
 #pragma warning disable CA1000
 
-    public static ObjectPool<T> Shared => InstanceHolder.instance;
+    public static ObjectPool<T> Shared => InstanceHolder.Instance;
 
 #pragma warning restore CA1000
 
@@ -43,7 +43,7 @@ public sealed class ObjectPool<T> where T : class, new()
 
     private static class InstanceHolder
     {
-        internal static readonly ObjectPool<T> instance = new();
+        internal static readonly ObjectPool<T> Instance = new();
         static InstanceHolder() { }
     }
 }
