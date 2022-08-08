@@ -5,7 +5,7 @@ namespace System;
 
 public static class Verify
 {
-    public static void ThrowIfNullOrEmpty(string argument, [CallerArgumentExpression("argument")] string argumentName = null)
+    public static void ThrowIfNullOrEmpty(string argument, [CallerArgumentExpression(nameof(argument))] string argumentName = null)
     {
         if (string.IsNullOrEmpty(argument))
         {
@@ -13,7 +13,7 @@ public static class Verify
         }
     }
 
-    public static void ThrowIfEmpty(ReadOnlyMemory<byte> argument, [CallerArgumentExpression("argument")] string argumentName = null)
+    public static void ThrowIfEmpty(ReadOnlyMemory<byte> argument, [CallerArgumentExpression(nameof(argument))] string argumentName = null)
     {
         if (argument.IsEmpty)
         {
@@ -21,7 +21,7 @@ public static class Verify
         }
     }
 
-    public static void ThrowIfNullOrEmpty(Array argument, [CallerArgumentExpression("argument")] string argumentName = null)
+    public static void ThrowIfNullOrEmpty(Array argument, [CallerArgumentExpression(nameof(argument))] string argumentName = null)
     {
         ArgumentNullException.ThrowIfNull(argument);
 
@@ -31,7 +31,7 @@ public static class Verify
         }
     }
 
-    public static void ThrowIfNullOrEmpty<T>(IReadOnlyCollection<T> argument, [CallerArgumentExpression("argument")] string argumentName = null)
+    public static void ThrowIfNullOrEmpty<T>(IReadOnlyCollection<T> argument, [CallerArgumentExpression(nameof(argument))] string argumentName = null)
     {
         ArgumentNullException.ThrowIfNull(argument);
 
@@ -41,7 +41,7 @@ public static class Verify
         }
     }
 
-    public static void ThrowIfNotPowerOfTwo(int argument, [CallerArgumentExpression("argument")] string argumentName = null)
+    public static void ThrowIfNotPowerOfTwo(int argument, [CallerArgumentExpression(nameof(argument))] string argumentName = null)
     {
         if ((argument & (argument - 1)) != 0)
         {
@@ -56,7 +56,7 @@ public static class Verify
     /// <param name="comparand">Min. value to compare with</param>
     /// <param name="argumentName">Argument name</param>
     /// <exception cref="ArgumentOutOfRangeException">If <paramref name="argument" /> is less than <paramref name="comparand" /></exception>
-    public static void ThrowIfLess(int argument, int comparand, [CallerArgumentExpression("argument")] string argumentName = null)
+    public static void ThrowIfLess(int argument, int comparand, [CallerArgumentExpression(nameof(argument))] string argumentName = null)
     {
         if (argument < comparand)
         {
@@ -71,7 +71,7 @@ public static class Verify
     /// <param name="comparand">Min. value to compare with</param>
     /// <param name="argumentName">Argument name</param>
     /// <exception cref="ArgumentOutOfRangeException">If <paramref name="argument" /> is less than or equal <paramref name="comparand" /></exception>
-    public static void ThrowIfLessOrEqual(int argument, int comparand, [CallerArgumentExpression("argument")] string argumentName = null)
+    public static void ThrowIfLessOrEqual(int argument, int comparand, [CallerArgumentExpression(nameof(argument))] string argumentName = null)
     {
         if (argument <= comparand)
         {
@@ -86,7 +86,7 @@ public static class Verify
     /// <param name="comparand">Min. value to compare with</param>
     /// <param name="argumentName">Argument name</param>
     /// <exception cref="ArgumentOutOfRangeException">If <paramref name="argument" /> is less than or equal <paramref name="comparand" /></exception>
-    public static void ThrowIfLessOrEqual(double argument, double comparand, [CallerArgumentExpression("argument")] string argumentName = null)
+    public static void ThrowIfLessOrEqual(double argument, double comparand, [CallerArgumentExpression(nameof(argument))] string argumentName = null)
     {
         if (argument <= comparand)
         {
@@ -101,7 +101,7 @@ public static class Verify
     /// <param name="minVal">Min. value to compare with</param>
     /// <param name="maxVal">Max. value to compare with</param>
     /// <param name="argumentName">Argument name</param>
-    public static void ThrowIfNotInRange(int argument, int minVal, int maxVal, [CallerArgumentExpression("argument")] string argumentName = null)
+    public static void ThrowIfNotInRange(int argument, int minVal, int maxVal, [CallerArgumentExpression(nameof(argument))] string argumentName = null)
     {
         if (argument < minVal || argument > maxVal)
         {
