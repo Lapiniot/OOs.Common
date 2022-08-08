@@ -117,17 +117,15 @@ public abstract class PipeProducer : IAsyncDisposable
 
     protected void CheckDisposed() => ThrowIfObjectDisposed(disposed is 1, nameof(PipeProducer));
 
-    private async Task StartProducerAsync(PipeWriter pipeWriter, CancellationToken token)
+    private async Task StartProducerAsync(PipeWriter pipeWriter, CancellationToken cancellationToken)
     {
         try
         {
             while (true)
             {
-                token.ThrowIfCancellationRequested();
-
                 var buffer = pipeWriter.GetMemory();
 
-                var received = await ReceiveAsync(buffer, token).ConfigureAwait(false);
+                var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
 
                 if (received == 0)
                 {
@@ -136,7 +134,7 @@ public abstract class PipeProducer : IAsyncDisposable
 
                 pipeWriter.Advance(received);
 
-                var result = await pipeWriter.FlushAsync(token).ConfigureAwait(false);
+                var result = await pipeWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
 
                 if (result.IsCompleted || result.IsCanceled)
                 {

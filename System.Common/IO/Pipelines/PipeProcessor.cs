@@ -1,14 +1,12 @@
-﻿using System.Buffers;
-
 namespace System.IO.Pipelines;
 
 /// <summary>
 /// Provides base pipe processor implementation which runs two loops.
 /// Producer loop reads data from the abstract source asynchronously on
 /// arrival via <see cref="ReceiveAsync" /> and writes to the pipe.
-/// Consumer loop consumes data from the pipe via <see cref="Consume" />.
+/// Consumer loop consumes data from the pipe via <see cref="PipeConsumerCore.Consume" />.
 /// </summary>
-public abstract class PipeProducerConsumer : ActivityObject
+public abstract class PipeProcessor : PipeConsumerCore
 {
     private CancellationTokenSource cancellationTokenSource;
     private Task processor;
@@ -73,50 +71,6 @@ public abstract class PipeProducerConsumer : ActivityObject
         }
     }
 
-    private async Task StartConsumerAsync(PipeReader reader, CancellationToken cancellationToken)
-    {
-        try
-        {
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-
-                var buffer = result.Buffer;
-
-                if (buffer.Length > 0)
-                {
-                    Consume(in buffer, out var consumed);
-
-                    if (consumed > 0)
-                    {
-                        reader.AdvanceTo(buffer.GetPosition(consumed));
-                        continue;
-                    }
-
-                    // Seems we have not enough data to be consumed in a consistent way by the consumer logic
-                    reader.AdvanceTo(buffer.Start, buffer.End);
-                }
-
-                if (result.IsCompleted || result.IsCanceled)
-                {
-                    // However we couldn't get more data, because writer end has already completed writing. 
-                    // So we better terminate reading in order to avoid potential "dead" loop
-                    break;
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected
-        }
-        finally
-        {
-            await reader.CompleteAsync().ConfigureAwait(false);
-        }
-    }
-
     /// <summary>
     /// Provides abstract data reading support from asynchronous sources (network stream, socket e.g.)
     /// </summary>
@@ -124,11 +78,4 @@ public abstract class PipeProducerConsumer : ActivityObject
     /// <param name="cancellationToken"><see cref="CancellationToken" /> for external cancellation support.</param>
     /// <returns>Actual amount of the data received.</returns>
     protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Method gets called every time new data is available.
-    /// </summary>
-    /// <param name="sequence">Sequence of linked buffers containing data produced by the pipe writer</param>
-    /// <param name="consumed">Amount of bytes actually consumed by our implementation or <value>0</value> if no data can be consumed at the moment.</param>
-    protected abstract void Consume(in ReadOnlySequence<byte> sequence, out long consumed);
 }
