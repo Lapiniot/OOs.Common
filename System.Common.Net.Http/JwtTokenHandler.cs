@@ -3,7 +3,6 @@ using System.Buffers.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using static System.Text.Encoding;
 
 namespace System.Net.Http;
@@ -38,11 +37,7 @@ public class JwtTokenHandler : IDisposable
         // Encode JWT payload part
         using (var writer = new Utf8JsonWriter(bufWriter))
         {
-            JsonSerializer.Serialize(writer, token.Claims, new JsonSerializerOptions
-            {
-                WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            });
+            JsonSerializer.Serialize(writer, token.Claims, JsonContext.Default.DictionaryStringString);
         }
 
         total += Base64EncodeInPlace(buffer[total..], bufWriter.WrittenCount - total);
