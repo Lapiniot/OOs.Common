@@ -1,6 +1,7 @@
 <Project>
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
+        <IsTrimmable>true</IsTrimmable>
         <LangVersion>preview</LangVersion>
         <Authors>aossss@gmail.com</Authors>
         <Company>aossss@gmail.com</Company>
