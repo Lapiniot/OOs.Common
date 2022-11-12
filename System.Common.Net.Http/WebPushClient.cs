@@ -109,7 +109,7 @@ public class WebPushClient : IDisposable
         var paddingLength = (payload.Length / 16 + 1) * 16 - payload.Length;
         var data = new byte[2 + paddingLength + payload.Length];
         Span<byte> span = data;
-        span[..(2 + paddingLength)].Fill(0);
+        span[..(2 + paddingLength)].Clear();
         BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)paddingLength);
         payload.CopyTo(span[(2 + paddingLength)..]);
         return data;
