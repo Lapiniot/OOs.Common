@@ -8,11 +8,11 @@ namespace System.Net.Pipelines;
 /// on data arrival and writes it to the pipe. Reads by consumers are supported via
 /// implemented <seealso cref="PipeReader" /> methods.
 /// </summary>
-public sealed class NetworkPipeReader : PipeProducer
+public sealed class NetworkTransportPipe : TransportPipe
 {
     private readonly INetworkConnection connection;
 
-    public NetworkPipeReader(INetworkConnection connection, PipeOptions pipeOptions = null) : base(pipeOptions)
+    public NetworkTransportPipe(INetworkConnection connection, PipeOptions pipeOptions = null) : base(pipeOptions)
     {
         ArgumentNullException.ThrowIfNull(connection);
         this.connection = connection;
@@ -20,4 +20,7 @@ public sealed class NetworkPipeReader : PipeProducer
 
     protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken) =>
         connection.ReceiveAsync(buffer, cancellationToken);
+
+    protected override ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) =>
+        connection.SendAsync(buffer, cancellationToken);
 }
