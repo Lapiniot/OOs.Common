@@ -182,10 +182,10 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
 
                 foreach (var chunk in buffer)
                 {
-                    await SendAsync(chunk, cancellationToken);
+                    await SendAsync(chunk, cancellationToken).ConfigureAwait(false);
                 }
 
-                reader.AdvanceTo(buffer.Start, buffer.End);
+                reader.AdvanceTo(buffer.End, buffer.End);
 
                 if (result.IsCanceled || result.IsCompleted)
                 {
