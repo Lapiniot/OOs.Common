@@ -18,7 +18,7 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
         RemoteCertificateValidationCallback remoteCertificateValidationCallback = null,
         ServerCertificateSelectionCallback serverCertificateSelectionCallback = null,
         bool clientCertificateRequired = false) :
-        base(endPoint, backlog, configureListening, configureAccepted)
+        base(endPoint, ProtocolType.Tcp, backlog, configureListening, configureAccepted)
     {
         this.serverCertificate = serverCertificate;
 

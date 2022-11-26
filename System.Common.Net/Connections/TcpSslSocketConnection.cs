@@ -11,7 +11,7 @@ public abstract class TcpSslSocketConnection : TcpSocketConnection
     protected TcpSslSocketConnection()
     { }
 
-    protected TcpSslSocketConnection(IPEndPoint remoteEndPoint) : base(remoteEndPoint)
+    protected TcpSslSocketConnection(IPEndPoint remoteEndPoint) : base(remoteEndPoint, Sockets.ProtocolType.Tcp)
     { }
 
     protected TcpSslSocketConnection(Socket acceptedSocket) : base(acceptedSocket)

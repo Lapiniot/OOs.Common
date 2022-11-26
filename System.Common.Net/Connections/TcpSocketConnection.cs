@@ -2,15 +2,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 using static System.Net.Sockets.SocketFlags;
 using static System.Net.Sockets.SocketError;
-using static System.Net.Sockets.ProtocolType;
 
 namespace System.Net.Connections;
 
 public abstract class TcpSocketConnection : NetworkConnection
 {
     private int disposed;
-    private IPEndPoint remoteEndPoint;
+    private EndPoint remoteEndPoint;
     private Socket socket;
+    private readonly ProtocolType protocolType;
 
     protected TcpSocketConnection()
     { }
@@ -19,17 +19,18 @@ public abstract class TcpSocketConnection : NetworkConnection
     {
         ArgumentNullException.ThrowIfNull(acceptedSocket);
         Socket = acceptedSocket;
-        RemoteEndPoint = (IPEndPoint)acceptedSocket.RemoteEndPoint;
+        RemoteEndPoint = acceptedSocket.RemoteEndPoint;
     }
 
-    protected TcpSocketConnection(IPEndPoint remoteEndPoint)
+    protected TcpSocketConnection(EndPoint remoteEndPoint, ProtocolType protocolType)
     {
         ArgumentNullException.ThrowIfNull(remoteEndPoint);
         this.remoteEndPoint = remoteEndPoint;
+        this.protocolType = protocolType;
     }
 
     protected Socket Socket { get => socket; set => socket = value; }
-    public IPEndPoint RemoteEndPoint { get => remoteEndPoint; protected set => remoteEndPoint = value; }
+    public EndPoint RemoteEndPoint { get => remoteEndPoint; protected set => remoteEndPoint = value; }
 
     public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
@@ -92,7 +93,7 @@ public abstract class TcpSocketConnection : NetworkConnection
         }
     }
 
-    protected async Task ConnectAsClientAsync([NotNull] IPEndPoint endPoint, CancellationToken cancellationToken)
+    protected async Task ConnectAsClientAsync([NotNull] EndPoint endPoint, CancellationToken cancellationToken)
     {
         try
         {
@@ -102,7 +103,7 @@ public abstract class TcpSocketConnection : NetworkConnection
                 socket = null;
             }
 
-            socket ??= new(endPoint.AddressFamily, SocketType.Stream, Tcp);
+            socket ??= new(endPoint.AddressFamily, SocketType.Stream, protocolType);
             await socket.ConnectAsync(endPoint, cancellationToken).ConfigureAwait(false);
             RemoteEndPoint = endPoint;
         }

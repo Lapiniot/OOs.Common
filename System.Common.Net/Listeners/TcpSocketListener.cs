@@ -8,7 +8,7 @@ public sealed class TcpSocketListener : TcpSocketListenerBase
     public TcpSocketListener(IPEndPoint endPoint, int backlog = 100,
         Action<Socket> configureListening = null,
         Action<Socket> configureAccepted = null) :
-        base(endPoint, backlog, configureListening, configureAccepted)
+        base(endPoint, ProtocolType.Tcp, backlog, configureListening, configureAccepted)
     { }
 
     protected override NetworkConnection CreateConnection(Socket acceptedSocket) => new TcpServerSocketConnection(acceptedSocket);

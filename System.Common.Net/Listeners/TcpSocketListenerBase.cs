@@ -8,9 +8,10 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<NetworkConnection
     private readonly int backlog;
     private readonly Action<Socket> configureAccepted;
     private readonly Action<Socket> configureListening;
-    private readonly IPEndPoint endPoint;
+    private readonly EndPoint endPoint;
+    private readonly ProtocolType protocolType;
 
-    protected TcpSocketListenerBase(IPEndPoint endPoint, int backlog = 100,
+    protected TcpSocketListenerBase(EndPoint endPoint, ProtocolType protocolType, int backlog = 100,
         Action<Socket> configureListening = null,
         Action<Socket> configureAccepted = null)
     {
@@ -20,9 +21,10 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<NetworkConnection
         this.backlog = backlog;
         this.configureListening = configureListening;
         this.configureAccepted = configureAccepted;
+        this.protocolType = protocolType;
     }
 
-    protected IPEndPoint EndPoint => endPoint;
+    protected EndPoint EndPoint => endPoint;
 
     protected abstract NetworkConnection CreateConnection(Socket acceptedSocket);
 
@@ -30,7 +32,7 @@ public abstract class TcpSocketListenerBase : IAsyncEnumerable<NetworkConnection
 
     public async IAsyncEnumerator<NetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        using var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, protocolType);
 
         if (endPoint.AddressFamily == AddressFamily.InterNetworkV6)
         {

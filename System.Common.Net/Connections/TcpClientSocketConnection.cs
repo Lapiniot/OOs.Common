@@ -5,7 +5,7 @@ public sealed class TcpClientSocketConnection : TcpSocketConnection
     private readonly string hostNameOrAddress;
     private readonly int port;
 
-    public TcpClientSocketConnection(IPEndPoint remoteEndPoint) : base(remoteEndPoint)
+    public TcpClientSocketConnection(IPEndPoint remoteEndPoint) : base(remoteEndPoint, Sockets.ProtocolType.Tcp)
     { }
 
     public TcpClientSocketConnection(string hostNameOrAddress, int port)
