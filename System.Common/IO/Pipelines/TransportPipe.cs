@@ -75,14 +75,14 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
         }
     }
 
-    public async Task ResetAsync()
+    public void Reset()
     {
-        await inputPipe.Reader.CompleteAsync().ConfigureAwait(false);
-        await inputPipe.Writer.CompleteAsync().ConfigureAwait(false);
+        inputPipe.Reader.Complete();
+        inputPipe.Writer.Complete();
         inputPipe.Reset();
 
-        await outputPipe.Reader.CompleteAsync().ConfigureAwait(false);
-        await outputPipe.Writer.CompleteAsync().ConfigureAwait(false);
+        outputPipe.Reader.Complete();
+        outputPipe.Writer.Complete();
         outputPipe.Reset();
     }
 
@@ -180,6 +180,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
                 var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
                 var buffer = result.Buffer;
 
+                // TODO: Test hot path when sequence consists of single span for potential performance impact
                 foreach (var chunk in buffer)
                 {
                     await SendAsync(chunk, cancellationToken).ConfigureAwait(false);
