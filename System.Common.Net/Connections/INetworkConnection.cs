@@ -4,7 +4,7 @@ namespace System.Net.Connections;
 /// Represents abstraction for duplex network connection with asynchronous Send/Receive
 /// support and connection state management
 /// </summary>
-public interface INetworkConnection : IConnectedObject, IAsyncDisposable
+public interface INetworkConnection : IAsyncDisposable
 {
     /// <summary>
     /// Correlation ID of the current connection (used for debugging and tracing purpose primarily).
