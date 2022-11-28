@@ -18,7 +18,7 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
         RemoteCertificateValidationCallback remoteCertificateValidationCallback = null,
         ServerCertificateSelectionCallback serverCertificateSelectionCallback = null,
         bool clientCertificateRequired = false) :
-        base(endPoint, ProtocolType.Tcp, backlog, configureListening, configureAccepted)
+        base(endPoint, backlog, configureListening, configureAccepted)
     {
         this.serverCertificate = serverCertificate;
 
@@ -32,10 +32,10 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
         };
     }
 
-    public override string ToString() => $"{nameof(TcpSslSocketListener)} (tcps://{EndPoint})";
-
     protected override NetworkConnection CreateConnection(Socket acceptedSocket) =>
-        new TcpSslServerSocketConnection(acceptedSocket, options);
+        new TcpSslSocketServerConnection(acceptedSocket, options);
+
+    public override string ToString() => $"{nameof(TcpSslSocketListener)} (tcps://{EndPoint})";
 
     public void Dispose()
     {

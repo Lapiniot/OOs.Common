@@ -4,7 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace System.Net.Connections;
 
-public sealed class TcpSslClientSocketConnection : TcpSslSocketConnection
+public sealed class TcpSslSocketClientConnection : TcpSslSocketConnection
 {
     private readonly X509Certificate[] certificates;
     private readonly SslProtocols enabledSslProtocols;
@@ -12,7 +12,7 @@ public sealed class TcpSslClientSocketConnection : TcpSslSocketConnection
     private readonly string machineName;
     private readonly int port;
 
-    public TcpSslClientSocketConnection(IPEndPoint remoteEndPoint, string machineName,
+    public TcpSslSocketClientConnection(IPEndPoint remoteEndPoint, string machineName,
         SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null) :
         base(remoteEndPoint)
     {
@@ -23,7 +23,7 @@ public sealed class TcpSslClientSocketConnection : TcpSslSocketConnection
         this.certificates = certificates;
     }
 
-    public TcpSslClientSocketConnection(string hostNameOrAddress, int port, string machineName = null,
+    public TcpSslSocketClientConnection(string hostNameOrAddress, int port, string machineName = null,
         SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null)
     {
         Verify.ThrowIfNullOrEmpty(hostNameOrAddress);

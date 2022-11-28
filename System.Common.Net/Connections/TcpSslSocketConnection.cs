@@ -4,7 +4,7 @@ using static System.Net.Sockets.SocketError;
 
 namespace System.Net.Connections;
 
-public abstract class TcpSslSocketConnection : TcpSocketConnection
+public abstract class TcpSslSocketConnection : SocketConnection
 {
     private SslStream sslStream;
 

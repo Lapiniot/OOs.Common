@@ -2,9 +2,9 @@
 
 namespace System.Net.Connections;
 
-public sealed class TcpServerSocketConnection : TcpSocketConnection
+public sealed class UnixDomainSocketServerConnection : SocketConnection
 {
-    public TcpServerSocketConnection(Socket acceptedSocket) : base(acceptedSocket)
+    public UnixDomainSocketServerConnection(Socket acceptedSocket) : base(acceptedSocket)
     { }
 
     protected override Task StartingAsync(CancellationToken cancellationToken) => Task.CompletedTask;

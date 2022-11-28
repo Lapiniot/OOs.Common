@@ -1,14 +1,14 @@
 namespace System.Net.Connections;
 
-public sealed class TcpClientSocketConnection : TcpSocketConnection
+public sealed class TcpSocketClientConnection : SocketConnection
 {
     private readonly string hostNameOrAddress;
     private readonly int port;
 
-    public TcpClientSocketConnection(IPEndPoint remoteEndPoint) : base(remoteEndPoint, Sockets.ProtocolType.Tcp)
+    public TcpSocketClientConnection(IPEndPoint remoteEndPoint) : base(remoteEndPoint, Sockets.ProtocolType.Tcp)
     { }
 
-    public TcpClientSocketConnection(string hostNameOrAddress, int port)
+    public TcpSocketClientConnection(string hostNameOrAddress, int port)
     {
         Verify.ThrowIfNullOrEmpty(hostNameOrAddress);
 

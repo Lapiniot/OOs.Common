@@ -3,11 +3,11 @@ using System.Net.Sockets;
 
 namespace System.Net.Connections;
 
-public sealed class TcpSslServerSocketConnection : TcpSslSocketConnection
+public sealed class TcpSslSocketServerConnection : TcpSslSocketConnection
 {
     private readonly SslServerAuthenticationOptions options;
 
-    public TcpSslServerSocketConnection(Socket acceptedSocket, SslServerAuthenticationOptions options) :
+    public TcpSslSocketServerConnection(Socket acceptedSocket, SslServerAuthenticationOptions options) :
         base(acceptedSocket) => this.options = options;
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)

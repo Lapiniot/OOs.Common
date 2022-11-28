@@ -5,24 +5,24 @@ using static System.Net.Sockets.SocketError;
 
 namespace System.Net.Connections;
 
-public abstract class TcpSocketConnection : NetworkConnection
+public abstract class SocketConnection : NetworkConnection
 {
+    private readonly ProtocolType protocolType;
     private int disposed;
     private EndPoint remoteEndPoint;
     private Socket socket;
-    private readonly ProtocolType protocolType;
 
-    protected TcpSocketConnection()
+    protected SocketConnection()
     { }
 
-    protected TcpSocketConnection(Socket acceptedSocket)
+    protected SocketConnection(Socket acceptedSocket)
     {
         ArgumentNullException.ThrowIfNull(acceptedSocket);
         Socket = acceptedSocket;
         RemoteEndPoint = acceptedSocket.RemoteEndPoint;
     }
 
-    protected TcpSocketConnection(EndPoint remoteEndPoint, ProtocolType protocolType)
+    protected SocketConnection(EndPoint remoteEndPoint, ProtocolType protocolType)
     {
         ArgumentNullException.ThrowIfNull(remoteEndPoint);
         this.remoteEndPoint = remoteEndPoint;

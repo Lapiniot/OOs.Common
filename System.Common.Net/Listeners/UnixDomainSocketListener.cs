@@ -3,15 +3,18 @@ using System.Net.Sockets;
 
 namespace System.Net.Listeners;
 
-public sealed class UnixDomainSocketListener : TcpSocketListenerBase
+public sealed class UnixDomainSocketListener : SocketListener
 {
     public UnixDomainSocketListener(UnixDomainSocketEndPoint endPoint, int backlog = 100,
         Action<Socket> configureListening = null,
         Action<Socket> configureAccepted = null) :
-        base(endPoint, ProtocolType.IP, backlog, configureListening, configureAccepted)
+        base(endPoint, backlog, configureListening, configureAccepted)
     { }
 
-    protected override NetworkConnection CreateConnection(Socket acceptedSocket) => new TcpServerSocketConnection(acceptedSocket);
+    protected override Socket CreateSocket() => new(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
+
+    protected override NetworkConnection CreateConnection(Socket acceptedSocket) =>
+        new UnixDomainSocketServerConnection(acceptedSocket);
 
     public override string ToString() => $"{nameof(UnixDomainSocketListener)} (unix://{EndPoint})";
 }
