@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace System.Threading;
 
 /// <summary>
@@ -55,7 +53,6 @@ public abstract class Worker : IAsyncDisposable
         return StopCoreAsync();
     }
 
-    [SuppressMessage("Design", "CA1031: Do not catch general exception types", Justification = "By design")]
     private async Task StopCoreAsync()
     {
         await semaphore.WaitAsync().ConfigureAwait(false);

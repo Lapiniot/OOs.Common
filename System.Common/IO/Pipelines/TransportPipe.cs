@@ -126,9 +126,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
                 }
             } while (state is Starting);
         }
-#pragma warning disable CA1031 // producer loop termination exception should not be rethrown here
         catch
-#pragma warning restore CA1031
         {
             // by design
         }

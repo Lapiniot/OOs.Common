@@ -50,9 +50,7 @@ public class AsyncSemaphore_ReleaseShould
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0, 1);
-#pragma warning disable CA2012 // Use ValueTasks correctly
         _ = semaphore.WaitAsync();
-#pragma warning restore CA2012 // Use ValueTasks correctly
 
         // Act/Assert
         Assert.ThrowsException<SemaphoreFullException>(() => semaphore.Release(3));
@@ -73,9 +71,7 @@ public class AsyncSemaphore_ReleaseShould
         // Arrange
         var semaphore = new AsyncSemaphore(initialCount);
         var waiters = new List<Task>(waitersCount);
-#pragma warning disable CA2012 // Use ValueTasks correctly
         for (var i = 0; i < waitersCount; i++) waiters.Add(semaphore.WaitAsync());
-#pragma warning restore CA2012 // Use ValueTasks correctly
 
         // Act
         Parallel.For(0, iterations, _ => semaphore.Release());

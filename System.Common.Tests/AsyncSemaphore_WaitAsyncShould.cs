@@ -118,9 +118,7 @@ public class AsyncSemaphore_WaitAsyncShould
         // Act
         Parallel.For(0, iterations, () => new List<Task>(), (_, _, result) =>
         {
-#pragma warning disable CA2012 // Use ValueTasks correctly
             result.Add(semaphore.WaitAsync());
-#pragma warning restore CA2012 // Use ValueTasks correctly
             return result;
         }, result =>
         {
