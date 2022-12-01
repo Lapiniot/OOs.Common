@@ -8,4 +8,6 @@ public sealed class UnixDomainSocketServerConnection : SocketConnection
     { }
 
     protected override Task StartingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public override string ToString() => $"{Id}-UD";
 }

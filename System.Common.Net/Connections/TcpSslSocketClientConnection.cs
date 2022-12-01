@@ -42,8 +42,7 @@ public sealed class TcpSslSocketClientConnection : TcpSslSocketConnection
             await SslStream.DisposeAsync().ConfigureAwait(false);
         }
 
-        await ConnectAsClientAsync(RemoteEndPoint ??
-                                   await ResolveRemoteEndPointAsync(hostNameOrAddress, port, cancellationToken).ConfigureAwait(false),
+        await ConnectAsClientAsync(RemoteEndPoint ?? await ResolveRemoteEndPointAsync(hostNameOrAddress, port, cancellationToken).ConfigureAwait(false),
             cancellationToken).ConfigureAwait(false);
 
         SslStream = CreateSslStream(Socket);

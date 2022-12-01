@@ -11,4 +11,6 @@ public sealed class UnixDomainSocketClientConnection : SocketConnection
 
     protected override Task StartingAsync(CancellationToken cancellationToken) =>
         ConnectAsClientAsync(RemoteEndPoint, cancellationToken);
+
+    public override string ToString() => $"{Id}-UD ({RemoteEndPoint?.ToString() ?? "Not connected"})";
 }

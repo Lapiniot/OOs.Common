@@ -11,7 +11,13 @@ public sealed class UnixDomainSocketListener : SocketListener
         base(endPoint, backlog, configureListening, configureAccepted)
     { }
 
-    protected override Socket CreateSocket() => new(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
+    protected override Socket CreateSocket()
+    {
+        var path = EndPoint.ToString();
+        if (File.Exists(path)) File.Delete(path);
+
+        return new(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
+    }
 
     protected override NetworkConnection CreateConnection(Socket acceptedSocket) =>
         new UnixDomainSocketServerConnection(acceptedSocket);
