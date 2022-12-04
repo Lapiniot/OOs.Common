@@ -40,7 +40,6 @@ public abstract class SocketConnection : NetworkConnection
         }
         catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
-            await StopActivityAsync().ConfigureAwait(false);
             ThrowConnectionClosed(se);
         }
     }
@@ -53,7 +52,6 @@ public abstract class SocketConnection : NetworkConnection
         }
         catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
-            await StopActivityAsync().ConfigureAwait(false);
             ThrowConnectionClosed(se);
             return 0;
         }

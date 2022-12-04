@@ -4,7 +4,7 @@ using static System.Verify;
 namespace System;
 
 /// <summary>
-/// Implements async state management template for any type which runs some activity and may be in two states only
+/// Provides state synchronization template base type for types running some activity and may be in two states only
 /// (Running/Stopped, Connected/Disconnected e.g.).
 /// </summary>
 public abstract class ActivityObject : IAsyncDisposable

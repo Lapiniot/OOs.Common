@@ -65,7 +65,10 @@ public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where 
                 return result.Count;
             }
 
-            await DisconnectAsync().ConfigureAwait(false);
+            if (socket is { State: CloseReceived, CloseStatus: NormalClosure })
+            {
+                await socket.CloseOutputAsync(NormalClosure, "Good bye.", default).ConfigureAwait(false);
+            }
         }
         catch (WebSocketException wse) when (
             wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
