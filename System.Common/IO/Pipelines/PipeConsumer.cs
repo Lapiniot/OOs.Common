@@ -6,7 +6,7 @@ namespace System.IO.Pipelines;
 public abstract class PipeConsumer : PipeConsumerCore
 {
     private readonly PipeReader reader;
-    private CancellationTokenSource cancellationTokenSource;
+    private CancellationTokenSource abortTokenSource;
     private Task consumerTask;
 
     protected PipeConsumer(PipeReader reader)
@@ -24,16 +24,18 @@ public abstract class PipeConsumer : PipeConsumerCore
         }
     }
 
+    protected CancellationToken Aborted => abortTokenSource.Token;
+
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
-        cancellationTokenSource = new();
-        consumerTask = StartConsumerAsync(reader, cancellationTokenSource.Token);
+        abortTokenSource = new();
+        consumerTask = StartConsumerAsync(reader, abortTokenSource.Token);
         return Task.CompletedTask;
     }
 
     protected override async Task StoppingAsync()
     {
-        using (cancellationTokenSource)
+        using (abortTokenSource)
         {
             // Try to perform graceful consumer loop cancellation first of all, 
             // by cancelling current pending reader.ReadAsync() call  
@@ -43,15 +45,12 @@ public abstract class PipeConsumer : PipeConsumerCore
             {
                 await consumerTask.ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
-            {
-                // expected
-            }
+            catch (OperationCanceledException) { /* expected */ }
         }
     }
 
     /// <summary>
-    /// Abruptly aborts current consumer task making it return with <see cref="OperationCanceledException" />
+    /// Abruptly aborts current processing task 
     /// </summary>
-    public virtual void Abort() => cancellationTokenSource?.Cancel();
+    public void Abort() => abortTokenSource?.Cancel();
 }
