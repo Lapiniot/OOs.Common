@@ -12,24 +12,27 @@ public abstract class PipeConsumerCore : ActivityObject
             {
                 var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
 
+                if (result.IsCanceled)
+                {
+                    // Exit reader loop gracefully
+                    break;
+                }
+
                 var buffer = result.Buffer;
 
                 while (Consume(ref buffer))
                 {
+                    // TODO: better call reader.AdvanceTo with appropriate position here before throwing exception
                     cancellationToken.ThrowIfCancellationRequested();
                 }
 
                 reader.AdvanceTo(buffer.Start, buffer.End);
 
-                if (result.IsCompleted || result.IsCanceled)
+                if (result.IsCompleted)
                 {
                     break;
                 }
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected
         }
         finally
         {

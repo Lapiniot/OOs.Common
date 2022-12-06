@@ -7,7 +7,7 @@ public abstract class PipeConsumer : PipeConsumerCore
 {
     private readonly PipeReader reader;
     private CancellationTokenSource cancellationTokenSource;
-    private Task consumer;
+    private Task consumerTask;
 
     protected PipeConsumer(PipeReader reader)
     {
@@ -15,21 +15,19 @@ public abstract class PipeConsumer : PipeConsumerCore
         this.reader = reader;
     }
 
-    public Task Completion
+    protected Task ConsumerCompletion
     {
         get
         {
             Verify.ThrowIfInvalidState(!IsRunning);
-            return consumer;
+            return consumerTask;
         }
     }
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
         cancellationTokenSource = new();
-
-        consumer = StartConsumerAsync(reader, cancellationTokenSource.Token);
-
+        consumerTask = StartConsumerAsync(reader, cancellationTokenSource.Token);
         return Task.CompletedTask;
     }
 
@@ -37,9 +35,23 @@ public abstract class PipeConsumer : PipeConsumerCore
     {
         using (cancellationTokenSource)
         {
-            cancellationTokenSource.Cancel();
+            // Try to perform graceful consumer loop cancellation first of all, 
+            // by cancelling current pending reader.ReadAsync() call  
+            reader.CancelPendingRead();
 
-            await consumer.ConfigureAwait(false);
+            try
+            {
+                await consumerTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // expected
+            }
         }
     }
+
+    /// <summary>
+    /// Abruptly aborts current consumer task making it return with <see cref="OperationCanceledException" />
+    /// </summary>
+    public virtual void Abort() => cancellationTokenSource?.Cancel();
 }
