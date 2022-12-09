@@ -176,6 +176,9 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
             while (true)
             {
                 var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+
+                if (result.IsCanceled) break;
+
                 var buffer = result.Buffer;
 
                 // TODO: Test hot path when sequence consists of single span for potential performance impact
@@ -186,10 +189,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
 
                 reader.AdvanceTo(buffer.End, buffer.End);
 
-                if (result.IsCanceled || result.IsCompleted)
-                {
-                    break;
-                }
+                if (result.IsCompleted) break;
             }
         }
         catch (OperationCanceledException)
