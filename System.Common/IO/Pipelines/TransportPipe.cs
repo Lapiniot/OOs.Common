@@ -4,6 +4,7 @@ namespace System.IO.Pipelines;
 
 public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
 {
+    private static readonly PipeOptions DefaultOptions = new(useSynchronizationContext: false);
     private const int Stopped = 0;
     private const int Starting = 1;
     private const int Started = 2;
@@ -16,11 +17,10 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
     private Task outputWorker;
     private long stateGuard;
 
-    protected TransportPipe(PipeOptions pipeOptions = null)
+    protected TransportPipe(PipeOptions inputPipeOptions, PipeOptions outputPipeOptions)
     {
-        var options = pipeOptions ?? new PipeOptions(useSynchronizationContext: false);
-        inputPipe = new(options);
-        outputPipe = new(options);
+        inputPipe = new(inputPipeOptions ?? DefaultOptions);
+        outputPipe = new(outputPipeOptions ?? DefaultOptions);
     }
 
     public Task InputCompletion

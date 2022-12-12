@@ -12,7 +12,8 @@ public sealed class NetworkTransportPipe : TransportPipe
 {
     private readonly INetworkConnection connection;
 
-    public NetworkTransportPipe(INetworkConnection connection, PipeOptions pipeOptions = null) : base(pipeOptions)
+    public NetworkTransportPipe(INetworkConnection connection, PipeOptions inputPipeOptions = null, PipeOptions outputPipeOptions = null) :
+        base(inputPipeOptions, outputPipeOptions)
     {
         ArgumentNullException.ThrowIfNull(connection);
         this.connection = connection;
