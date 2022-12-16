@@ -1,10 +1,11 @@
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace System.IO.Pipelines;
 
 public abstract class PipeConsumerCore : ActivityObject
 {
-    protected async Task StartConsumerAsync(PipeReader reader, CancellationToken cancellationToken)
+    protected async Task StartConsumerAsync([NotNull] PipeReader reader, CancellationToken cancellationToken)
     {
         try
         {

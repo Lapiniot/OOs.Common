@@ -64,10 +64,12 @@ public abstract class Worker : IAsyncDisposable
                 cancelableOperation = null;
             }
         }
+#pragma warning disable CA1031
         catch
         {
             // Should not throw loop-breaking exception here by design
         }
+#pragma warning restore CA1031
         finally
         {
             _ = semaphore.Release();

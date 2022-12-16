@@ -53,4 +53,14 @@ public abstract class PipeConsumer : PipeConsumerCore
     /// Abruptly aborts current processing task 
     /// </summary>
     public void Abort() => abortTokenSource?.Cancel();
+
+    public override async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+
+        using (abortTokenSource)
+        {
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
+    }
 }

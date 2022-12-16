@@ -2,13 +2,15 @@ using System.Collections.Concurrent;
 
 namespace System;
 
+#pragma warning disable CA1031
+
 public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 {
-    private ConcurrentDictionary<IObserver<T>, Subscription> observers;
+    private ConcurrentDictionary<IObserver<T>, Subscription<T>> observers;
 
     public ObserversContainer() => observers = new();
 
-    private void Unsubscribe(IObserver<T> observer) => observers?.TryRemove(observer, out _);
+    internal void Unsubscribe(IObserver<T> observer) => observers?.TryRemove(observer, out _);
 
     public void Notify(T value)
     {
@@ -80,25 +82,11 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 
     #endregion
 
-    public readonly record struct Subscription : IDisposable
-    {
-        private readonly ObserversContainer<T> container;
-        private readonly IObserver<T> observer;
-
-        internal Subscription(IObserver<T> observer, ObserversContainer<T> container)
-        {
-            this.observer = observer;
-            this.container = container;
-        }
-
-        public void Dispose() => container.Unsubscribe(observer);
-    }
-
     #region Implementation of IObservable<out T>
 
     IDisposable IObservable<T>.Subscribe(IObserver<T> observer) => Subscribe(observer);
 
-    public Subscription Subscribe(IObserver<T> observer)
+    public Subscription<T> Subscribe(IObserver<T> observer)
     {
         Verify.ThrowIfObjectDisposed(observers is null, nameof(ObserversContainer<T>));
 
@@ -106,4 +94,18 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
     }
 
     #endregion
+}
+
+public readonly record struct Subscription<T> : IDisposable
+{
+    private readonly ObserversContainer<T> container;
+    private readonly IObserver<T> observer;
+
+    internal Subscription(IObserver<T> observer, ObserversContainer<T> container)
+    {
+        this.observer = observer;
+        this.container = container;
+    }
+
+    public void Dispose() => container.Unsubscribe(observer);
 }

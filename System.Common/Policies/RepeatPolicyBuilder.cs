@@ -2,6 +2,8 @@
 
 namespace System.Policies;
 
+#pragma warning disable CA5394
+
 public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition> Conditions)
 {
     /// <summary>

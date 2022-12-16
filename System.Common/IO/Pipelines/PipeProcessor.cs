@@ -8,13 +8,13 @@ namespace System.IO.Pipelines;
 /// </summary>
 public abstract class PipeProcessor : PipeConsumerCore
 {
-    private CancellationTokenSource cancellationTokenSource;
+    private CancellationTokenSource abortTokenSource;
     private Task processor;
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
-        cancellationTokenSource = new();
-        var token = cancellationTokenSource.Token;
+        abortTokenSource = new();
+        var token = abortTokenSource.Token;
 
         var (reader, writer) = new Pipe();
 
@@ -27,9 +27,9 @@ public abstract class PipeProcessor : PipeConsumerCore
 
     protected override async Task StoppingAsync()
     {
-        using (cancellationTokenSource)
+        using (abortTokenSource)
         {
-            cancellationTokenSource.Cancel();
+            abortTokenSource.Cancel();
             await processor.ConfigureAwait(false);
         }
     }
@@ -78,4 +78,14 @@ public abstract class PipeProcessor : PipeConsumerCore
     /// <param name="cancellationToken"><see cref="CancellationToken" /> for external cancellation support.</param>
     /// <returns>Actual amount of the data received.</returns>
     protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+
+    public override async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+
+        using (abortTokenSource)
+        {
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
+    }
 }
