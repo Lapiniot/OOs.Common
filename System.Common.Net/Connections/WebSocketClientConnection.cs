@@ -24,9 +24,11 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
     {
         try
         {
-            var ws = Socket = new();
-            configureOptions?.Invoke(ws.Options);
-            await ws.ConnectAsync(RemoteUri, invoker, cancellationToken).ConfigureAwait(false);
+            var socket = Socket = new();
+            configureOptions?.Invoke(socket.Options);
+            await socket.ConnectAsync(RemoteUri, invoker, cancellationToken).ConfigureAwait(false);
+            // Discard HTTP Response Headers in order to release some memory
+            socket.HttpResponseHeaders = null;
         }
         catch (WebSocketException wse) when (
             wse.InnerException is HttpRequestException { InnerException: SocketException { SocketErrorCode: SocketError.HostNotFound } })
