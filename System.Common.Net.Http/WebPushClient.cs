@@ -109,9 +109,9 @@ public class WebPushClient : IDisposable
         var paddingLength = (payload.Length / 16 + 1) * 16 - payload.Length;
         var data = new byte[2 + paddingLength + payload.Length];
         Span<byte> span = data;
-        span[..(2 + paddingLength)].Clear();
+        span.Slice(0, 2 + paddingLength).Clear();
         BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)paddingLength);
-        payload.CopyTo(span[(2 + paddingLength)..]);
+        payload.CopyTo(span.Slice(2 + paddingLength));
         return data;
     }
 
@@ -122,15 +122,15 @@ public class WebPushClient : IDisposable
         var span = buffer.AsSpan();
         var header = "Content-Encoding: "u8;
         header.CopyTo(span);
-        UTF8.GetBytes(label, span[18..]);
+        UTF8.GetBytes(label, span.Slice(18));
         span[18 + len] = 0;
         var p256 = "P-256"u8;
-        p256.CopyTo(span[(19 + len)..]);
+        p256.CopyTo(span.Slice(19 + len));
         span[24 + len] = 0;
-        BinaryPrimitives.WriteUInt16BigEndian(span[(25 + len)..], (ushort)clientPublicKey.Length);
-        clientPublicKey.CopyTo(span[(27 + len)..]);
-        BinaryPrimitives.WriteUInt16BigEndian(span[(27 + len + clientPublicKey.Length)..], (ushort)serverPublicKey.Length);
-        serverPublicKey.CopyTo(span[(29 + len + clientPublicKey.Length)..]);
+        BinaryPrimitives.WriteUInt16BigEndian(span.Slice(25 + len), (ushort)clientPublicKey.Length);
+        clientPublicKey.CopyTo(span.Slice(27 + len));
+        BinaryPrimitives.WriteUInt16BigEndian(span.Slice(27 + len + clientPublicKey.Length), (ushort)serverPublicKey.Length);
+        serverPublicKey.CopyTo(span.Slice(29 + len + clientPublicKey.Length));
         return buffer;
     }
 

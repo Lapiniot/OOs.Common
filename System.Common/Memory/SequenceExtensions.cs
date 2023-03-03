@@ -17,7 +17,7 @@ public static class SequenceExtensions
             var index = span.IndexOf(CR);
             if (index <= 0 || index >= span.Length - 1 || span[index + 1] != LF) return false;
 
-            line = sequence.First[..index];
+            line = sequence.First.Slice(0, index);
             return true;
         }
 

@@ -40,23 +40,23 @@ public class JwtTokenHandler : IDisposable
             JsonSerializer.Serialize(writer, token.Claims, JsonContext.Default.DictionaryStringString);
         }
 
-        total += Base64EncodeInPlace(buffer[total..], bufWriter.WrittenCount - total);
+        total += Base64EncodeInPlace(buffer.Slice(total), bufWriter.WrittenCount - total);
         buffer[total++] = 0x2E;
 
         // Sign and encode signature part
-        if (!ecdsa.TrySignData(buffer[..(total - 1)], buffer[total..], HashAlgorithmName.SHA256, SignatureFormat, out var bytesWritten))
+        if (!ecdsa.TrySignData(buffer.Slice(0, total - 1), buffer.Slice(total), HashAlgorithmName.SHA256, SignatureFormat, out var bytesWritten))
         {
             ThrowSignatureComputeFailed();
         }
 
-        total += Base64EncodeInPlace(buffer[total..], bytesWritten);
-        return UTF8.GetString(buffer[..total]);
+        total += Base64EncodeInPlace(buffer.Slice(total), bytesWritten);
+        return UTF8.GetString(buffer.Slice(0, total));
     }
 
     protected virtual int Base64EncodeInPlace(Span<byte> buffer, int length)
     {
         Base64.EncodeToUtf8InPlace(buffer, length, out var written);
-        var encoded = buffer[..written].TrimEnd((byte)0x3D);
+        var encoded = buffer.Slice(0, written).TrimEnd((byte)0x3D);
 
         for (var i = 0; i < encoded.Length; i++)
         {
