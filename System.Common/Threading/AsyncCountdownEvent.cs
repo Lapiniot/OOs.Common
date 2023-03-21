@@ -7,7 +7,7 @@ namespace System.Threading;
 /// Represents synchronization primitive that is signaled when its counter reaches zero. 
 /// </summary>
 /// <remarks>It is effectively <seealso cref="CountdownEvent"/> analog optimized for async. programming.</remarks>
-public class AsyncCountdownEvent
+public sealed class AsyncCountdownEvent
 {
     private TaskCompletionSource completionSource;
     private int initialCount;
