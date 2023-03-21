@@ -55,7 +55,7 @@ public class ArgumentParser
 
             command = commands.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase))?.Name;
 
-            _ = tokens.Dequeue();
+            tokens.Dequeue();
         }
 
         while (tokens.Count > 0)
@@ -96,7 +96,7 @@ public class ArgumentParser
                 if (queue.TryPeek(out var str) && TryParseBoolean(str, out var value))
                 {
                     arguments[arg] = value;
-                    _ = queue.Dequeue();
+                    queue.Dequeue();
                 }
                 else
                 {
@@ -167,7 +167,7 @@ public class ArgumentParser
 
                 if (!arg.StartsWith(key, false, InvariantCulture)) continue;
 
-                _ = keys.Add(key);
+                keys.Add(key);
                 arg = arg[key.Length..];
                 match = true;
 

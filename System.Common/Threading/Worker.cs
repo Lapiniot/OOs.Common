@@ -37,7 +37,7 @@ public abstract class Worker : IAsyncDisposable
         }
         finally
         {
-            _ = semaphore.Release();
+            semaphore.Release();
         }
 
         await operation.Completion.ConfigureAwait(false);
@@ -72,7 +72,7 @@ public abstract class Worker : IAsyncDisposable
 #pragma warning restore CA1031
         finally
         {
-            _ = semaphore.Release();
+            semaphore.Release();
         }
     }
 

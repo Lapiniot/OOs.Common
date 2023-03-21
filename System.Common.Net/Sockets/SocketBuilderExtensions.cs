@@ -120,7 +120,7 @@ public static class SocketBuilderExtensions
         if (mcint is not null)
         {
             Span<byte> bytes = stackalloc byte[4];
-            _ = mcint.TryWriteBytes(bytes, out _);
+            mcint.TryWriteBytes(bytes, out _);
             // Address from range 0.x.x.x must be interpreted as interface index
             return bytes[0] == 0
                 ? new(groupToJoin, ReadInt32BigEndian(bytes))

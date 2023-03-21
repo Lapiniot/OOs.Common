@@ -50,7 +50,7 @@ public class AsyncSemaphore_ReleaseShould
     {
         // Arrange
         var semaphore = new AsyncSemaphore(0, 1);
-        _ = semaphore.WaitAsync();
+        semaphore.WaitAsync();
 
         // Act/Assert
         Assert.ThrowsException<SemaphoreFullException>(() => semaphore.Release(3));

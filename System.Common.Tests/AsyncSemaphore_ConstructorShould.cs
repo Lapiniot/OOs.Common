@@ -5,19 +5,19 @@ public class AsyncSemaphore_ConstructorShould
 {
     [TestMethod]
     public void ThrowArgumentOutOfRange_GivenNegativeInitialCount() =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _ = new AsyncSemaphore(-1));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new AsyncSemaphore(-1));
 
     [TestMethod]
     public void ThrowArgumentOutOfRange_GivenNegativeMaxCount() =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _ = new AsyncSemaphore(0, -1));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new AsyncSemaphore(0, -1));
 
     [TestMethod]
     public void ThrowArgumentOutOfRange_GivenZeroMaxCount() =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _ = new AsyncSemaphore(0, 0));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new AsyncSemaphore(0, 0));
 
     [TestMethod]
     public void ThrowArgumentOutOfRange_GivenInitialCountGraterThanMaxCount() =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => _ = new AsyncSemaphore(2, 1));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new AsyncSemaphore(2, 1));
 
     [TestMethod]
     public void SetCurrentCountProperty_GivenValidInitialCountArg()

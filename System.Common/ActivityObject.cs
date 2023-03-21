@@ -41,7 +41,7 @@ public abstract class ActivityObject : IAsyncDisposable
             }
             finally
             {
-                _ = semaphore.Release();
+                semaphore.Release();
             }
         }
     }
@@ -68,7 +68,7 @@ public abstract class ActivityObject : IAsyncDisposable
             finally
             {
                 IsRunning = false;
-                _ = semaphore.Release();
+                semaphore.Release();
             }
         }
     }

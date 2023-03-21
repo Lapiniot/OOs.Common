@@ -8,7 +8,7 @@ public class AddOrUpdateShould
 
     [TestMethod]
     public void ThrowArgumentNullExceptionGivenKeyNull() =>
-        _ = Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsException<ArgumentNullException>(() =>
         {
             var map = new OrderedHashMap<string, string>();
             return map.AddOrUpdate(null, "", "");

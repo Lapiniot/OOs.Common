@@ -65,7 +65,7 @@ public class WebPushClient : IDisposable
             Content = content
         };
         using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        _ = response.EnsureSuccessStatusCode();
+        response.EnsureSuccessStatusCode();
     }
 
     private static HttpContent CreateHttpContent(byte[] content) =>
@@ -99,7 +99,7 @@ public class WebPushClient : IDisposable
     {
         const string HeaderStr = "Content-Encoding: auth\0";
         Span<byte> buffer = stackalloc byte[HeaderStr.Length + 1];
-        _ = ASCII.GetBytes(HeaderStr, buffer);
+        ASCII.GetBytes(HeaderStr, buffer);
         buffer[^1] = 0x01;
         return HMACSHA256.HashData(key, buffer);
     }
