@@ -1,5 +1,7 @@
 namespace System.Threading;
 
+#pragma warning disable CA1031
+
 public static class TaskExtensions
 {
     /// <summary>
@@ -16,21 +18,35 @@ public static class TaskExtensions
             return;
         }
 
-        // this method never throws, so no need to observe exceptions here :)
-        _ = ObserveAsync(task);
+        void Continuation() => _ = task.Exception;
+        task.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(Continuation);
     }
 
-    private static async Task ObserveAsync(Task task)
+    /// <summary>
+    /// Observes task errors on completion in order to avoid eventual unobserved task exceptions.
+    /// Use this extension method if you simply need to fire-and-forget async methods.
+    /// </summary>
+    /// <param name="task">Task to be observed for errors</param>
+    /// <param name="onError">Callback to be called when exception is observed</param> 
+    public static void Observe(this Task task, Action<Exception> onError)
     {
-        try
+        ArgumentNullException.ThrowIfNull(task);
+        ArgumentNullException.ThrowIfNull(onError);
+
+        if (task.IsCompletedSuccessfully)
         {
-            await task.ConfigureAwait(false);
+            return;
         }
-#pragma warning disable CA1031
-        catch
-#pragma warning restore CA1031
+
+        void Continuation()
         {
-            // Expected, don't rethrow
+            try
+            {
+                onError(task.Exception);
+            }
+            catch { /* Expected */ }
         }
+
+        task.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(Continuation);
     }
 }
