@@ -8,8 +8,8 @@ namespace System.Threading;
 /// </summary>
 public sealed class AsyncManualResetEvent
 {
-    private TaskCompletionSource tcs;
-    private readonly object syncRoot = new();
+    private volatile TaskCompletionSource tcs;
+    private nuint resetGuard;
 
     public AsyncManualResetEvent(bool initialState = false)
     {
@@ -20,21 +20,33 @@ public sealed class AsyncManualResetEvent
         }
     }
 
-    public void Set()
-    {
-        lock (syncRoot)
-        {
-            tcs.TrySetResult();
-        }
-    }
+    public void Set() => tcs.TrySetResult();
 
     public void Reset()
     {
-        lock (syncRoot)
+        SpinWait spinner = default;
+
+        while (true)
         {
             if (!tcs.Task.IsCompleted)
                 return;
-            tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            // We must limit concurrent writes to the tcs field 
+            // in order to avoid orphaned tasks!!!
+            if (Interlocked.CompareExchange(ref resetGuard, 1, 0) == 0)
+            {
+                // We acquired exclusive access to the tcs field.
+                // Update it if still needed, release guard lock and exit asap
+                if (tcs.Task.IsCompleted)
+                {
+                    tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                }
+
+                Interlocked.Exchange(ref resetGuard, 0);
+                return;
+            }
+
+            spinner.SpinOnce(sleep1Threshold: -1);
         }
     }
 
