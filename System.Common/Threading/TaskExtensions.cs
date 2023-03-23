@@ -40,11 +40,17 @@ public static class TaskExtensions
 
         void Continuation()
         {
-            try
+            if (task.Exception is { } ex)
             {
-                onError(task.Exception);
+                try
+                {
+                    foreach (var e in ex.Flatten().InnerExceptions)
+                    {
+                        onError(e);
+                    }
+                }
+                catch { /* Expected */ }
             }
-            catch { /* Expected */ }
         }
 
         task.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(Continuation);
