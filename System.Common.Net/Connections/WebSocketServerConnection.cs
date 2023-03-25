@@ -4,12 +4,18 @@ namespace System.Net.Connections;
 
 public class WebSocketServerConnection : WebSocketConnection<WebSocket>
 {
-    private readonly IPEndPoint remoteEndPoint;
+    private readonly EndPoint localEndPoint;
+    private readonly EndPoint remoteEndPoint;
 
-    public WebSocketServerConnection(WebSocket acceptedSocket, IPEndPoint remoteEndPoint) :
-        base(acceptedSocket) => this.remoteEndPoint = remoteEndPoint;
+    public WebSocketServerConnection(WebSocket socket, EndPoint localEndPoint, EndPoint remoteEndPoint) : base(socket)
+    {
+        this.localEndPoint = localEndPoint;
+        this.remoteEndPoint = remoteEndPoint;
+    }
 
-    public IPEndPoint RemoteEndPoint => remoteEndPoint;
+    public sealed override EndPoint LocalEndPoint => localEndPoint;
+
+    public sealed override EndPoint RemoteEndPoint => remoteEndPoint;
 
     public override string ToString() => $"{Id}-WS ({remoteEndPoint})";
 

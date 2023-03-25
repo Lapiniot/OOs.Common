@@ -7,6 +7,7 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
 {
     private readonly Action<ClientWebSocketOptions> configureOptions;
     private readonly HttpMessageInvoker invoker;
+    private readonly EndPoint remoteEndPoint;
 
     public WebSocketClientConnection(Uri remoteUri, Action<ClientWebSocketOptions> configureOptions, HttpMessageInvoker invoker)
         : base(null)
@@ -14,11 +15,16 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
         ArgumentNullException.ThrowIfNull(remoteUri);
 
         RemoteUri = remoteUri;
+        remoteEndPoint = new UriEndPoint(RemoteUri);
         this.configureOptions = configureOptions;
         this.invoker = invoker;
     }
 
     public Uri RemoteUri { get; }
+
+    public override EndPoint LocalEndPoint => null;
+
+    public override EndPoint RemoteEndPoint => remoteEndPoint;
 
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {

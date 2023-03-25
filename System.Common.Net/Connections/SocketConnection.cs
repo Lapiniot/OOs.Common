@@ -10,6 +10,7 @@ public abstract class SocketConnection : NetworkConnection
     private readonly ProtocolType protocolType;
     private int disposed;
     private EndPoint remoteEndPoint;
+    private EndPoint localEndPoint;
     private Socket socket;
 
     protected SocketConnection()
@@ -19,7 +20,8 @@ public abstract class SocketConnection : NetworkConnection
     {
         ArgumentNullException.ThrowIfNull(acceptedSocket);
         Socket = acceptedSocket;
-        RemoteEndPoint = acceptedSocket.RemoteEndPoint;
+        remoteEndPoint = acceptedSocket.RemoteEndPoint;
+        localEndPoint = acceptedSocket.LocalEndPoint;
     }
 
     protected SocketConnection(EndPoint remoteEndPoint, ProtocolType protocolType)
@@ -30,7 +32,10 @@ public abstract class SocketConnection : NetworkConnection
     }
 
     protected Socket Socket { get => socket; set => socket = value; }
-    public EndPoint RemoteEndPoint { get => remoteEndPoint; protected set => remoteEndPoint = value; }
+
+    public sealed override EndPoint RemoteEndPoint => remoteEndPoint;
+
+    public sealed override EndPoint LocalEndPoint => localEndPoint;
 
     public override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
     {
@@ -103,7 +108,8 @@ public abstract class SocketConnection : NetworkConnection
 
             socket ??= new(endPoint.AddressFamily, SocketType.Stream, protocolType);
             await socket.ConnectAsync(endPoint, cancellationToken).ConfigureAwait(false);
-            RemoteEndPoint = endPoint;
+            remoteEndPoint = socket.RemoteEndPoint;
+            localEndPoint = socket.LocalEndPoint;
         }
         catch (SocketException se)
         {

@@ -5,7 +5,9 @@ namespace System.Net.Connections;
 
 public abstract class NetworkConnection : ActivityObject, INetworkConnection
 {
-    protected NetworkConnection() => Id = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
+    public string Id { get; } = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
+    public abstract EndPoint LocalEndPoint { get; }
+    public abstract EndPoint RemoteEndPoint { get; }
 
     [DoesNotReturn]
     protected static void ThrowConnectionClosed(Exception exception) =>
@@ -18,8 +20,6 @@ public abstract class NetworkConnection : ActivityObject, INetworkConnection
     [DoesNotReturn]
     protected static void ThrowServerUnavailable(Exception exception) =>
         throw new ServerUnavailableException(exception);
-
-    public string Id { get; }
 
     public override string ToString() => $"{Id}-{GetType().Name}";
 

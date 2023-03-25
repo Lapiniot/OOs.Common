@@ -118,7 +118,8 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
                     {
                         var socketContext = await context.AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval)
                             .WaitAsync(cancellationToken).ConfigureAwait(false);
-                        Current = new WebSocketServerConnection(socketContext.WebSocket, context.Request.RemoteEndPoint);
+                        Current = new WebSocketServerConnection(socketContext.WebSocket,
+                            context.Request.LocalEndPoint, context.Request.RemoteEndPoint);
                         return true;
                     }
                     catch
