@@ -13,13 +13,11 @@ public static class TaskExtensions
     {
         ArgumentNullException.ThrowIfNull(task);
 
-        if (task.IsCompletedSuccessfully)
+        if (!task.IsCompletedSuccessfully)
         {
-            return;
+            var ctx = new DiscardErrorContinuationContext(task);
+            task.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(ctx.OnCompleted);
         }
-
-        void Continuation() => _ = task.Exception;
-        task.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(Continuation);
     }
 
     /// <summary>
@@ -33,12 +31,25 @@ public static class TaskExtensions
         ArgumentNullException.ThrowIfNull(task);
         ArgumentNullException.ThrowIfNull(onError);
 
-        if (task.IsCompletedSuccessfully)
+        if (!task.IsCompletedSuccessfully)
         {
-            return;
+            var ctx = new ReportErrorContinuationContext(task, onError);
+            task.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(ctx.OnCompleted);
+        }
+    }
+
+    private sealed class ReportErrorContinuationContext
+    {
+        private readonly Task task;
+        private readonly Action<Exception> onError;
+
+        public ReportErrorContinuationContext(Task task, Action<Exception> onError)
+        {
+            this.task = task;
+            this.onError = onError;
         }
 
-        void Continuation()
+        public void OnCompleted()
         {
             if (task.Exception is { } ex)
             {
@@ -52,7 +63,14 @@ public static class TaskExtensions
                 catch { /* Expected */ }
             }
         }
+    }
 
-        task.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(Continuation);
+    private sealed class DiscardErrorContinuationContext
+    {
+        private readonly Task task;
+
+        public DiscardErrorContinuationContext(Task task) => this.task = task;
+
+        public void OnCompleted() => _ = task.Exception;
     }
 }
