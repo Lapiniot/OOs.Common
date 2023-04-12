@@ -4,6 +4,7 @@
         "**/obj": true,
         "**/.vs": true,
         "**/*.DotSettings.*": true,
+        "artifacts": true,
         "**/*.sln": true
     },
     "dotnet.defaultSolution": "System.Common.sln",
