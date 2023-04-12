@@ -84,7 +84,7 @@ public class ArgumentParser
         return d != 0 ? d : CompareOrdinal(x, y);
     }
 
-    private void AddByShortName(string arg, Queue<string> queue, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
+    private void AddByShortName(string arg, Queue<string> queue, SortedDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
     {
         if (metadata.TryGetValue(arg, out var def))
         {
@@ -185,7 +185,7 @@ public class ArgumentParser
         return true;
     }
 
-    private void AddByName(string arg, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
+    private void AddByName(string arg, SortedDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
     {
         var pair = arg.Split(new[] { '=' }, 2);
 
