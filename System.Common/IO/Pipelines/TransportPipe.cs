@@ -134,6 +134,12 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
         }
     }
 
+    public async Task CompleteOutputAsync()
+    {
+        await Output.CompleteAsync().ConfigureAwait(false);
+        await OutputCompletion.ConfigureAwait(false);
+    }
+
     protected void CheckDisposed() => ThrowIfObjectDisposed(disposed is 1, nameof(TransportPipe));
 
     private async Task StartInputPartAsync(PipeWriter writer, CancellationToken cancellationToken)
@@ -147,18 +153,14 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
                 var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
 
                 if (received == 0)
-                {
                     break;
-                }
 
                 writer.Advance(received);
 
                 var result = await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
 
                 if (result.IsCompleted || result.IsCanceled)
-                {
                     break;
-                }
             }
         }
         catch (OperationCanceledException)
@@ -179,7 +181,8 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
             {
                 var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
 
-                if (result.IsCanceled) break;
+                if (result.IsCanceled)
+                    break;
 
                 var buffer = result.Buffer;
 
@@ -191,7 +194,8 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
 
                 reader.AdvanceTo(buffer.End, buffer.End);
 
-                if (result.IsCompleted) break;
+                if (result.IsCompleted)
+                    break;
             }
         }
         catch (OperationCanceledException)
