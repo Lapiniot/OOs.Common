@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using static System.Net.IPAddress;
 using static System.Net.Sockets.AddressFamily;
@@ -16,6 +16,14 @@ public static class SocketBuilderExtensions
     public static IPEndPoint GetIPv4MulticastGroup(int port) => new(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
 
     public static IPEndPoint GetIPv4SSDPGroup() => GetIPv4MulticastGroup(1900);
+
+    public static UnixDomainSocketEndPoint ResolveUnixDomainSocketPath(string path)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        return new(path.AsSpan().StartsWith("/@")
+            ? string.Create(path.Length - 1, path, (span, p) => p.AsSpan(2).CopyTo(span.Slice(1)))
+            : path);
+    }
 
     public static Socket CreateUdp(AddressFamily addressFamily = InterNetwork) => new(addressFamily, Dgram, ProtocolType.Udp);
 
