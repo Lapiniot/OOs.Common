@@ -11,7 +11,7 @@ public class AddOrUpdateShould
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
             var map = new OrderedHashMap<string, string>();
-            return map.AddOrUpdate(null, "", "");
+            map.AddOrUpdate(null, "");
         });
 
     [TestMethod]
@@ -19,7 +19,7 @@ public class AddOrUpdateShould
     {
         var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
 
-        map.AddOrUpdate("key1", "add-value1", "");
+        map.AddOrUpdate("key1", "add-value1");
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
@@ -39,14 +39,15 @@ public class AddOrUpdateShould
     {
         var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
 
-        map.AddOrUpdate("key2", "add-value2", "update-value2");
+        map.AddOrUpdate("key2", "update-value2");
+        map.AddOrUpdate("key3", "update-value3");
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
         Assert.AreEqual("update-value2", enumerator.Current);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("value3", enumerator.Current);
+        Assert.AreEqual("update-value3", enumerator.Current);
 
         Assert.IsFalse(enumerator.MoveNext());
     }

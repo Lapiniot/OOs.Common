@@ -22,13 +22,14 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
 
     public OrderedHashMap() => map = new();
 
-    public TValue AddOrUpdate(TKey key, TValue addValue, TValue updateValue)
+    public void AddOrUpdate(TKey key, TValue value)
     {
         lock (syncLock)
         {
-            return map.TryGetValue(key, out var node)
-                ? node.Value = updateValue
-                : AddNode(key, addValue).Value;
+            if (map.TryGetValue(key, out var node))
+                node.Value = value;
+            else
+                AddNode(key, value);
         }
     }
 
@@ -59,19 +60,13 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         }
     }
 
-    private Node AddNode(TKey key, TValue value)
+    private void AddNode(TKey key, TValue value)
     {
-        var node = new Node
-        {
-            Value = value,
-            Prev = tail,
-            Next = null
-        };
+        var node = new Node { Value = value, Prev = tail };
         head ??= node;
         if (tail != null) tail.Next = node;
         tail = node;
         map.Add(key, node);
-        return node;
     }
 
     private sealed class Node

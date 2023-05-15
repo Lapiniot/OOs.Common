@@ -8,9 +8,9 @@ public class GetEnumeratorShould
     {
         var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(4, "Value 4"), new(1, "Value 1"), new(0, "Value 0") });
 
-        map.AddOrUpdate(3, "Value 3", "Value 3");
-        map.AddOrUpdate(2, "Value 2", "Value 2");
-        map.AddOrUpdate(4, "Value 4", "Value 4");
+        map.AddOrUpdate(3, "Value 3");
+        map.AddOrUpdate(2, "Value 2");
+        map.AddOrUpdate(4, "Value 4");
 
         using var enumerator = map.GetEnumerator();
         Assert.IsTrue(enumerator.MoveNext());
