@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace System.Collections.Generic;
 
@@ -14,7 +15,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         ArgumentNullException.ThrowIfNull(collection);
         foreach (var (key, value) in collection)
         {
-            AddNode(key, value);
+            AddOrUpdateInternal(key, value);
         }
     }
 
@@ -26,10 +27,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
     {
         lock (syncLock)
         {
-            if (map.TryGetValue(key, out var node))
-                node.Value = value;
-            else
-                AddNode(key, value);
+            AddOrUpdateInternal(key, value);
         }
     }
 
@@ -39,8 +37,8 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         {
             if (map.Remove(key, out var node))
             {
-                if (node.Next != null) node.Next.Prev = node.Prev;
-                if (node.Prev != null) node.Prev.Next = node.Next;
+                if (node.Next is not null) node.Next.Prev = node.Prev;
+                if (node.Prev is not null) node.Prev.Next = node.Next;
                 if (head == node) head = node.Next;
                 if (tail == node) tail = node.Prev;
                 value = node.Value;
@@ -52,6 +50,24 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddOrUpdateInternal(TKey key, TValue value)
+    {
+        ref var node = ref CollectionsMarshal.GetValueRefOrAddDefault(map, key, out var exists);
+
+        if (!exists)
+        {
+            node = new Node(value, tail, null);
+            head ??= node;
+            if (tail is not null) tail.Next = node;
+            tail = node;
+        }
+        else
+        {
+            node.Value = value;
+        }
+    }
+
     public void TrimExcess()
     {
         lock (syncLock)
@@ -60,17 +76,15 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
         }
     }
 
-    private void AddNode(TKey key, TValue value)
-    {
-        var node = new Node { Value = value, Prev = tail };
-        head ??= node;
-        if (tail != null) tail.Next = node;
-        tail = node;
-        map.Add(key, node);
-    }
-
     private sealed class Node
     {
+        public Node(TValue value, Node prev, Node next)
+        {
+            Value = value;
+            Prev = prev;
+            Next = next;
+        }
+
         public TValue Value { get; set; }
         public Node Prev { get; set; }
         public Node Next { get; set; }
