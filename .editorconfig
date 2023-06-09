@@ -63,6 +63,8 @@ dotnet_diagnostic.CA1848.severity = warning
 dotnet_diagnostic.CA1001.severity = error
 # CA1200: Avoid using cref tags with a prefix
 dotnet_diagnostic.CA1200.severity = warning
+# CA2252: Opt in to preview features before using them
+dotnet_diagnostic.CA2252.severity = none
 
 #### Naming styles ####
 
