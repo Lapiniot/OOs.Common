@@ -68,8 +68,8 @@ public class WebPushClient : IDisposable
         response.EnsureSuccessStatusCode();
     }
 
-    private static HttpContent CreateHttpContent(byte[] content) =>
-        new ByteArrayContent(content)
+    private static ByteArrayContent CreateHttpContent(byte[] content) =>
+        new(content)
         {
             Headers =
             {

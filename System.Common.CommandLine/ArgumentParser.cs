@@ -7,6 +7,8 @@ namespace System.Common.CommandLine;
 public class ArgumentParser
 {
     private static readonly char[] Quotes = { '"', '\'' };
+    private static readonly char[] Separator = { '=' };
+
     private readonly IEnumerable<ICommandMetadata> commands;
     private readonly IEnumerable<IArgumentMetadata> schema;
     private readonly bool strict;
@@ -187,7 +189,7 @@ public class ArgumentParser
 
     private void AddByName(string arg, SortedDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
     {
-        var pair = arg.Split(new[] { '=' }, 2);
+        var pair = arg.Split(Separator, 2);
 
         var key = pair[0];
 

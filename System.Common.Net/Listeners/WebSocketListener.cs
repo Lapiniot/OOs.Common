@@ -37,6 +37,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
 
     private sealed class WebSocketEnumerator : IAsyncEnumerator<NetworkConnection>
     {
+        private static readonly char[] Separators = { ' ', ',' };
         private readonly CancellationToken cancellationToken;
         private readonly TimeSpan keepAliveInterval;
         private readonly HttpListener listener;
@@ -105,7 +106,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
                             continue;
                         }
 
-                        var headers = subProtocol.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        var headers = subProtocol.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
                         subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
                         if (subProtocol is null)
                         {
