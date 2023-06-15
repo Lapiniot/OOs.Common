@@ -1,0 +1,15 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="System.IO.Pipelines" Version="7.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.6.2" />
+    <PackageVersion Include="MSTest.TestAdapter" Version="3.0.4" />
+    <PackageVersion Include="MSTest.TestFramework" Version="3.0.4" />
+  </ItemGroup>
+
+</Project>
