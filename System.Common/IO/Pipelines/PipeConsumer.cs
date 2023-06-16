@@ -22,7 +22,7 @@ public abstract class PipeConsumer : PipeConsumerCore
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
         abortTokenSource ??= new();
-        consumerTask = StartConsumerAsync(reader, Aborted);
+        consumerTask = RunConsumerAsync(reader, Aborted);
         return Task.CompletedTask;
     }
 

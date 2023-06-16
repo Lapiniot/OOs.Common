@@ -19,7 +19,7 @@ public abstract class PipeProcessor : PipeConsumerCore
         var (reader, writer) = new Pipe();
 
         var producer = StartProducerAsync(writer, token);
-        var consumer = StartConsumerAsync(reader, token);
+        var consumer = RunConsumerAsync(reader, token);
         processor = Task.WhenAll(producer, consumer);
 
         return Task.CompletedTask;

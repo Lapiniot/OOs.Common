@@ -5,7 +5,7 @@ namespace System.IO.Pipelines;
 
 public abstract class PipeConsumerCore : ActivityObject
 {
-    protected async Task StartConsumerAsync([NotNull] PipeReader reader, CancellationToken cancellationToken)
+    protected async Task RunConsumerAsync([NotNull] PipeReader reader, CancellationToken cancellationToken)
     {
         try
         {
@@ -21,13 +21,13 @@ public abstract class PipeConsumerCore : ActivityObject
 
                 var buffer = result.Buffer;
 
-                while (Consume(ref buffer))
+                while (!cancellationToken.IsCancellationRequested && Consume(ref buffer))
                 {
-                    // TODO: better call reader.AdvanceTo with appropriate position here before throwing exception
-                    cancellationToken.ThrowIfCancellationRequested();
                 }
 
                 reader.AdvanceTo(buffer.Start, buffer.End);
+
+                cancellationToken.ThrowIfCancellationRequested();
 
                 if (result.IsCompleted)
                 {
