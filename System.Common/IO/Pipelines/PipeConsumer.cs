@@ -43,10 +43,7 @@ public abstract class PipeConsumer : PipeConsumerCore
         }
     }
 
-    /// <summary>
-    /// Abruptly aborts current session 
-    /// </summary>
-    public void Abort() => abortTokenSource?.Cancel();
+    protected void Abort() => abortTokenSource?.Cancel();
 
     public override async ValueTask DisposeAsync()
     {
