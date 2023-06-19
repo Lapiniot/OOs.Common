@@ -7,7 +7,6 @@ public abstract class PipeConsumer : PipeConsumerCore
 {
     private readonly PipeReader reader;
     private CancellationTokenSource abortTokenSource = new();
-    private Task consumerTask;
 
     protected PipeConsumer(PipeReader reader)
     {
@@ -15,14 +14,14 @@ public abstract class PipeConsumer : PipeConsumerCore
         this.reader = reader;
     }
 
-    protected Task ConsumerCompletion => consumerTask;
+    protected Task ConsumerCompletion { get; private set; }
 
     protected CancellationToken Aborted => abortTokenSource.Token;
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
         abortTokenSource ??= new();
-        consumerTask = RunConsumerAsync(reader, Aborted);
+        ConsumerCompletion = RunConsumerAsync(reader, Aborted);
         return Task.CompletedTask;
     }
 
@@ -37,7 +36,7 @@ public abstract class PipeConsumer : PipeConsumerCore
 
             try
             {
-                await consumerTask.ConfigureAwait(false);
+                await ConsumerCompletion.ConfigureAwait(false);
             }
             catch (OperationCanceledException) { /* expected */ }
         }

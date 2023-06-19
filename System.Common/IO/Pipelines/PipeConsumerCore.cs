@@ -14,10 +14,7 @@ public abstract class PipeConsumerCore : ActivityObject
                 var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
 
                 if (result.IsCanceled)
-                {
-                    // Exit reader loop gracefully
                     break;
-                }
 
                 var buffer = result.Buffer;
 
@@ -30,9 +27,7 @@ public abstract class PipeConsumerCore : ActivityObject
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (result.IsCompleted)
-                {
                     break;
-                }
             }
         }
         finally
