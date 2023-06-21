@@ -6,5 +6,6 @@
         "**/*.DotSettings.*": true,
         "**/*.sln": true
     },
-    "omnisharp.enableRoslynAnalyzers": true
+    "omnisharp.enableRoslynAnalyzers": true,
+    "dotnet.defaultSolution": "System.Common.sln"
 }
