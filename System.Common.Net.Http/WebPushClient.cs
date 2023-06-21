@@ -80,7 +80,7 @@ public class WebPushClient : IDisposable
 
     private static byte[] EncryptPayload(byte[] data, byte[] key, byte[] nonce)
     {
-        using var aes = new AesGcm(key);
+        using var aes = new AesGcm(key, 16);
         var cipher = new byte[data.Length + AesGcm.TagByteSizes.MaxSize];
         aes.Encrypt((Span<byte>)nonce, data, cipher.AsSpan(0, data.Length), cipher.AsSpan(data.Length));
         return cipher;
