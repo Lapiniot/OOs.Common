@@ -18,19 +18,19 @@ public class ConstructorShould
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("10", enumerator.Current);
+        Assert.AreEqual("10", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("1", enumerator.Current);
+        Assert.AreEqual("1", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("4", enumerator.Current);
+        Assert.AreEqual("4", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("15", enumerator.Current);
+        Assert.AreEqual("15", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("0", enumerator.Current);
+        Assert.AreEqual("0", enumerator.Current.Value);
 
         Assert.IsFalse(enumerator.MoveNext());
     }

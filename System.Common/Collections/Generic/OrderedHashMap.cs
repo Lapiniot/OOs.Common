@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace System.Collections.Generic;
 
-public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKey : notnull
+public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> where TKey : notnull
 {
     private readonly Dictionary<TKey, Node> map;
     private readonly object syncLock = new();
@@ -57,7 +57,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
 
         if (!exists)
         {
-            node = new Node(value, tail, null);
+            node = new Node(key, value, tail, null);
             head ??= node;
             if (tail is not null) tail.Next = node;
             tail = node;
@@ -78,13 +78,15 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
 
     private sealed class Node
     {
-        public Node(TValue value, Node prev, Node next)
+        public Node(TKey key, TValue value, Node prev, Node next)
         {
+            Key = key;
             Value = value;
             Prev = prev;
             Next = next;
         }
 
+        public TKey Key { get; }
         public TValue Value { get; set; }
         public Node Prev { get; set; }
         public Node Next { get; set; }
@@ -94,11 +96,11 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
 
     public Enumerator GetEnumerator() => new(this);
 
-    IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator() => new Enumerator(this);
+    IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => new Enumerator(this);
 
     IEnumerator IEnumerable.GetEnumerator() => new Enumerator(this);
 
-    public struct Enumerator : IEnumerator<TValue>
+    public struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
     {
         private const int Init = 0;
         private const int InProgress = 1;
@@ -110,7 +112,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<TValue> where TKe
 
         internal Enumerator(OrderedHashMap<TKey, TValue> map) => this.map = map;
 
-        public readonly TValue Current => node.Value;
+        public readonly KeyValuePair<TKey, TValue> Current => new(node.Key, node.Value);
 
         readonly object IEnumerator.Current => node.Value;
 

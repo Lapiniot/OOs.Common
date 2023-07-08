@@ -37,7 +37,7 @@ public class TryRemoveShould
 
         map.TryRemove(2, out _);
 
-        Assert.IsFalse(map.Contains("value 2"));
+        Assert.IsFalse(map.Any(p => p.Value == "value 2"));
     }
 
     [TestMethod]
@@ -49,10 +49,10 @@ public class TryRemoveShould
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("value 2", enumerator.Current);
+        Assert.AreEqual("value 2", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("value 3", enumerator.Current);
+        Assert.AreEqual("value 3", enumerator.Current.Value);
 
         Assert.IsFalse(enumerator.MoveNext());
     }
@@ -66,10 +66,10 @@ public class TryRemoveShould
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("value 1", enumerator.Current);
+        Assert.AreEqual("value 1", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("value 2", enumerator.Current);
+        Assert.AreEqual("value 2", enumerator.Current.Value);
 
         Assert.IsFalse(enumerator.MoveNext());
     }
@@ -84,10 +84,10 @@ public class TryRemoveShould
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("value 1", enumerator.Current);
+        Assert.AreEqual("value 1", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("value 4", enumerator.Current);
+        Assert.AreEqual("value 4", enumerator.Current.Value);
 
         Assert.IsFalse(enumerator.MoveNext());
     }

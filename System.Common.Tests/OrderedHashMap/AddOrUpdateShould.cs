@@ -23,13 +23,13 @@ public class AddOrUpdateShould
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("value2", enumerator.Current);
+        Assert.AreEqual("value2", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("value3", enumerator.Current);
+        Assert.AreEqual("value3", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("add-value1", enumerator.Current);
+        Assert.AreEqual("add-value1", enumerator.Current.Value);
 
         Assert.IsFalse(enumerator.MoveNext());
     }
@@ -44,10 +44,10 @@ public class AddOrUpdateShould
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("update-value2", enumerator.Current);
+        Assert.AreEqual("update-value2", enumerator.Current.Value);
 
         Assert.IsTrue(enumerator.MoveNext());
-        Assert.AreEqual("update-value3", enumerator.Current);
+        Assert.AreEqual("update-value3", enumerator.Current.Value);
 
         Assert.IsFalse(enumerator.MoveNext());
     }
