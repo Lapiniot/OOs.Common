@@ -81,6 +81,14 @@ public sealed class AsyncSemaphore
 
     public void Release(int releaseCount)
     {
+        if (!TryRelease(releaseCount))
+        {
+            ThrowSemaphoreFull();
+        }
+    }
+
+    public bool TryRelease(int releaseCount)
+    {
         Verify.ThrowIfLess(releaseCount, 1);
 
         int current;
@@ -91,7 +99,7 @@ public sealed class AsyncSemaphore
             current = currentCount;
 
             if (current > maxCount - releaseCount)
-                ThrowSemaphoreFull();
+                return false;
 
             if (Interlocked.CompareExchange(ref currentCount, current + releaseCount, current) == current)
                 break;
@@ -100,7 +108,7 @@ public sealed class AsyncSemaphore
         }
 
         if (current >= 0)
-            return;
+            return true;
 
         lock (syncRoot)
         {
@@ -111,6 +119,8 @@ public sealed class AsyncSemaphore
                 releaseCount--;
             }
         }
+
+        return true;
     }
 
     private void Enqueue(WaiterNode waiter)
