@@ -23,6 +23,23 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
 
     public OrderedHashMap() => map = new();
 
+    public bool TryGetValue(TKey key, out TValue value)
+    {
+        lock (syncLock)
+        {
+            if (map.TryGetValue(key, out var node))
+            {
+                value = node.Value;
+                return true;
+            }
+            else
+            {
+                value = default;
+                return false;
+            }
+        }
+    }
+
     public void AddOrUpdate(TKey key, TValue value)
     {
         lock (syncLock)
@@ -31,7 +48,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
         }
     }
 
-    public bool TryRemove(TKey key, out TValue value)
+    public bool Remove(TKey key, out TValue value)
     {
         lock (syncLock)
         {
@@ -46,6 +63,21 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
             }
 
             value = default;
+            return false;
+        }
+    }
+
+    public bool Update(TKey key, TValue value)
+    {
+        lock (syncLock)
+        {
+            ref var node = ref CollectionsMarshal.GetValueRefOrNullRef(map, key);
+            if (!Unsafe.IsNullRef(ref node))
+            {
+                node.Value = value;
+                return true;
+            }
+
             return false;
         }
     }

@@ -1,14 +1,14 @@
 ﻿namespace System.Common.Tests.OrderedHashMap;
 
 [TestClass]
-public class TryRemoveShould
+public class RemoveShould
 {
     [TestMethod]
     public void ReturnTrueAndValueGivenExistingKey()
     {
         var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
 
-        var actual = map.TryRemove(1, out var value);
+        var actual = map.Remove(1, out var value);
 
         Assert.IsTrue(actual);
         Assert.AreEqual("value 1", value);
@@ -19,13 +19,13 @@ public class TryRemoveShould
     {
         var stringMap = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
 
-        var actual = stringMap.TryRemove(5, out var strValue);
+        var actual = stringMap.Remove(5, out var strValue);
         Assert.IsFalse(actual);
         Assert.AreEqual(default, strValue);
 
         var intMap = new OrderedHashMap<string, int>(new KeyValuePair<string, int>[] { new("1", 1), new("2", 2), new("3", 3) });
 
-        actual = intMap.TryRemove("5", out var intValue);
+        actual = intMap.Remove("5", out var intValue);
         Assert.IsFalse(actual);
         Assert.AreEqual(default, intValue);
     }
@@ -35,7 +35,7 @@ public class TryRemoveShould
     {
         var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
 
-        map.TryRemove(2, out _);
+        map.Remove(2, out _);
 
         Assert.IsFalse(map.Any(p => p.Value == "value 2"));
     }
@@ -45,7 +45,7 @@ public class TryRemoveShould
     {
         var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
 
-        map.TryRemove(1, out _);
+        map.Remove(1, out _);
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
@@ -62,7 +62,7 @@ public class TryRemoveShould
     {
         var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
 
-        map.TryRemove(3, out _);
+        map.Remove(3, out _);
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
@@ -79,8 +79,8 @@ public class TryRemoveShould
     {
         var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3"), new(4, "value 4") });
 
-        map.TryRemove(2, out _);
-        map.TryRemove(3, out _);
+        map.Remove(2, out _);
+        map.Remove(3, out _);
         using var enumerator = map.GetEnumerator();
 
         Assert.IsTrue(enumerator.MoveNext());
@@ -97,6 +97,6 @@ public class TryRemoveShould
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
             var map = new OrderedHashMap<string, string>();
-            return map.TryRemove(null, out _);
+            return map.Remove(null, out _);
         });
 }
