@@ -1,12 +1,12 @@
-namespace System.Common.Tests;
+namespace System.Common.Tests.AsyncCountdownEvent;
 
 [TestClass]
-public class AsyncCountdownEvent_ResetDefaultShould
+public class ResetDefaultShould
 {
     [TestMethod]
     public void SetCurrentCountToInitialCount()
     {
-        var cde = new AsyncCountdownEvent(2);
+        var cde = new Threading.AsyncCountdownEvent(2);
         cde.Signal();
 
         cde.Reset();
@@ -18,7 +18,7 @@ public class AsyncCountdownEvent_ResetDefaultShould
     [TestMethod]
     public void ResetEvent_IfWasAlreadySetBefore()
     {
-        var cde = new AsyncCountdownEvent(1);
+        var cde = new Threading.AsyncCountdownEvent(1);
         cde.Signal();
 
         cde.Reset();
@@ -29,7 +29,7 @@ public class AsyncCountdownEvent_ResetDefaultShould
     [TestMethod]
     public void SetEventImmediately_WhenInitialCountZero()
     {
-        var cde = new AsyncCountdownEvent(0);
+        var cde = new Threading.AsyncCountdownEvent(0);
 
         cde.Reset();
 

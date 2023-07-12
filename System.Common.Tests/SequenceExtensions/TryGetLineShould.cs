@@ -1,10 +1,10 @@
 ﻿using System.Buffers;
 using System.Memory;
 
-namespace System.Common.Tests;
+namespace System.Common.Tests.SequenceExtensions;
 
 [TestClass]
-public class SequenceExtensionsTryGetLineShould
+public class TryGetLineShould
 {
     [TestMethod]
     public void ReturnTrueAndLineGivenValidSingleSegmentSequence()

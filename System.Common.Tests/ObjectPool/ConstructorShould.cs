@@ -1,9 +1,9 @@
 ﻿using System.Memory;
 
-namespace System.Common.Tests;
+namespace System.Common.Tests.ObjectPool;
 
 [TestClass]
-public class ObjectPoolConstructorShould
+public class ConstructorShould
 {
     [TestMethod]
     [DataRow(0)]

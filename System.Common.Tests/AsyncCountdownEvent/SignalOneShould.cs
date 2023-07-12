@@ -1,16 +1,16 @@
-﻿namespace System.Common.Tests;
+﻿namespace System.Common.Tests.AsyncCountdownEvent;
 
 [TestClass]
-public class AsyncCountdownEvent_SignalOneShould
+public class SignalOneShould
 {
     [TestMethod]
     public void ThrowInvalidOperationException_WhenEventAlreadySet() =>
-        Assert.ThrowsException<InvalidOperationException>(() => new AsyncCountdownEvent(0).Signal());
+        Assert.ThrowsException<InvalidOperationException>(() => new Threading.AsyncCountdownEvent(0).Signal());
 
     [TestMethod]
     public void DecrementCountButDoNotSetEvent_WhenCurrentCountIsGreaterThanOne()
     {
-        var cde = new AsyncCountdownEvent(2);
+        var cde = new Threading.AsyncCountdownEvent(2);
 
         cde.Signal();
 
@@ -21,7 +21,7 @@ public class AsyncCountdownEvent_SignalOneShould
     [TestMethod]
     public void DecrementCountAndSetEvent_WhenCurrentCountEqualsOne()
     {
-        var cde = new AsyncCountdownEvent(1);
+        var cde = new Threading.AsyncCountdownEvent(1);
 
         cde.Signal();
 

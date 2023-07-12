@@ -1,16 +1,16 @@
-﻿namespace System.Common.Tests;
+﻿namespace System.Common.Tests.AsyncCountdownEvent;
 
 [TestClass]
-public class AsyncCountdownEvent_ResetShould
+public class ResetShould
 {
     [TestMethod]
     public void ThrowArgumentOutOfRangeException_GivenNegativeValue() =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new AsyncCountdownEvent(1).Reset(-1));
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Threading.AsyncCountdownEvent(1).Reset(-1));
 
     [TestMethod]
     public void SetEventImmediately_GivenZeroValue()
     {
-        var cde = new AsyncCountdownEvent(1);
+        var cde = new Threading.AsyncCountdownEvent(1);
 
         cde.Reset(0);
 
@@ -20,7 +20,7 @@ public class AsyncCountdownEvent_ResetShould
     [TestMethod]
     public void SetCurrentCountAndInitialCount_GivenPositiveValue()
     {
-        var cde = new AsyncCountdownEvent(1);
+        var cde = new Threading.AsyncCountdownEvent(1);
 
         cde.Reset(2);
 
@@ -31,7 +31,7 @@ public class AsyncCountdownEvent_ResetShould
     [TestMethod]
     public void DoNotSetEventImmediately_GivenPositiveValue()
     {
-        var cde = new AsyncCountdownEvent(1);
+        var cde = new Threading.AsyncCountdownEvent(1);
 
         cde.Reset(2);
 
@@ -41,7 +41,7 @@ public class AsyncCountdownEvent_ResetShould
     [TestMethod]
     public void ResetEvent_GivenPositiveValue()
     {
-        var cde = new AsyncCountdownEvent(0);
+        var cde = new Threading.AsyncCountdownEvent(0);
 
         cde.Reset(1);
 

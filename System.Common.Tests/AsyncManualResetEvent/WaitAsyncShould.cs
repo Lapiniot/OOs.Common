@@ -1,12 +1,12 @@
-namespace System.Common.Tests;
+namespace System.Common.Tests.AsyncManualResetEvent;
 
 [TestClass]
-public class AsyncManualResetEvent_WaitAsyncShould
+public class WaitAsyncShould
 {
     [TestMethod]
     public void ReturnPendingTask_WhenNonSignaled()
     {
-        var mre = new AsyncManualResetEvent(false);
+        var mre = new Threading.AsyncManualResetEvent(false);
 
         var actual = mre.WaitAsync(default);
 
@@ -17,7 +17,7 @@ public class AsyncManualResetEvent_WaitAsyncShould
     [TestMethod]
     public async Task ReturnCompletedTask_WhenSignaled()
     {
-        var mre = new AsyncManualResetEvent(true);
+        var mre = new Threading.AsyncManualResetEvent(true);
 
         var actual = mre.WaitAsync(default);
 
@@ -29,7 +29,7 @@ public class AsyncManualResetEvent_WaitAsyncShould
     [TestMethod]
     public async Task ReturnPendingTaskThanCompletes_WhenSetSignaled()
     {
-        var mre = new AsyncManualResetEvent(false);
+        var mre = new Threading.AsyncManualResetEvent(false);
 
         var actual = mre.WaitAsync(default);
 
@@ -45,7 +45,7 @@ public class AsyncManualResetEvent_WaitAsyncShould
     [TestMethod]
     public void ReturnPendingTask_ThanThrowsOperationCancelledException_WhenTokenCanceled()
     {
-        var mre = new AsyncManualResetEvent(false);
+        var mre = new Threading.AsyncManualResetEvent(false);
         using var cts = new CancellationTokenSource();
 
         var actual = mre.WaitAsync(cts.Token);
@@ -61,7 +61,7 @@ public class AsyncManualResetEvent_WaitAsyncShould
     [TestMethod]
     public void ThrowOperationCancelledExceptionImmidiatelly_WhenCancelledTokenProvided()
     {
-        var mre = new AsyncManualResetEvent(false);
+        var mre = new Threading.AsyncManualResetEvent(false);
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 

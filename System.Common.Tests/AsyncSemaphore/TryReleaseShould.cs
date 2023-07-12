@@ -1,13 +1,13 @@
-﻿namespace System.Common.Tests;
+﻿namespace System.Common.Tests.AsyncSemaphore;
 
 [TestClass]
-public class AsyncSemaphore_TryReleaseShould
+public class TryReleaseShould
 {
     [TestMethod]
     public void ReturnTrue_IncrementCurrentCount_WhenThereAreNoPendingWaitingTasks()
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(1);
+        var semaphore = new Threading.AsyncSemaphore(1);
 
         // Act
         var actual = semaphore.TryRelease(2);
@@ -20,14 +20,14 @@ public class AsyncSemaphore_TryReleaseShould
     [TestMethod]
     public void ThrowArgumentOutOfRangeException_GivenNegativeReleaseCount()
     {
-        var semaphore = new AsyncSemaphore(1);
+        var semaphore = new Threading.AsyncSemaphore(1);
         Assert.ThrowsException<ArgumentOutOfRangeException>(() => semaphore.TryRelease(-1));
     }
 
     [TestMethod]
     public void ThrowArgumentOutOfRangeException_GivenZeroReleaseCount()
     {
-        var semaphore = new AsyncSemaphore(1);
+        var semaphore = new Threading.AsyncSemaphore(1);
         Assert.ThrowsException<ArgumentOutOfRangeException>(() => semaphore.TryRelease(0));
     }
 
@@ -35,7 +35,7 @@ public class AsyncSemaphore_TryReleaseShould
     public void ReturnTrue_RetainCurrentCountButCompleteTasks_WhenThereArePendingWaitingTasks()
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(0);
+        var semaphore = new Threading.AsyncSemaphore(0);
         var task1 = semaphore.WaitAsync();
         var task2 = semaphore.WaitAsync();
 
@@ -53,7 +53,7 @@ public class AsyncSemaphore_TryReleaseShould
     public void ReturnFalse_DoNotThrowSemaphoreFullException_GivenReleaseCountResultingCurrentCountGreaterThanMaxCount()
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(0, 1);
+        var semaphore = new Threading.AsyncSemaphore(0, 1);
         semaphore.WaitAsync();
 
         // Act
@@ -73,7 +73,7 @@ public class AsyncSemaphore_TryReleaseShould
         int expectedCompleteCount, int expectedPendingCount, int expectedCurrentCount)
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(initialCount);
+        var semaphore = new Threading.AsyncSemaphore(initialCount);
         var waiters = new List<Task>(waitersCount);
         for (var i = 0; i < waitersCount; i++) waiters.Add(semaphore.WaitAsync());
 

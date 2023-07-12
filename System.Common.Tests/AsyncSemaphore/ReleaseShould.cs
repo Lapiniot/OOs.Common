@@ -1,13 +1,13 @@
-﻿namespace System.Common.Tests;
+﻿namespace System.Common.Tests.AsyncSemaphore;
 
 [TestClass]
-public class AsyncSemaphore_ReleaseShould
+public class ReleaseShould
 {
     [TestMethod]
     public void ThrowSemaphoreFullException_GivenReleaseCountResultingCurrentCountGreaterThanMaxCount()
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(0, 1);
+        var semaphore = new Threading.AsyncSemaphore(0, 1);
         semaphore.WaitAsync();
 
         // Act/Assert

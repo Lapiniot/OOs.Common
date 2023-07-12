@@ -1,12 +1,12 @@
-namespace System.Common.Tests;
+namespace System.Common.Tests.AsyncManualResetEvent;
 
 [TestClass]
-public class AsyncManualResetEvent_ResetShould
+public class ResetShould
 {
     [TestMethod]
     public void SetEventNonSignaled_FromSignaled()
     {
-        var mre = new AsyncManualResetEvent(true);
+        var mre = new Threading.AsyncManualResetEvent(true);
 
         mre.Reset();
 
@@ -16,7 +16,7 @@ public class AsyncManualResetEvent_ResetShould
     [TestMethod]
     public void SubsequentCallsDontChangeState_AndDontThrow_WhenNonSignaled()
     {
-        var mre = new AsyncManualResetEvent(false);
+        var mre = new Threading.AsyncManualResetEvent(false);
 
         mre.Reset();
         Assert.IsFalse(mre.WaitAsync(default).IsCompleted);

@@ -1,13 +1,13 @@
-﻿namespace System.Common.Tests;
+﻿namespace System.Common.Tests.AsyncSemaphore;
 
 [TestClass]
-public class AsyncSemaphore_WaitAsyncShould
+public class WaitAsyncShould
 {
     [TestMethod]
     public void ReturnCancelledTaskAndRetainCurrentCount_GivenAlreadyCanceledToken()
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(1);
+        var semaphore = new Threading.AsyncSemaphore(1);
         using var cts = new CancellationTokenSource(0);
 
         // Act
@@ -23,7 +23,7 @@ public class AsyncSemaphore_WaitAsyncShould
     public void ReturnTaskWhichTransitsToCancelled_WhenCurrentCountZeroAndCancellationRequestedBeforeReleaseCalled()
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(0);
+        var semaphore = new Threading.AsyncSemaphore(0);
         using var cts = new CancellationTokenSource();
 
         // Act 1
@@ -49,7 +49,7 @@ public class AsyncSemaphore_WaitAsyncShould
     public void ReturnTaskWhichTransitsToCompleted_WhenCurrentCountZeroAndCancellationRequestedAfterReleaseCalled()
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(0);
+        var semaphore = new Threading.AsyncSemaphore(0);
         using var cts = new CancellationTokenSource();
 
         // Act 1
@@ -71,7 +71,7 @@ public class AsyncSemaphore_WaitAsyncShould
     public void ReturnCompletedTaskAndDecrementCurrentCount_WhenCurrentCountIsGreaterThanZero()
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(1);
+        var semaphore = new Threading.AsyncSemaphore(1);
 
         // Act
         var task = semaphore.WaitAsync();
@@ -86,7 +86,7 @@ public class AsyncSemaphore_WaitAsyncShould
     public void ReturnPendingTaskAndRetainCurrentCount_WhenCurrentCountIsZero()
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(0);
+        var semaphore = new Threading.AsyncSemaphore(0);
 
         // Act
         var task1 = semaphore.WaitAsync();
@@ -112,7 +112,7 @@ public class AsyncSemaphore_WaitAsyncShould
         int expectedCurrentCount, int expectedCompleteTasks, int expectedPendingTasks)
     {
         // Arrange
-        var semaphore = new AsyncSemaphore(initialCount);
+        var semaphore = new Threading.AsyncSemaphore(initialCount);
         var tasks = new List<Task>();
 
         // Act
