@@ -14,7 +14,7 @@ public class ResetShould
 
         cde.Reset(0);
 
-        Assert.IsTrue(cde.WaitAsync().IsCompletedSuccessfully);
+        Assert.IsTrue(cde.WaitAsync(default).IsCompletedSuccessfully);
     }
 
     [TestMethod]
@@ -35,7 +35,7 @@ public class ResetShould
 
         cde.Reset(2);
 
-        Assert.IsFalse(cde.WaitAsync().IsCompleted);
+        Assert.IsFalse(cde.WaitAsync(default).IsCompleted);
     }
 
     [TestMethod]
@@ -45,6 +45,6 @@ public class ResetShould
 
         cde.Reset(1);
 
-        Assert.IsFalse(cde.WaitAsync().IsCompleted);
+        Assert.IsFalse(cde.WaitAsync(default).IsCompleted);
     }
 }

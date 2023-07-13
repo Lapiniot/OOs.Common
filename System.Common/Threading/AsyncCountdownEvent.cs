@@ -148,10 +148,10 @@ public sealed class AsyncCountdownEvent
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task which is completed when <see cref="CurrentCount"/> reaches zero.</returns>
-    public Task WaitAsync(CancellationToken cancellationToken = default) =>
-        cancellationToken == default
-            ? completionSource.Task
-            : completionSource.Task.WaitAsync(cancellationToken);
+    public Task WaitAsync(CancellationToken cancellationToken) =>
+        cancellationToken.IsCancellationRequested
+            ? Task.FromCanceled(cancellationToken)
+            : completionSource.Task;
 
     /// <summary>
     /// Resets the <see cref="CurrentCount"/> to a specified <see cref="InitialCount"/> value.

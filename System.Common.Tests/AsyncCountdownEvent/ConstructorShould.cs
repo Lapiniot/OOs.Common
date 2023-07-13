@@ -16,7 +16,7 @@ public class ConstructorShould
     public void SetEventImmediately_GivenZeroValue()
     {
         var cde = new Threading.AsyncCountdownEvent(0);
-        var task = cde.WaitAsync();
+        var task = cde.WaitAsync(default);
 
         Assert.IsTrue(task.IsCompletedSuccessfully);
     }
@@ -25,7 +25,7 @@ public class ConstructorShould
     public void NotSetEventImmediately_GivenPositiveValue()
     {
         var cde = new Threading.AsyncCountdownEvent(1);
-        var task = cde.WaitAsync();
+        var task = cde.WaitAsync(default);
 
         Assert.IsFalse(task.IsCompleted);
     }

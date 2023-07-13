@@ -27,6 +27,6 @@ public class AddCountShould
         cde.AddCount(2);
 
         Assert.AreEqual(3, cde.CurrentCount);
-        Assert.IsFalse(cde.WaitAsync().IsCompleted);
+        Assert.IsFalse(cde.WaitAsync(default).IsCompleted);
     }
 }

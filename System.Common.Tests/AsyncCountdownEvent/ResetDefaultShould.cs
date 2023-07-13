@@ -23,7 +23,7 @@ public class ResetDefaultShould
 
         cde.Reset();
 
-        Assert.IsFalse(cde.WaitAsync().IsCompleted);
+        Assert.IsFalse(cde.WaitAsync(default).IsCompleted);
     }
 
     [TestMethod]
@@ -33,6 +33,6 @@ public class ResetDefaultShould
 
         cde.Reset();
 
-        Assert.IsTrue(cde.WaitAsync().IsCompletedSuccessfully);
+        Assert.IsTrue(cde.WaitAsync(default).IsCompletedSuccessfully);
     }
 }

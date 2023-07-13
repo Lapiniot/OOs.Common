@@ -50,9 +50,8 @@ public sealed class AsyncManualResetEvent
         }
     }
 
-    public Task WaitAsync(CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return tcs.Task.WaitAsync(cancellationToken);
-    }
+    public Task WaitAsync(CancellationToken cancellationToken) =>
+        cancellationToken.IsCancellationRequested
+            ? Task.FromCanceled(cancellationToken)
+            : tcs.Task.WaitAsync(cancellationToken);
 }

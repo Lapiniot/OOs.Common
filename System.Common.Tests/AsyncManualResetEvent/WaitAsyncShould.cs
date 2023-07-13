@@ -59,12 +59,14 @@ public class WaitAsyncShould
     }
 
     [TestMethod]
-    public void ThrowOperationCancelledExceptionImmidiatelly_WhenCancelledTokenProvided()
+    public void ReturnCancelledTask_WhenCancelledTokenProvided()
     {
         var mre = new Threading.AsyncManualResetEvent(false);
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        Assert.ThrowsException<OperationCanceledException>(() => mre.WaitAsync(cts.Token));
+        var task = mre.WaitAsync(cts.Token);
+
+        Assert.IsTrue(task.IsCanceled);
     }
 }

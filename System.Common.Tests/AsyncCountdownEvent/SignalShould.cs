@@ -27,7 +27,7 @@ public class SignalShould
         cde.Signal(1);
 
         Assert.AreEqual(1, cde.CurrentCount);
-        Assert.IsFalse(cde.WaitAsync().IsCompleted);
+        Assert.IsFalse(cde.WaitAsync(default).IsCompleted);
     }
 
     [TestMethod]
@@ -38,6 +38,6 @@ public class SignalShould
         cde.Signal(2);
 
         Assert.AreEqual(0, cde.CurrentCount);
-        Assert.IsTrue(cde.WaitAsync().IsCompletedSuccessfully);
+        Assert.IsTrue(cde.WaitAsync(default).IsCompletedSuccessfully);
     }
 }
