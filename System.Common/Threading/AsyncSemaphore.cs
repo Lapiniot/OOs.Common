@@ -33,7 +33,7 @@ public sealed class AsyncSemaphore
     {
         get
         {
-            var current = Volatile.Read(ref currentCount);
+            var current = currentCount;
             return current >= 0 ? current : 0;
         }
     }
@@ -43,19 +43,19 @@ public sealed class AsyncSemaphore
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled(cancellationToken);
 
-        if (Interlocked.Decrement(ref currentCount) >= 0)
-            return Task.CompletedTask;
-
         lock (syncRoot)
         {
+            if (--currentCount >= 0)
+                return Task.CompletedTask;
+
             var waiter = new WaiterNode(runContinuationsAsynchronously);
-            Enqueue(waiter);
 
             if (cancellationToken != CancellationToken.None)
             {
                 waiter.CtReg = cancellationToken.UnsafeRegister(cancelCallback ??= CancelWaiter, waiter);
             }
 
+            Enqueue(waiter);
             return waiter.Task;
         }
     }
@@ -66,10 +66,9 @@ public sealed class AsyncSemaphore
 
         if (!waiter.TrySetCanceled(token)) return;
 
-        Interlocked.Increment(ref currentCount);
-
         lock (syncRoot)
         {
+            currentCount++;
             TryRemove(waiter);
         }
 
@@ -91,27 +90,18 @@ public sealed class AsyncSemaphore
     {
         Verify.ThrowIfLess(releaseCount, 1);
 
-        int current;
-        var sw = new SpinWait();
-
-        while (true)
-        {
-            current = currentCount;
-
-            if (current > maxCount - releaseCount)
-                return false;
-
-            if (Interlocked.CompareExchange(ref currentCount, current + releaseCount, current) == current)
-                break;
-
-            sw.SpinOnce(-1);
-        }
-
-        if (current >= 0)
-            return true;
-
         lock (syncRoot)
         {
+            var current = currentCount;
+
+            if (current + releaseCount > maxCount)
+                return false;
+
+            currentCount += releaseCount;
+
+            if (current >= 0)
+                return true;
+
             while (releaseCount > 0 && TryDequeue(out var waiter))
             {
                 if (!waiter.TrySetResult()) continue;
@@ -141,38 +131,22 @@ public sealed class AsyncSemaphore
         if (waiter is { Next: null, Prev: null } && waiter != head) return;
 
         var prev = waiter.Prev;
-        if (prev is not null)
-            prev.Next = waiter.Next;
-
         var next = waiter.Next;
-        if (next is not null)
-            next.Prev = waiter.Prev;
-
-        if (head == waiter)
-            head = waiter.Next;
-
-        if (tail == waiter)
-            tail = waiter.Prev;
-
+        if (prev is not null) prev.Next = waiter.Next;
+        if (next is not null) next.Prev = waiter.Prev;
+        if (head == waiter) head = waiter.Next;
+        if (tail == waiter) tail = waiter.Prev;
         waiter.Prev = waiter.Next = null;
     }
 
     private bool TryDequeue([NotNullWhen(true)] out WaiterNode? waiter)
     {
         waiter = head;
-
-        if (waiter is null)
-            return false;
-
+        if (waiter is null) return false;
         head = waiter.Next;
         waiter.Next = waiter.Prev = null;
-
-        if (head is not null)
-            head.Prev = null;
-
-        if (tail == waiter)
-            tail = null;
-
+        if (head is not null) head.Prev = null;
+        if (tail == waiter) tail = null;
         return true;
     }
 
