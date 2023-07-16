@@ -20,7 +20,7 @@ public abstract class ActivityObject : IAsyncDisposable
 
     protected void CheckState([CallerMemberName] string callerName = null) => ThrowIfInvalidState(!IsRunning, callerName);
 
-    protected void CheckDisposed() => ThrowIfObjectDisposed(Volatile.Read(ref disposed) != 0, nameof(ActivityObject));
+    protected void CheckDisposed() => ObjectDisposedException.ThrowIf(disposed is 1, this);
 
     protected async Task StartActivityAsync(CancellationToken cancellationToken)
     {

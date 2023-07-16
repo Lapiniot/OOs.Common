@@ -1,5 +1,3 @@
-using static System.Verify;
-
 namespace System.IO.Pipelines;
 
 public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
@@ -28,7 +26,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
         get
         {
             var current = Volatile.Read(ref inputWorker);
-            ThrowIfInvalidState(Interlocked.Read(ref stateGuard) != Started || current is null);
+            Verify.ThrowIfInvalidState(Interlocked.Read(ref stateGuard) != Started || current is null);
             return current;
         }
     }
@@ -38,7 +36,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
         get
         {
             var current = Volatile.Read(ref outputWorker);
-            ThrowIfInvalidState(Interlocked.Read(ref stateGuard) != Started || current is null);
+            Verify.ThrowIfInvalidState(Interlocked.Read(ref stateGuard) != Started || current is null);
             return current;
         }
     }
@@ -70,7 +68,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
 
                 break;
             case Stopping:
-                ThrowInvalidState();
+                ThrowHelper.ThrowInvalidState();
                 break;
         }
     }
@@ -140,7 +138,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
         await OutputCompletion.ConfigureAwait(false);
     }
 
-    protected void CheckDisposed() => ThrowIfObjectDisposed(disposed is 1, nameof(TransportPipe));
+    protected void CheckDisposed() => ObjectDisposedException.ThrowIf(disposed is 1, this);
 
     private async Task StartInputPartAsync(PipeWriter writer, CancellationToken cancellationToken)
     {

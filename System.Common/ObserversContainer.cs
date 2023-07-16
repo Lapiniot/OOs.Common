@@ -88,8 +88,7 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 
     public Subscription<T> Subscribe(IObserver<T> observer)
     {
-        Verify.ThrowIfObjectDisposed(observers is null, nameof(ObserversContainer<T>));
-
+        ObjectDisposedException.ThrowIf(observers is null, this);
         return observers!.GetOrAdd(observer, static (observer, container) => new(observer, container), this);
     }
 
