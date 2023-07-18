@@ -82,7 +82,7 @@ public sealed class AsyncSemaphore
     {
         if (!TryRelease(releaseCount))
         {
-            ThrowSemaphoreFull();
+            ThrowHelper.ThrowSemaphoreFull();
         }
     }
 
@@ -149,9 +149,6 @@ public sealed class AsyncSemaphore
         if (tail == waiter) tail = null;
         return true;
     }
-
-    [DoesNotReturn]
-    private static void ThrowSemaphoreFull() => throw new SemaphoreFullException();
 
     private sealed class WaiterNode : TaskCompletionSource
     {

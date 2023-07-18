@@ -46,6 +46,8 @@ internal static class ThrowHelper
         throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
 
     [DoesNotReturn]
-    public static void ThrowObjectDisposed(string objectName) =>
-        throw new ObjectDisposedException(objectName);
+    public static void ThrowInvalidOperation() => throw new InvalidOperationException();
+
+    [DoesNotReturn]
+    public static void ThrowSemaphoreFull() => throw new SemaphoreFullException();
 }
