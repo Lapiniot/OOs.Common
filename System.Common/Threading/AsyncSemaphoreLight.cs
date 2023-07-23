@@ -1,4 +1,8 @@
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Threading.Tasks.Sources;
+
+#nullable enable
 
 namespace System.Threading;
 
@@ -10,8 +14,9 @@ namespace System.Threading;
 /// <remarks>
 /// Do not use this implementation for other scenarious where concurrent calls to <see cref="WaitAsync(CancellationToken)"/> are potentially possible.
 /// </remarks>
-public sealed class AsyncSemaphoreLight : IValueTaskSource
+public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentationMetrics
 {
+    private static long waitingCount;
     private readonly int maxCount;
     private readonly object syncRoot;
     private int currentCount;
@@ -38,7 +43,7 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource
 
     void IValueTaskSource.GetResult(short token) => mrvtsc.GetResult(token);
     ValueTaskSourceStatus IValueTaskSource.GetStatus(short token) => mrvtsc.GetStatus(token);
-    void IValueTaskSource.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags) =>
+    void IValueTaskSource.OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags) =>
         mrvtsc.OnCompleted(continuation, state, token, flags);
 
     #endregion
@@ -95,6 +100,11 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource
 
         ValueTask WaitCoreAsync(CancellationToken cancellationToken)
         {
+            if (RuntimeSettings.ThreadingInstrumentationSupport)
+            {
+                Interlocked.Increment(ref waitingCount);
+            }
+
             waiting = true;
             mrvtsc.Reset();
             if (cancellationToken.CanBeCanceled)
@@ -104,7 +114,19 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource
 
             return new ValueTask(this, mrvtsc.Version);
 
-            void CancelCallback(object state, CancellationToken token) => ((AsyncSemaphoreLight)state!).Cancel(token);
+            static void CancelCallback(object? state, CancellationToken token) => ((AsyncSemaphoreLight)state!).Cancel(token);
         }
+    }
+
+    public static IDisposable? EnableInstrumentation(string? meterName = null)
+    {
+        if (RuntimeSettings.ThreadingInstrumentationSupport)
+        {
+            var meter = new Meter(meterName ?? "System.Threading.AsyncSemaphoreLight");
+            meter.CreateObservableGauge("waiting-count", static () => waitingCount, description: "Number of asynchronous waits");
+            return meter;
+        }
+
+        return null;
     }
 }

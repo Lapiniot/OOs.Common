@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 using static System.Threading.Tasks.TaskCreationOptions;
 
@@ -6,8 +8,9 @@ namespace System.Threading;
 
 #nullable enable
 
-public sealed class AsyncSemaphore
+public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 {
+    private static long waitingCount;
     private readonly int maxCount;
     private readonly bool runContinuationsAsynchronously;
     private readonly object syncRoot;
@@ -47,6 +50,11 @@ public sealed class AsyncSemaphore
         {
             if (--currentCount >= 0)
                 return Task.CompletedTask;
+
+            if (RuntimeSettings.ThreadingInstrumentationSupport)
+            {
+                Interlocked.Increment(ref waitingCount);
+            }
 
             var waiter = new WaiterNode(runContinuationsAsynchronously);
 
@@ -159,5 +167,17 @@ public sealed class AsyncSemaphore
         public WaiterNode? Next { get; set; }
         public WaiterNode? Prev { get; set; }
         public CancellationTokenRegistration CtReg { get; set; }
+    }
+
+    public static IDisposable? EnableInstrumentation(string? meterName = null)
+    {
+        if (RuntimeSettings.ThreadingInstrumentationSupport)
+        {
+            var meter = new Meter(meterName ?? "System.Threading.AsyncSemaphore");
+            meter.CreateObservableGauge("waiting-count", static () => waitingCount, description: "Number of asynchronous waits");
+            return meter;
+        }
+
+        return null;
     }
 }
