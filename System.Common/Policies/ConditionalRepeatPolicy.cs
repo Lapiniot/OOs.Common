@@ -2,12 +2,8 @@
 
 public delegate bool RepeatCondition(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
 
-public sealed class ConditionalRepeatPolicy : RepeatPolicy
+public sealed class ConditionalRepeatPolicy(IEnumerable<RepeatCondition> conditions) : RepeatPolicy
 {
-    private readonly IEnumerable<RepeatCondition> conditions;
-
-    public ConditionalRepeatPolicy(IEnumerable<RepeatCondition> conditions) => this.conditions = conditions;
-
     #region Overrides of RetryPolicy
 
     protected override bool ShouldRepeat(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay)

@@ -158,12 +158,9 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
         return true;
     }
 
-    private sealed class WaiterNode : TaskCompletionSource
+    private sealed class WaiterNode(bool runContinuationsAsynchronously) :
+        TaskCompletionSource(runContinuationsAsynchronously ? RunContinuationsAsynchronously : None)
     {
-        public WaiterNode(bool runContinuationsAsynchronously) :
-            base(runContinuationsAsynchronously ? RunContinuationsAsynchronously : None)
-        { }
-
         public WaiterNode? Next { get; set; }
         public WaiterNode? Prev { get; set; }
         public CancellationTokenRegistration CtReg { get; set; }

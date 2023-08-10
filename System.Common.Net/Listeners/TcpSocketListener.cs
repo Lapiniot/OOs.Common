@@ -3,14 +3,10 @@ using System.Net.Sockets;
 
 namespace System.Net.Listeners;
 
-public sealed class TcpSocketListener : TcpSocketListenerBase
+public sealed class TcpSocketListener(IPEndPoint endPoint, int backlog = 100,
+    Action<Socket> configureListening = null, Action<Socket> configureAccepted = null) :
+    TcpSocketListenerBase(endPoint, backlog, configureListening, configureAccepted)
 {
-    public TcpSocketListener(IPEndPoint endPoint, int backlog = 100,
-        Action<Socket> configureListening = null,
-        Action<Socket> configureAccepted = null) :
-        base(endPoint, backlog, configureListening, configureAccepted)
-    { }
-
     protected override NetworkConnection CreateConnection(Socket acceptedSocket) =>
         new TcpSocketServerConnection(acceptedSocket);
 

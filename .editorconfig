@@ -65,8 +65,6 @@ dotnet_diagnostic.CA1001.severity = error
 dotnet_diagnostic.CA1200.severity = warning
 # CA2252: Opt in to preview features before using them
 dotnet_diagnostic.CA2252.severity = none
-# IDE0290: Use primary constructor
-dotnet_diagnostic.IDE0290.severity = none
 
 #### Naming styles ####
 

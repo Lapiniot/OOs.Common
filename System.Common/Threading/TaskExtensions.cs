@@ -1,6 +1,6 @@
 namespace System.Threading;
 
-#pragma warning disable CA1031
+#pragma warning disable CA1031, CA1822
 
 public static class TaskExtensions
 {
@@ -38,17 +38,8 @@ public static class TaskExtensions
         }
     }
 
-    private sealed class ReportErrorContinuationContext
+    private sealed class ReportErrorContinuationContext(Task task, Action<Exception> onError)
     {
-        private readonly Task task;
-        private readonly Action<Exception> onError;
-
-        public ReportErrorContinuationContext(Task task, Action<Exception> onError)
-        {
-            this.task = task;
-            this.onError = onError;
-        }
-
         public void OnCompleted()
         {
             if (task.Exception is { } ex)
@@ -65,12 +56,8 @@ public static class TaskExtensions
         }
     }
 
-    private sealed class DiscardErrorContinuationContext
+    private sealed class DiscardErrorContinuationContext(Task task)
     {
-        private readonly Task task;
-
-        public DiscardErrorContinuationContext(Task task) => this.task = task;
-
         public void OnCompleted() => _ = task.Exception;
     }
 }

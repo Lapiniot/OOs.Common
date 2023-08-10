@@ -2,11 +2,8 @@
 
 namespace System.Net.Connections;
 
-public sealed class UnixDomainSocketServerConnection : SocketConnection
+public sealed class UnixDomainSocketServerConnection(Socket acceptedSocket) : SocketConnection(acceptedSocket)
 {
-    public UnixDomainSocketServerConnection(Socket acceptedSocket) : base(acceptedSocket)
-    { }
-
     protected override Task StartingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     public override string ToString() => $"{Id}-UD";

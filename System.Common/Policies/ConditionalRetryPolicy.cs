@@ -1,11 +1,7 @@
 namespace System.Policies;
 
-public sealed class ConditionalRetryPolicy : RetryPolicy
+public sealed class ConditionalRetryPolicy(IEnumerable<RepeatCondition> conditions) : RetryPolicy
 {
-    private readonly IEnumerable<RepeatCondition> conditions;
-
-    public ConditionalRetryPolicy(IEnumerable<RepeatCondition> conditions) => this.conditions = conditions;
-
     #region Overrides of RetryPolicy
 
     protected override bool ShouldRetry(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay)

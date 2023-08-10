@@ -2,17 +2,8 @@
 
 namespace System.Net.Connections;
 
-public class WebSocketServerConnection : WebSocketConnection<WebSocket>
+public class WebSocketServerConnection(WebSocket socket, EndPoint localEndPoint, EndPoint remoteEndPoint) : WebSocketConnection<WebSocket>(socket)
 {
-    private readonly EndPoint localEndPoint;
-    private readonly EndPoint remoteEndPoint;
-
-    public WebSocketServerConnection(WebSocket socket, EndPoint localEndPoint, EndPoint remoteEndPoint) : base(socket)
-    {
-        this.localEndPoint = localEndPoint;
-        this.remoteEndPoint = remoteEndPoint;
-    }
-
     public sealed override EndPoint LocalEndPoint => localEndPoint;
 
     public sealed override EndPoint RemoteEndPoint => remoteEndPoint;

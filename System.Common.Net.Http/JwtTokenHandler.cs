@@ -7,13 +7,10 @@ using static System.Text.Encoding;
 
 namespace System.Net.Http;
 
-public class JwtTokenHandler : IDisposable
+public class JwtTokenHandler(byte[] publicKey, byte[] privateKey) : IDisposable
 {
-    private readonly ECDsa ecdsa;
+    private readonly ECDsa ecdsa = ECDsa.Create(CryptoExtensions.ImportECParameters(publicKey, privateKey));
     private bool disposed;
-
-    public JwtTokenHandler(byte[] publicKey, byte[] privateKey) =>
-        ecdsa = ECDsa.Create(CryptoExtensions.ImportECParameters(publicKey, privateKey));
 
     public string Serialize(JwtToken token)
     {

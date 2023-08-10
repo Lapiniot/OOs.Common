@@ -4,9 +4,8 @@ using System.Globalization;
 namespace System.Diagnostics;
 
 [CLSCompliant(false)]
-public class RuntimeCountersListener : EventListener
+public class RuntimeCountersListener(int updateIntervalSec = 1) : EventListener
 {
-    private readonly int updateIntervalSec;
     private EventSource source;
 
     public double CpuUsage { get; private set; }
@@ -21,8 +20,6 @@ public class RuntimeCountersListener : EventListener
     public int ThreadPoolThreadCount { get; private set; }
     public int ThreadPoolQueueLength { get; private set; }
     public int ThreadPoolCompletedItemsCount { get; private set; }
-
-    public RuntimeCountersListener(int updateIntervalSec = 1) => this.updateIntervalSec = updateIntervalSec;
 
     protected override void OnEventSourceCreated(EventSource eventSource)
     {

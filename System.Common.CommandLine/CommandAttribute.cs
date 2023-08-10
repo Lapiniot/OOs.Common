@@ -1,11 +1,9 @@
 ﻿namespace System.Common.CommandLine;
 
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-public sealed class CommandAttribute : Attribute, ICommandMetadata
+public sealed class CommandAttribute(string name) : Attribute, ICommandMetadata
 {
-    public CommandAttribute(string name) => Name = name;
-
-    public string Name { get; }
+    public string Name { get; } = name;
 
     public bool IsDefault { get; set; }
 }

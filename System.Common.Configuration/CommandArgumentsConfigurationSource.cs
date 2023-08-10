@@ -2,17 +2,8 @@
 
 namespace System.Configuration;
 
-public class CommandArgumentsConfigurationSource : IConfigurationSource
+public class CommandArgumentsConfigurationSource(string[] args, bool strict) : IConfigurationSource
 {
-    private readonly string[] args;
-    private readonly bool strict;
-
-    public CommandArgumentsConfigurationSource(string[] args, bool strict)
-    {
-        this.args = args;
-        this.strict = strict;
-    }
-
     public IConfigurationProvider Build(IConfigurationBuilder builder) =>
         new CommandArgumentsConfigurationProvider(args, "args", strict);
 }

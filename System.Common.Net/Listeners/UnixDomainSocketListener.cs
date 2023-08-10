@@ -3,14 +3,10 @@ using System.Net.Sockets;
 
 namespace System.Net.Listeners;
 
-public sealed class UnixDomainSocketListener : SocketListener
+public sealed class UnixDomainSocketListener(UnixDomainSocketEndPoint endPoint, int backlog = 100,
+    Action<Socket> configureListening = null, Action<Socket> configureAccepted = null) :
+    SocketListener(endPoint, backlog, configureListening, configureAccepted)
 {
-    public UnixDomainSocketListener(UnixDomainSocketEndPoint endPoint, int backlog = 100,
-        Action<Socket> configureListening = null,
-        Action<Socket> configureAccepted = null) :
-        base(endPoint, backlog, configureListening, configureAccepted)
-    { }
-
     protected override Socket CreateSocket()
     {
         var path = EndPoint.ToString();

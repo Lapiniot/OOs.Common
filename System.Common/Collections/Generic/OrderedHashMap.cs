@@ -108,20 +108,12 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
         }
     }
 
-    private sealed class Node
+    private sealed class Node(TKey key, TValue value, Node prev, Node next)
     {
-        public Node(TKey key, TValue value, Node prev, Node next)
-        {
-            Key = key;
-            Value = value;
-            Prev = prev;
-            Next = next;
-        }
-
-        public TKey Key { get; }
-        public TValue Value { get; set; }
-        public Node Prev { get; set; }
-        public Node Next { get; set; }
+        public TKey Key { get; } = key;
+        public TValue Value { get; set; } = value;
+        public Node Prev { get; set; } = prev;
+        public Node Next { get; set; } = next;
     }
 
     #region Implementation of IEnumerable
