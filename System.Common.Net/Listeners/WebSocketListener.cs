@@ -37,7 +37,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
 
     private sealed class WebSocketEnumerator : IAsyncEnumerator<NetworkConnection>
     {
-        private static readonly char[] Separators = { ' ', ',' };
+        private static readonly char[] Separators = [' ', ','];
         private readonly CancellationToken cancellationToken;
         private readonly TimeSpan keepAliveInterval;
         private readonly HttpListener listener;

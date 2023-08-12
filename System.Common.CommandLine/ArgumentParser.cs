@@ -6,8 +6,8 @@ namespace System.Common.CommandLine;
 
 public class ArgumentParser
 {
-    private static readonly char[] Quotes = { '"', '\'' };
-    private static readonly char[] Separator = { '=' };
+    private static readonly char[] Quotes = ['"', '\''];
+    private static readonly char[] Separator = ['='];
 
     private readonly IEnumerable<ICommandMetadata> commands;
     private readonly IEnumerable<IArgumentMetadata> schema;

@@ -9,12 +9,7 @@ public class TryGetLineShould
     [TestMethod]
     public void ReturnTrueAndLineGivenValidSingleSegmentSequence()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[]
-        {
-            0x00, 0x11, 0x22, 0x33,
-            (byte)'\r', (byte)'\n',
-            0x33, 0x22, 0x11, 0x00
-        });
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x11, 0x22, 0x33, (byte)'\r', (byte)'\n', 0x33, 0x22, 0x11, 0x00]);
 
         var actual = sequence.TryReadLine(out var line);
 
@@ -126,7 +121,7 @@ public class TryGetLineShould
     [TestMethod]
     public void ReturnFalseAndEmptyLineGivenInvalidSingleSegmentSequenceCase1()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x11, 0x22, 0x33, 0x33, 0x22, 0x11, 0x00 });
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x11, 0x22, 0x33, 0x33, 0x22, 0x11, 0x00]);
 
         var actual = sequence.TryReadLine(out var line);
 
@@ -137,7 +132,7 @@ public class TryGetLineShould
     [TestMethod]
     public void ReturnFalseAndEmptyLineGivenInvalidSingleSegmentSequenceCase2()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x11, 0x22, 0x33, (byte)'\r', 0x00, 0x33, 0x22, 0x11, 0x00 });
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x11, 0x22, 0x33, (byte)'\r', 0x00, 0x33, 0x22, 0x11, 0x00]);
 
         var actual = sequence.TryReadLine(out var line);
 
@@ -148,7 +143,7 @@ public class TryGetLineShould
     [TestMethod]
     public void ReturnFalseAndEmptyLineGivenInvalidSingleSegmentSequenceCase3()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x11, 0x22, 0x33, (byte)'\n', 0x00, 0x33, 0x22, 0x11, 0x00 });
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x11, 0x22, 0x33, (byte)'\n', 0x00, 0x33, 0x22, 0x11, 0x00]);
 
         var actual = sequence.TryReadLine(out var line);
 
@@ -159,7 +154,7 @@ public class TryGetLineShould
     [TestMethod]
     public void ReturnFalseAndEmptyLineGivenInvalidSingleSegmentSequenceCase4()
     {
-        var sequence = new ReadOnlySequence<byte>(new byte[] { 0x00, 0x11, 0x22, 0x33, (byte)'\r', 0x00, (byte)'\n', 0x33, 0x22, 0x11, 0x00 });
+        var sequence = new ReadOnlySequence<byte>([0x00, 0x11, 0x22, 0x33, (byte)'\r', 0x00, (byte)'\n', 0x33, 0x22, 0x11, 0x00]);
 
         var actual = sequence.TryReadLine(out var line);
 

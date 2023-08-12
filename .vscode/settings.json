@@ -7,5 +7,6 @@
         "**/*.sln": true
     },
     "omnisharp.enableRoslynAnalyzers": true,
-    "dotnet.defaultSolution": "System.Common.sln"
+    "dotnet.defaultSolution": "System.Common.sln",
+    "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "openFiles"
 }
