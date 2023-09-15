@@ -28,14 +28,14 @@ public class Arguments
         var schema = Assembly.GetEntryAssembly()?
             .GetCustomAttributes<ArgumentAttribute>()
             .Distinct(argumentByNameComparer)
-            .ToArray() ?? Array.Empty<ArgumentAttribute>();
+            .ToArray() ?? [];
 
         var commandByNameComparer = new EqualityComparerAdapter<CommandAttribute>((c1, c2) =>
             string.Equals(c1.Name, c2.Name, StringComparison.OrdinalIgnoreCase));
         var commands = Assembly.GetEntryAssembly()?
             .GetCustomAttributes<CommandAttribute>()
             .Distinct(commandByNameComparer)
-            .ToArray() ?? Array.Empty<CommandAttribute>();
+            .ToArray() ?? [];
 
         var parser = new ArgumentParser(commands, schema, strict);
 

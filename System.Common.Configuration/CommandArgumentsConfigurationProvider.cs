@@ -17,7 +17,7 @@ public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvide
     {
         ArgumentNullException.ThrowIfNull(args);
         this.args = args;
-        prefix = !string.IsNullOrEmpty(sectionName) ? !sectionName.EndsWith(":", StringComparison.InvariantCultureIgnoreCase) ? sectionName + ":" : sectionName : "args:";
+        prefix = !string.IsNullOrEmpty(sectionName) ? !sectionName.EndsWith(':') ? sectionName + ":" : sectionName : "args:";
         this.strict = strict;
     }
 

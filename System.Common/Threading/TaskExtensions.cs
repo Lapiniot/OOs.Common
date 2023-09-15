@@ -1,6 +1,6 @@
 namespace System.Threading;
 
-#pragma warning disable CA1031, CA1822
+#pragma warning disable CA1031
 
 public static class TaskExtensions
 {
