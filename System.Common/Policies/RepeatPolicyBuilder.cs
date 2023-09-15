@@ -10,7 +10,7 @@ public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition>
     /// Creates new instance of the repeat policy
     /// </summary>
     /// <returns>New instance of the policy</returns>
-    public IRepeatPolicy Build() => new ConditionalRepeatPolicy((Conditions ?? ImmutableList<RepeatCondition>.Empty).ToArray());
+    public IRepeatPolicy Build() => new ConditionalRepeatPolicy((Conditions ?? []).ToArray());
 
     /// <summary>
     /// Appends custom repeat condition handler to the current instance of the builder
@@ -18,7 +18,7 @@ public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition>
     /// <param name="condition">Condition to add</param>
     /// <returns>New instance of the builder</returns>
     public RepeatPolicyBuilder WithCondition(RepeatCondition condition) =>
-        new((Conditions ?? ImmutableList<RepeatCondition>.Empty).Add(condition));
+        new((Conditions ?? []).Add(condition));
 
     /// <summary>
     /// Appends repeat threshold condition to the current instance of the builder
