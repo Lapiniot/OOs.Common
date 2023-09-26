@@ -17,10 +17,10 @@ public sealed class AsyncCountdownEvent
     /// Initializes new instance of <see cref="AsyncCountdownEvent"/>.
     /// </summary>
     /// <param name="signalCount">The number of signals initially required to set the event.</param>
-    /// <exception cref="ArgumentOutOfRangeException">When the value of <paramref name="signalCount"/> is less or equal to zero.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">When the value of <paramref name="signalCount"/> is negative.</exception>
     public AsyncCountdownEvent(int signalCount)
     {
-        Verify.ThrowIfLess(signalCount, 0);
+        ArgumentOutOfRangeException.ThrowIfNegative(signalCount);
         currentCount = initialCount = signalCount;
         completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
         if (currentCount is 0)
@@ -64,7 +64,7 @@ public sealed class AsyncCountdownEvent
     /// <remarks>Method is thread-safe.</remarks>
     public void AddCount(int signalCount)
     {
-        Verify.ThrowIfLessOrEqual(signalCount, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(signalCount, 0);
 
         var sw = new SpinWait();
 
@@ -121,7 +121,7 @@ public sealed class AsyncCountdownEvent
     /// <remarks>Method is thread-safe.</remarks>
     public bool Signal(int signalCount)
     {
-        Verify.ThrowIfLessOrEqual(signalCount, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(signalCount, 0);
 
         var sw = new SpinWait();
 
@@ -163,11 +163,11 @@ public sealed class AsyncCountdownEvent
     /// Resets the <see cref="CurrentCount"/> to a specified <paramref name="signalCount"/> value.
     /// </summary>
     /// <param name="signalCount">The number of signals required to set the event.</param>
-    /// <exception cref="ArgumentOutOfRangeException">When <paramref name="signalCount"/> is less than zero.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">When <paramref name="signalCount"/> is negative.</exception>
     /// <remarks>Attention: method is not thread-safe.</remarks>
     public void Reset(int signalCount)
     {
-        Verify.ThrowIfLess(signalCount, 0);
+        ArgumentOutOfRangeException.ThrowIfNegative(signalCount);
 
         currentCount = initialCount = signalCount;
 

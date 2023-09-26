@@ -5,7 +5,7 @@ public sealed class ArgumentAttribute : Attribute, IArgumentMetadata
 {
     public ArgumentAttribute(string name, Type type)
     {
-        Verify.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(type);
 
         Name = name;

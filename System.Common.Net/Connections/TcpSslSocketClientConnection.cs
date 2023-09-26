@@ -16,7 +16,7 @@ public sealed class TcpSslSocketClientConnection : TcpSslSocketConnection
         SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null) :
         base(remoteEndPoint)
     {
-        Verify.ThrowIfNullOrEmpty(machineName);
+        ArgumentException.ThrowIfNullOrEmpty(machineName);
 
         this.machineName = machineName;
         this.enabledSslProtocols = enabledSslProtocols;
@@ -26,7 +26,7 @@ public sealed class TcpSslSocketClientConnection : TcpSslSocketConnection
     public TcpSslSocketClientConnection(string hostNameOrAddress, int port, string machineName = null,
         SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null)
     {
-        Verify.ThrowIfNullOrEmpty(hostNameOrAddress);
+        ArgumentException.ThrowIfNullOrEmpty(hostNameOrAddress);
 
         this.hostNameOrAddress = hostNameOrAddress;
         this.port = port;

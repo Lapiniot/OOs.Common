@@ -22,7 +22,7 @@ public static class RandomString
 
     public static string Generate(int length, string alphabet)
     {
-        Verify.ThrowIfNullOrEmpty(alphabet);
+        ArgumentException.ThrowIfNullOrWhiteSpace(alphabet);
 
         var bytes = length <= 256 ? stackalloc byte[length] : new byte[length];
 

@@ -26,8 +26,9 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
 
     public AsyncSemaphoreLight(int initialCount, int maxCount = int.MaxValue, bool runContinuationsAsynchronously = true)
     {
-        Verify.ThrowIfLessOrEqual(maxCount, 0);
-        Verify.ThrowIfNotInRange(initialCount, 0, maxCount);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxCount, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThan(initialCount, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCount, maxCount);
 
         this.maxCount = maxCount;
         currentCount = initialCount;

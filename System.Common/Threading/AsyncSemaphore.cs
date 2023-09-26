@@ -20,8 +20,9 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 
     public AsyncSemaphore(int initialCount, int maxCount = int.MaxValue, bool runContinuationsAsynchronously = true)
     {
-        Verify.ThrowIfLessOrEqual(maxCount, 0);
-        Verify.ThrowIfNotInRange(initialCount, 0, maxCount);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxCount, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThan(initialCount, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCount, maxCount);
 
         currentCount = initialCount;
         this.maxCount = maxCount;
@@ -94,7 +95,7 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 
     public bool TryRelease(int releaseCount)
     {
-        Verify.ThrowIfLess(releaseCount, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(releaseCount, 1);
 
         lock (syncRoot)
         {

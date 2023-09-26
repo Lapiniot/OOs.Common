@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace System.IO.Pipelines;
 
 public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
@@ -21,29 +23,23 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
         outputPipe = new(outputPipeOptions ?? DefaultOptions);
     }
 
-    public Task InputCompletion
-    {
-        get
-        {
-            var current = Volatile.Read(ref inputWorker);
-            Verify.ThrowIfInvalidState(Interlocked.Read(ref stateGuard) != Started || current is null);
-            return current;
-        }
-    }
+    public Task InputCompletion => Read(ref inputWorker);
 
-    public Task OutputCompletion
-    {
-        get
-        {
-            var current = Volatile.Read(ref outputWorker);
-            Verify.ThrowIfInvalidState(Interlocked.Read(ref stateGuard) != Started || current is null);
-            return current;
-        }
-    }
+    public Task OutputCompletion => Read(ref outputWorker);
 
     public PipeReader Input => inputPipe.Reader;
 
     public PipeWriter Output => outputPipe.Writer;
+
+    private T Read<T>(ref T location, [CallerMemberName] string callerName = null) where T : class
+    {
+        if (Interlocked.Read(ref stateGuard) != Started)
+        {
+            ThrowHelper.ThrowInvalidState(callerName);
+        }
+
+        return Volatile.Read(ref location);
+    }
 
     public void Start()
     {

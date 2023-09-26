@@ -9,7 +9,7 @@ public sealed class ObjectPool<T> where T : class, new()
 
     public ObjectPool(int capacity = 32)
     {
-        Verify.ThrowIfLessOrEqual(capacity, 0);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         this.capacity = capacity;
         bag = new();
     }

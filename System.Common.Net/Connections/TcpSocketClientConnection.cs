@@ -10,7 +10,7 @@ public sealed class TcpSocketClientConnection : SocketConnection
 
     public TcpSocketClientConnection(string hostNameOrAddress, int port)
     {
-        Verify.ThrowIfNullOrEmpty(hostNameOrAddress);
+        ArgumentException.ThrowIfNullOrEmpty(hostNameOrAddress);
 
         this.hostNameOrAddress = hostNameOrAddress;
         this.port = port;

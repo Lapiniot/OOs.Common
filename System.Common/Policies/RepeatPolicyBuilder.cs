@@ -49,7 +49,7 @@ public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition>
     /// <returns>New instance of the builder</returns>
     public RepeatPolicyBuilder WithExponentialInterval(double baseSeconds, double limitSeconds)
     {
-        Verify.ThrowIfLessOrEqual(baseSeconds, 1.0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(baseSeconds, 1.0);
         return WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan delay) =>
         {
             delay = TimeSpan.FromSeconds(Math.Min(Math.Pow(baseSeconds, attempt), limitSeconds));
