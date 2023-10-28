@@ -4,7 +4,7 @@ namespace System.Memory;
 
 public sealed class GenericPool<T>
 {
-    private readonly ConcurrentBag<T> bag = new();
+    private readonly ConcurrentBag<T> bag = [];
     private readonly Func<T> factory;
     private int capacity;
 

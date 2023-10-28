@@ -6,7 +6,7 @@ public class JwtToken
 {
     private readonly Dictionary<string, string> claims;
 
-    public JwtToken() => claims = new();
+    public JwtToken() => claims = [];
 
     public JwtToken(IReadOnlyDictionary<string, string> claims) =>
         this.claims = new(claims);

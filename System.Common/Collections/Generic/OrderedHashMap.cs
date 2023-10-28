@@ -21,7 +21,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
 
     public OrderedHashMap(int capacity) => map = new(capacity);
 
-    public OrderedHashMap() => map = new();
+    public OrderedHashMap() => map = [];
 
     public bool TryGetValue(TKey key, out TValue value)
     {
