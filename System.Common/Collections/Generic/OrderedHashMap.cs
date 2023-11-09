@@ -82,7 +82,6 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddOrUpdateInternal(TKey key, TValue value)
     {
         ref var node = ref CollectionsMarshal.GetValueRefOrAddDefault(map, key, out var exists);
@@ -177,7 +176,6 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReleaseLock()
         {
             if (!locked) return;

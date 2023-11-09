@@ -1,10 +1,7 @@
-using System.Runtime.CompilerServices;
-
 namespace System;
 
 public static class Base32
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToBase32String(long value) => string.Create(13, value, WriteBuffer);
 
     private static void WriteBuffer(Span<char> span, long value)

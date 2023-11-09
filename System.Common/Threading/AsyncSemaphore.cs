@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
-using System.Runtime.CompilerServices;
 using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace System.Threading;
@@ -83,7 +82,6 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
         waiter.CtReg.Dispose();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Release() => Release(1);
 
     public void Release(int releaseCount)

@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
 namespace System.Net.Http;
@@ -33,7 +32,6 @@ public static class CryptoExtensions
         return ExportP256DHPublicKey(ecdh.PublicKey);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ECParameters ImportECParameters(byte[] publicKey, byte[] privateKey) =>
         new()
         {
@@ -42,11 +40,9 @@ public static class CryptoExtensions
             D = privateKey
         };
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (byte[] PublicKey, byte[] PrivateKey) ExportECParameters(ECParameters parameters) =>
         (GetBytes(parameters.Q), parameters.D);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ECPoint GetECPoint(byte[] publicKey) =>
         publicKey is null
             ? new()
@@ -56,7 +52,6 @@ public static class CryptoExtensions
                 Y = publicKey.AsSpan(33, 32).ToArray()
             };
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] GetBytes(ECPoint point)
     {
         var buffer = new byte[65];
