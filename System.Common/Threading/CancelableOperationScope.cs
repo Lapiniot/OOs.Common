@@ -52,7 +52,7 @@ public sealed class CancelableOperationScope : IAsyncCancelable
         {
             try
             {
-                localCts.Cancel();
+                await localCts.CancelAsync().ConfigureAwait(false);
                 await completion.ConfigureAwait(false);
             }
             catch (OperationCanceledException) { }

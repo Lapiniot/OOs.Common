@@ -29,7 +29,7 @@ public abstract class PipeProcessor : PipeConsumerCore
     {
         using (abortTokenSource)
         {
-            abortTokenSource.Cancel();
+            await abortTokenSource.CancelAsync().ConfigureAwait(false);
             await processor.ConfigureAwait(false);
         }
     }

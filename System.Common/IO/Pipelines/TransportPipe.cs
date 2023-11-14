@@ -105,7 +105,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
                         // we are responsible for cancellation and cleanup
                         using (localCts)
                         {
-                            localCts!.Cancel();
+                            await localCts!.CancelAsync().ConfigureAwait(false);
                             try
                             {
                                 await Task.WhenAll(inputWorker, outputWorker).ConfigureAwait(false);
