@@ -70,7 +70,7 @@ public abstract class SocketConnection : NetworkConnection
 
     public override async ValueTask DisposeAsync()
     {
-        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
 
         GC.SuppressFinalize(this);
 

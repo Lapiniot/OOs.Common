@@ -33,7 +33,7 @@ public sealed class AsyncManualResetEvent
 
             // We must limit concurrent writes to the tcs field 
             // in order to avoid orphaned tasks!!!
-            if (Interlocked.CompareExchange(ref resetGuard, 1, 0) == 0)
+            if (Interlocked.Exchange(ref resetGuard, 1) == 0)
             {
                 // We acquired exclusive access to the tcs field.
                 // Update it if still needed, release guard lock and exit asap
@@ -42,7 +42,7 @@ public sealed class AsyncManualResetEvent
                     tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
                 }
 
-                Interlocked.Exchange(ref resetGuard, 0);
+                Volatile.Write(ref resetGuard, 0);
                 return;
             }
 

@@ -58,11 +58,11 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
                     globalCts = cts;
                     inputWorker = StartInputPartAsync(inputPipe.Writer, cts.Token);
                     outputWorker = StartOutputPartAsync(outputPipe.Reader, cts.Token);
-                    Interlocked.Exchange(ref stateGuard, Started);
+                    Volatile.Write(ref stateGuard, Started);
                 }
                 catch
                 {
-                    Interlocked.Exchange(ref stateGuard, Stopped);
+                    Volatile.Write(ref stateGuard, Stopped);
                     throw;
                 }
 
@@ -112,7 +112,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
                             }
                             finally
                             {
-                                Interlocked.Exchange(ref stateGuard, Stopped);
+                                Volatile.Write(ref stateGuard, Stopped);
                             }
                         }
 
@@ -213,7 +213,7 @@ public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (Interlocked.CompareExchange(ref disposed, 1, 0) != 0) return;
+        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
 
         GC.SuppressFinalize(this);
 

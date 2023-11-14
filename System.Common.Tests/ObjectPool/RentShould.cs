@@ -80,6 +80,6 @@ public class RentShould
 
         internal static int ConstructorInvocations => Volatile.Read(ref constructorInvocations);
 
-        public static void ResetCounter() => Interlocked.Exchange(ref constructorInvocations, 0);
+        public static void ResetCounter() => Volatile.Write(ref constructorInvocations, 0);
     }
 }
