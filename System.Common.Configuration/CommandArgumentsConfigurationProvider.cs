@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Common.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 
 namespace System.Configuration;
@@ -30,38 +29,13 @@ public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvide
         var arguments = Arguments.Parse(args, strict);
         var values = arguments.ProvidedValues;
 
-        // Make configuration value accessible via both original and upper camel case argument name
-        Data = values.ToDictionary(a => a.Key, a => a.Value?.ToString());
+        var data = new Dictionary<string, string>(capacity: values.Count, StringComparer.OrdinalIgnoreCase);
         foreach (var (key, value) in values)
         {
-            Data[ConvertToUpperCamelCase(key)] = value?.ToString();
+            data[key.Replace("-", "", StringComparison.OrdinalIgnoreCase)] = value?.ToString();
         }
 
-        Data["Command"] = arguments.Command;
-    }
-
-    private static string ConvertToUpperCamelCase(string key)
-    {
-        var sb = new StringBuilder();
-        var jumpCase = true;
-        foreach (var ch in key)
-        {
-            if (ch == '-')
-            {
-                jumpCase = true;
-                continue;
-            }
-
-            if (jumpCase)
-            {
-                sb.Append(char.ToUpperInvariant(ch));
-                jumpCase = false;
-                continue;
-            }
-
-            sb.Append(ch);
-        }
-
-        return sb.ToString();
+        data["Command"] = arguments.Command;
+        Data = data;
     }
 }
