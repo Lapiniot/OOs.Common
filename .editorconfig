@@ -49,8 +49,6 @@ dotnet_diagnostic.JSON002.severity = suggestion
 dotnet_diagnostic.CA1027.severity = silent
 # CA1303: Do not pass literals as localized parameters
 dotnet_diagnostic.CA1303.severity = none
-# IDE0079: Remove unnecessary suppression
-dotnet_diagnostic.IDE0079.severity = silent
 # CA1852: Seal internal types
 dotnet_diagnostic.CA1852.severity = warning
 # CA2215: Dispose methods should call base class dispose
