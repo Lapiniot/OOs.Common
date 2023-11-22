@@ -5,9 +5,9 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using static System.Text.Encoding;
 
-namespace System.Net.Http;
+namespace System.Net.Http.Jwt;
 
-public sealed class JwtTokenHandler : IDisposable
+public sealed class JwtTokenHandlerES256Alg : IJwtTokenHandler, IDisposable
 {
     // Contains Base64 encoded JWT header {"typ":"JWT","alg":"ES256"}
     private static ReadOnlySpan<byte> JwtHeaderEncoded => "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9."u8;
@@ -16,18 +16,19 @@ public sealed class JwtTokenHandler : IDisposable
     private readonly ECDsa ecdsa;
     private bool disposed;
 
-    public JwtTokenHandler(byte[] publicKey, byte[] privateKey, int initialBufferCapacity = 512)
+    public JwtTokenHandlerES256Alg(byte[] publicKey, byte[] privateKey, int initialBufferCapacity = 512)
     {
         ArgumentNullException.ThrowIfNull(publicKey);
         ArgumentNullException.ThrowIfNull(privateKey);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(initialBufferCapacity);
 
-        ecdsa = ECDsa.Create(CryptoExtensions.ImportECParameters(publicKey, privateKey));
+        ecdsa = ECDsa.Create(CryptoHelpers.ImportECParameters(publicKey, privateKey));
         this.initialBufferCapacity = initialBufferCapacity;
     }
 
     public string Write(JwtToken token)
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
         ArgumentNullException.ThrowIfNull(token);
 
         const DSASignatureFormat SignatureFormat = DSASignatureFormat.IeeeP1363FixedFieldConcatenation;
@@ -61,9 +62,7 @@ public sealed class JwtTokenHandler : IDisposable
         var dataSpan = buffer.Slice(0, dataCount - 1);
         var signatureSpan = buffer.Slice(dataCount);
         if (!ecdsa.TrySignData(dataSpan, signatureSpan, HashAlgorithmName.SHA256, SignatureFormat, out var signatureCount))
-        {
             ThrowSignatureComputeFailed();
-        }
 
         Base64.EncodeToUtf8InPlace(signatureSpan, signatureCount, out signatureCount);
         ConvertToUrlSafeInPlace(signatureSpan.Slice(0, signatureCount), out signatureCount);

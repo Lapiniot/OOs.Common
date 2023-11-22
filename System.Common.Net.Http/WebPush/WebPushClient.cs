@@ -1,33 +1,33 @@
 using System.Buffers.Binary;
 using System.Globalization;
+using System.Net.Http.Jwt;
 using System.Security.Cryptography;
 using static System.Text.Encoding;
 
-namespace System.Net.Http;
+namespace System.Net.Http.WebPush;
 
-public class WebPushClient : IDisposable
+public class WebPushClient
 {
     private readonly HttpClient client;
     private readonly string cryptoKey;
-    private readonly int expires;
-    private readonly string subject;
-    private readonly JwtTokenHandler tokenHandler;
-    private bool disposed;
+    private readonly int jwtExpiresSeconds;
+    private readonly string jwtSubject;
+    private readonly IJwtTokenHandler jwtTokenHandler;
 
-    public WebPushClient(HttpClient client, byte[] publicKey, byte[] privateKey, string jwtSubject, int jwtExpires)
+    public WebPushClient(HttpClient client, byte[] serverPublicKey, IJwtTokenHandler jwtTokenHandler, string jwtSubject, int jwtExpiresSeconds)
     {
         ArgumentNullException.ThrowIfNull(client);
-        ArgumentNullException.ThrowIfNull(publicKey);
-        ArgumentNullException.ThrowIfNull(privateKey);
+        ArgumentNullException.ThrowIfNull(serverPublicKey);
+        ArgumentNullException.ThrowIfNull(jwtTokenHandler);
         ArgumentNullException.ThrowIfNull(jwtSubject);
         ArgumentOutOfRangeException.ThrowIfZero(jwtSubject.Length);
-        ArgumentOutOfRangeException.ThrowIfLessThan(jwtExpires, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(jwtExpiresSeconds, 1);
 
         this.client = client;
-        subject = jwtSubject;
-        expires = jwtExpires;
-        tokenHandler = new(publicKey, privateKey);
-        cryptoKey = Encoders.ToBase64String(publicKey);
+        this.jwtTokenHandler = jwtTokenHandler;
+        this.jwtSubject = jwtSubject;
+        this.jwtExpiresSeconds = jwtExpiresSeconds;
+        cryptoKey = Encoders.ToBase64String(serverPublicKey);
     }
 
     public async Task SendAsync(Uri endpoint, byte[] clientPublicKey, byte[] authKey, byte[] payload, int ttl, CancellationToken cancellationToken)
@@ -41,15 +41,15 @@ public class WebPushClient : IDisposable
         var token = new JwtToken
         {
             Audience = endpoint.GetComponents(UriComponents.SchemeAndServer, UriFormat.SafeUnescaped),
-            Subject = subject,
-            Expires = DateTimeOffset.UtcNow.AddSeconds(expires)
+            Subject = jwtSubject,
+            Expires = DateTimeOffset.UtcNow.AddSeconds(jwtExpiresSeconds)
         };
 
-        var salt = CryptoExtensions.GenerateSalt(16);
+        var salt = CryptoHelpers.GenerateSalt(16);
         var (serverPublicKey, derivedKeyMaterial) = GenerateServerKeys(clientPublicKey, authKey);
         var prk = GeneratePseudoRandomKey(derivedKeyMaterial);
-        var encryptionKey = CryptoExtensions.ComputeHKDF(salt, prk, CreateInfo("aesgcm", clientPublicKey, serverPublicKey), 16);
-        var nonce = CryptoExtensions.ComputeHKDF(salt, prk, CreateInfo("nonce", clientPublicKey, serverPublicKey), 12);
+        var encryptionKey = CryptoHelpers.ComputeHKDF(salt, prk, CreateInfo("aesgcm", clientPublicKey, serverPublicKey), 16);
+        var nonce = CryptoHelpers.ComputeHKDF(salt, prk, CreateInfo("nonce", clientPublicKey, serverPublicKey), 12);
         var data = GetPayloadWithPadding(payload);
         var encrypted = EncryptPayload(data, encryptionKey, nonce);
 
@@ -58,7 +58,7 @@ public class WebPushClient : IDisposable
         {
             Headers =
             {
-                { "Authorization", $"WebPush {tokenHandler.Write(token)}" },
+                { "Authorization", $"WebPush {jwtTokenHandler.Write(token)}" },
                 { "Encryption", $"salt={Encoders.ToBase64String(salt)}" },
                 { "Crypto-Key", $"dh={Encoders.ToBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}" },
                 { "TTL", ttl.ToString(CultureInfo.InvariantCulture) }
@@ -93,8 +93,8 @@ public class WebPushClient : IDisposable
     {
         using var ecdh = ECDiffieHellman.Create();
         ecdh.GenerateKey(ECCurve.NamedCurves.nistP256);
-        var publicKey = ecdh.ExportP256DHPublicKey();
-        var keyMaterial = ecdh.DeriveKeyFromHmac(otherPartyPublicKey, hmacKey);
+        var publicKey = CryptoHelpers.GetBytes(ecdh.PublicKey.ExportParameters().Q);
+        var keyMaterial = CryptoHelpers.DeriveKeyFromHmac(ecdh, otherPartyPublicKey, hmacKey);
         return (publicKey, keyMaterial);
     }
 
@@ -136,26 +136,4 @@ public class WebPushClient : IDisposable
         serverPublicKey.CopyTo(span.Slice(29 + len + clientPublicKey.Length));
         return buffer;
     }
-
-    #region Implementation of IDisposable
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposed) return;
-
-        if (disposing)
-        {
-            tokenHandler.Dispose();
-        }
-
-        disposed = true;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    #endregion
 }

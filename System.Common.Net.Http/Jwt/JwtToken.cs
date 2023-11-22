@@ -1,4 +1,4 @@
-namespace System.Net.Http;
+namespace System.Net.Http.Jwt;
 
 public sealed class JwtToken
 {

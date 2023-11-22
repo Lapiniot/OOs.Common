@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 
 namespace System.Net.Http;
 
-public static class CryptoExtensions
+internal static class CryptoHelpers
 {
     public static byte[] GenerateSalt(int size)
     {
@@ -17,40 +17,13 @@ public static class CryptoExtensions
         return ecdh.PublicKey;
     }
 
-    public static byte[] ExportP256DHPublicKey(ECDiffieHellmanPublicKey publicKey)
-    {
-        ArgumentNullException.ThrowIfNull(publicKey);
-
-        var parameters = publicKey.ExportParameters();
-        return GetBytes(parameters.Q);
-    }
-
-    public static byte[] ExportP256DHPublicKey(this ECDiffieHellman ecdh)
-    {
-        ArgumentNullException.ThrowIfNull(ecdh);
-
-        return ExportP256DHPublicKey(ecdh.PublicKey);
-    }
-
     public static ECParameters ImportECParameters(byte[] publicKey, byte[] privateKey) =>
         new()
         {
             Curve = ECCurve.NamedCurves.nistP256,
-            Q = GetECPoint(publicKey),
+            Q = new ECPoint { X = publicKey.AsSpan(1, 32).ToArray(), Y = publicKey.AsSpan(33, 32).ToArray() },
             D = privateKey
         };
-
-    public static (byte[] PublicKey, byte[] PrivateKey) ExportECParameters(ECParameters parameters) =>
-        (GetBytes(parameters.Q), parameters.D);
-
-    public static ECPoint GetECPoint(byte[] publicKey) =>
-        publicKey is null
-            ? new()
-            : new ECPoint
-            {
-                X = publicKey.AsSpan(1, 32).ToArray(),
-                Y = publicKey.AsSpan(33, 32).ToArray()
-            };
 
     public static byte[] GetBytes(ECPoint point)
     {
@@ -61,7 +34,7 @@ public static class CryptoExtensions
         return buffer;
     }
 
-    public static byte[] DeriveKeyFromHmac(this ECDiffieHellman ecdh, byte[] otherPartyPublicKey, byte[] hmacKey)
+    public static byte[] DeriveKeyFromHmac(ECDiffieHellman ecdh, byte[] otherPartyPublicKey, byte[] hmacKey)
     {
         ArgumentNullException.ThrowIfNull(ecdh);
         ArgumentNullException.ThrowIfNull(otherPartyPublicKey);
@@ -83,12 +56,5 @@ public static class CryptoExtensions
         hmac.Key = key;
         hmac.Initialize();
         return hmac.ComputeHash(buffer).AsSpan(0, length).ToArray();
-    }
-
-    public static (byte[] PublicKey, byte[] PrivateKey) GenerateP256ECKeys()
-    {
-        using var ecdh = ECDiffieHellman.Create();
-        ecdh.GenerateKey(ECCurve.NamedCurves.nistP256);
-        return ExportECParameters(ecdh.ExportParameters(true));
     }
 }
