@@ -1,41 +1,36 @@
-using System.Globalization;
-
 namespace System.Net.Http;
 
-public class JwtToken
+public sealed class JwtToken
 {
-    private readonly Dictionary<string, string> claims;
+    private readonly Dictionary<string, object> claims;
 
     public JwtToken() => claims = [];
 
-    public JwtToken(IReadOnlyDictionary<string, string> claims) =>
-        this.claims = new(claims);
+    public JwtToken(IReadOnlyDictionary<string, object> claims) => this.claims = new(claims);
+
+    public IReadOnlyDictionary<string, object> Claims => claims;
 
     public string Issuer
     {
-        get => claims.TryGetValue("iss", out var value) ? value : null;
+        get => claims.TryGetValue("iss", out var value) ? (string)value : null;
         set => claims["iss"] = value;
     }
 
     public string Audience
     {
-        get => claims.TryGetValue("aud", out var value) ? value : null;
+        get => claims.TryGetValue("aud", out var value) ? (string)value : null;
         set => claims["aud"] = value;
     }
 
     public string Subject
     {
-        get => claims.TryGetValue("sub", out var value) ? value : null;
+        get => claims.TryGetValue("sub", out var value) ? (string)value : null;
         set => claims["sub"] = value;
     }
 
     public DateTimeOffset? Expires
     {
-        get => claims.TryGetValue("exp", out var value) && int.TryParse(value, out var seconds)
-            ? DateTimeOffset.FromUnixTimeSeconds(seconds).ToUniversalTime()
-            : null;
-        set => claims["exp"] = value?.ToUniversalTime().ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
+        get => claims.TryGetValue("exp", out var value) ? DateTimeOffset.FromUnixTimeSeconds((long)value).ToUniversalTime() : null;
+        set => claims["exp"] = value?.ToUniversalTime().ToUnixTimeSeconds();
     }
-
-    public Dictionary<string, string> Claims => claims;
 }

@@ -58,14 +58,16 @@ public class WebPushClient : IDisposable
         {
             Headers =
             {
-                { "Authorization", $"WebPush {tokenHandler.Serialize(token)}" },
+                { "Authorization", $"WebPush {tokenHandler.Write(token)}" },
                 { "Encryption", $"salt={Encoders.ToBase64String(salt)}" },
                 { "Crypto-Key", $"dh={Encoders.ToBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}" },
                 { "TTL", ttl.ToString(CultureInfo.InvariantCulture) }
             },
             Content = content
         };
+
         using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
         response.EnsureSuccessStatusCode();
     }
 

@@ -7,89 +7,99 @@ using static System.Text.Encoding;
 
 namespace System.Net.Http;
 
-public class JwtTokenHandler(byte[] publicKey, byte[] privateKey) : IDisposable
+public sealed class JwtTokenHandler : IDisposable
 {
-    private readonly ECDsa ecdsa = ECDsa.Create(CryptoExtensions.ImportECParameters(publicKey, privateKey));
+    // Contains Base64 encoded JWT header {"typ":"JWT","alg":"ES256"}
+    private static ReadOnlySpan<byte> JwtHeaderEncoded => "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9."u8;
+
+    private readonly int initialBufferCapacity;
+    private readonly ECDsa ecdsa;
     private bool disposed;
 
-    public string Serialize(JwtToken token)
+    public JwtTokenHandler(byte[] publicKey, byte[] privateKey, int initialBufferCapacity = 512)
+    {
+        ArgumentNullException.ThrowIfNull(publicKey);
+        ArgumentNullException.ThrowIfNull(privateKey);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(initialBufferCapacity);
+
+        ecdsa = ECDsa.Create(CryptoExtensions.ImportECParameters(publicKey, privateKey));
+        this.initialBufferCapacity = initialBufferCapacity;
+    }
+
+    public string Write(JwtToken token)
     {
         ArgumentNullException.ThrowIfNull(token);
 
         const DSASignatureFormat SignatureFormat = DSASignatureFormat.IeeeP1363FixedFieldConcatenation;
-        var JwtInfo = /*lang=json,strict*/ """{"typ":"JWT","alg":"ES256"}"""u8;
 
-        var maxJwtDataSize = Base64.GetMaxEncodedToUtf8Length(
-            2 + token.Claims.Sum(p => 6 + UTF8.GetMaxByteCount(p.Key.Length) + UTF8.GetMaxByteCount(p.Value.Length)));
-        var maxJwtSignatureSize = Base64.GetMaxEncodedToUtf8Length(ecdsa.GetMaxSignatureSize(SignatureFormat));
+        var bufWriter = new ArrayBufferWriter<byte>(initialBufferCapacity);
 
-        // Encode JWT header part
-        var bufWriter = new ArrayBufferWriter<byte>(JwtInfo.Length + maxJwtDataSize + maxJwtSignatureSize + 2);
-        var buffer = bufWriter.GetSpan(bufWriter.FreeCapacity);
-        JwtInfo.CopyTo(buffer);
-        var total = Base64EncodeInPlace(buffer, JwtInfo.Length);
-        buffer[total++] = 0x2E;
-        bufWriter.Advance(total);
+        // Write pre-encoded fixed JWT header part
+        var headerCount = JwtHeaderEncoded.Length;
+        var buffer = bufWriter.GetSpan(headerCount);
+        JwtHeaderEncoded.CopyTo(buffer);
+        bufWriter.Advance(headerCount);
 
         // Encode JWT payload part
         using (var writer = new Utf8JsonWriter(bufWriter))
         {
-            JsonSerializer.Serialize(writer, token.Claims, JsonContext.Default.DictionaryStringString);
+            JsonSerializer.Serialize(writer, token.Claims, JsonContext.Default.DictionaryStringObject);
         }
 
-        total += Base64EncodeInPlace(buffer.Slice(total), bufWriter.WrittenCount - total);
-        buffer[total++] = 0x2E;
+        var payloadCount = bufWriter.WrittenCount - headerCount;
+        bufWriter.ResetWrittenCount();
+        bufWriter.Advance(headerCount);
+        buffer = bufWriter.GetSpan(Base64.GetMaxEncodedToUtf8Length(payloadCount) + 1);
+        Base64.EncodeToUtf8InPlace(buffer, payloadCount, out payloadCount);
+        ConvertToUrlSafeInPlace(buffer.Slice(0, payloadCount), out payloadCount);
+        buffer[payloadCount++] = 0x2E;
 
         // Sign and encode signature part
-        if (!ecdsa.TrySignData(buffer.Slice(0, total - 1), buffer.Slice(total), HashAlgorithmName.SHA256, SignatureFormat, out var bytesWritten))
+        bufWriter.ResetWrittenCount();
+        var dataCount = headerCount + payloadCount;
+        buffer = bufWriter.GetSpan(dataCount + Base64.GetMaxEncodedToUtf8Length(ecdsa.GetMaxSignatureSize(SignatureFormat)));
+        var dataSpan = buffer.Slice(0, dataCount - 1);
+        var signatureSpan = buffer.Slice(dataCount);
+        if (!ecdsa.TrySignData(dataSpan, signatureSpan, HashAlgorithmName.SHA256, SignatureFormat, out var signatureCount))
         {
             ThrowSignatureComputeFailed();
         }
 
-        total += Base64EncodeInPlace(buffer.Slice(total), bytesWritten);
-        return UTF8.GetString(buffer.Slice(0, total));
-    }
+        Base64.EncodeToUtf8InPlace(signatureSpan, signatureCount, out signatureCount);
+        ConvertToUrlSafeInPlace(signatureSpan.Slice(0, signatureCount), out signatureCount);
+        var count = dataCount + signatureCount;
+        bufWriter.Advance(count);
 
-    protected virtual int Base64EncodeInPlace(Span<byte> buffer, int length)
-    {
-        Base64.EncodeToUtf8InPlace(buffer, length, out var written);
-        var encoded = buffer.Slice(0, written).TrimEnd((byte)0x3D);
+        return UTF8.GetString(bufWriter.WrittenSpan);
 
-        for (var i = 0; i < encoded.Length; i++)
+        static void ConvertToUrlSafeInPlace(Span<byte> base64Bytes, out int bytesConverted)
         {
-            encoded[i] = encoded[i] switch
-            {
-                0x2B => 0x2D,
-                0x2F => 0x5F,
-                _ => encoded[i]
-            };
-        }
+            var index = base64Bytes.Length - 1;
 
-        return encoded.Length;
+            while (index >= 0 && base64Bytes[index] == '=') index--;
+            bytesConverted = index + 1;
+
+            for (; index >= 0; index--)
+            {
+                ref var b = ref base64Bytes[index];
+                if (b == '+')
+                    b = (byte)'-';
+                else if (b == '/')
+                    b = (byte)'_';
+            }
+        }
     }
 
     [DoesNotReturn]
-    private static void ThrowSignatureComputeFailed() =>
-        throw new InvalidOperationException("Signature computation failed");
+    private static void ThrowSignatureComputeFailed() => throw new InvalidOperationException("Signature computation failed");
 
     #region Implementation of IDisposable
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposed) return;
-
-        if (disposing)
-        {
-            ecdsa.Dispose();
-        }
-
-        disposed = true;
-    }
-
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        if (disposed) return;
+        ecdsa.Dispose();
+        disposed = true;
     }
 
     #endregion
