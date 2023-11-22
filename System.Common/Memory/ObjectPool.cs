@@ -14,11 +14,9 @@ public sealed class ObjectPool<T> where T : class, new()
         bag = new();
     }
 
-#pragma warning disable CA1000
-
+#pragma warning disable CA1000 // Do not declare static members on generic types
     public static ObjectPool<T> Shared => InstanceHolder.Instance;
-
-#pragma warning restore CA1000
+#pragma warning restore CA1000 // Do not declare static members on generic types
 
     public T Rent()
     {

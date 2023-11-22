@@ -1,7 +1,5 @@
 namespace System.Threading;
 
-#pragma warning disable CA1031
-
 public static class TaskExtensions
 {
     /// <summary>
@@ -51,7 +49,9 @@ public static class TaskExtensions
                         onError(e);
                     }
                 }
-                catch { /* Expected */ }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch { /* by design */ }
+#pragma warning restore CA1031 // Do not catch general exception types
             }
         }
     }

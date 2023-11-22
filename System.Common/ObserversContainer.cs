@@ -2,8 +2,6 @@ using System.Collections.Concurrent;
 
 namespace System;
 
-#pragma warning disable CA1031
-
 public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 {
     private ConcurrentDictionary<IObserver<T>, Subscription<T>> observers;
@@ -20,10 +18,9 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
             {
                 observer.OnNext(value);
             }
-            catch
-            {
-                // ignored
-            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch { /* by design */}
+#pragma warning restore CA1031 // Do not catch general exception types
         }
     }
 
@@ -35,10 +32,9 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
             {
                 observer.OnError(error);
             }
-            catch
-            {
-                // ignored
-            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch { /* by design */ }
+#pragma warning restore CA1031 // Do not catch general exception types
         }
     }
 
@@ -50,10 +46,9 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
             {
                 observer.OnCompleted();
             }
-            catch
-            {
-                // ignored
-            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch { /* by design */ }
+#pragma warning restore CA1031 // Do not catch general exception types
         }
     }
 
@@ -71,10 +66,9 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
             {
                 observer.OnCompleted();
             }
-            catch
-            {
-                // ignored
-            }
+#pragma warning disable CA1031 // Do not catch general exception types
+            catch { /* by design */ }
+#pragma warning restore CA1031 // Do not catch general exception types
         }
 
         current.Clear();

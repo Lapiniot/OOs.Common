@@ -2,8 +2,6 @@
 
 namespace System.Policies;
 
-#pragma warning disable CA5394
-
 public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition> Conditions)
 {
     /// <summary>
@@ -66,7 +64,9 @@ public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition>
     public RepeatPolicyBuilder WithJitter(int minMilliseconds = 500, int maxMilliseconds = 10000) =>
         WithCondition((Exception _, int _, TimeSpan _, ref TimeSpan delay) =>
         {
-            delay = delay.Add(TimeSpan.FromMilliseconds(new Random().Next(minMilliseconds, maxMilliseconds)));
+#pragma warning disable CA5394 // Do not use insecure randomness
+            delay = delay.Add(TimeSpan.FromMilliseconds(Random.Shared.Next(minMilliseconds, maxMilliseconds)));
+#pragma warning restore CA5394 // Do not use insecure randomness
             return true;
         });
 
