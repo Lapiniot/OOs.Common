@@ -3,12 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace System.Collections.Generic;
 
+#nullable enable
+
 public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> where TKey : notnull
 {
     private readonly Dictionary<TKey, Node> map;
     private readonly object syncLock = new();
-    private Node head;
-    private Node tail;
+    private Node? head;
+    private Node? tail;
 
     public OrderedHashMap(IEnumerable<KeyValuePair<TKey, TValue>> collection) : this()
     {
@@ -23,7 +25,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
 
     public OrderedHashMap() => map = [];
 
-    public bool TryGetValue(TKey key, out TValue value)
+    public bool TryGetValue(TKey key, out TValue? value)
     {
         lock (syncLock)
         {
@@ -48,14 +50,14 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
         }
     }
 
-    public bool Remove(TKey key, out TValue value)
+    public bool Remove(TKey key, out TValue? value)
     {
         lock (syncLock)
         {
             if (map.Remove(key, out var node))
             {
                 if (node.Next is not null) node.Next.Prev = node.Prev;
-                if (node.Prev is not null) node.Prev.Next = node.Next;
+                if (node.Prev is not null) node.Prev.Next = node!.Next;
                 if (head == node) head = node.Next;
                 if (tail == node) tail = node.Prev;
                 value = node.Value;
@@ -95,7 +97,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
         }
         else
         {
-            node.Value = value;
+            node!.Value = value;
         }
     }
 
@@ -107,12 +109,12 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
         }
     }
 
-    private sealed class Node(TKey key, TValue value, Node prev, Node next)
+    private sealed class Node(TKey key, TValue value, Node? prev, Node? next)
     {
         public TKey Key { get; } = key;
         public TValue Value { get; set; } = value;
-        public Node Prev { get; set; } = prev;
-        public Node Next { get; set; } = next;
+        public Node? Prev { get; set; } = prev;
+        public Node? Next { get; set; } = next;
     }
 
     #region Implementation of IEnumerable
@@ -129,15 +131,15 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
         private const int InProgress = 1;
         private const int Done = 2;
         private readonly OrderedHashMap<TKey, TValue> map;
-        private Node node;
+        private Node? node;
         private int state;
         private bool locked;
 
         internal Enumerator(OrderedHashMap<TKey, TValue> map) => this.map = map;
 
-        public readonly KeyValuePair<TKey, TValue> Current => new(node.Key, node.Value);
+        public readonly KeyValuePair<TKey, TValue> Current => new(node!.Key, node.Value);
 
-        readonly object IEnumerator.Current => node.Value;
+        readonly object? IEnumerator.Current => node!.Value;
 
         public void Dispose()
         {
@@ -164,7 +166,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
                     ReleaseLock();
                     return false;
                 case InProgress:
-                    node = node.Next;
+                    node = node!.Next;
 
                     if (node is not null) return true;
 
