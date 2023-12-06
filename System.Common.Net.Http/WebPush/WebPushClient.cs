@@ -27,7 +27,7 @@ public class WebPushClient
         this.jwtTokenHandler = jwtTokenHandler;
         this.jwtSubject = jwtSubject;
         this.jwtExpiresSeconds = jwtExpiresSeconds;
-        cryptoKey = Encoders.ToBase64String(serverPublicKey);
+        cryptoKey = Base64UrlSafe.ToBase64String(serverPublicKey);
     }
 
     public async Task SendAsync(Uri endpoint, byte[] clientPublicKey, byte[] authKey, byte[] payload, int ttl, CancellationToken cancellationToken)
@@ -59,8 +59,8 @@ public class WebPushClient
             Headers =
             {
                 { "Authorization", $"WebPush {jwtTokenHandler.Write(token)}" },
-                { "Encryption", $"salt={Encoders.ToBase64String(salt)}" },
-                { "Crypto-Key", $"dh={Encoders.ToBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}" },
+                { "Encryption", $"salt={Base64UrlSafe.ToBase64String(salt)}" },
+                { "Crypto-Key", $"dh={Base64UrlSafe.ToBase64String(serverPublicKey)}; p256ecdsa={cryptoKey}" },
                 { "TTL", ttl.ToString(CultureInfo.InvariantCulture) }
             },
             Content = content

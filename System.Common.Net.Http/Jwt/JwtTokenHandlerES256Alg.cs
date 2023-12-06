@@ -51,8 +51,7 @@ public sealed class JwtTokenHandlerES256Alg : IJwtTokenHandler, IDisposable
         bufWriter.ResetWrittenCount();
         bufWriter.Advance(headerCount);
         buffer = bufWriter.GetSpan(Base64.GetMaxEncodedToUtf8Length(payloadCount) + 1);
-        Base64.EncodeToUtf8InPlace(buffer, payloadCount, out payloadCount);
-        ConvertToUrlSafeInPlace(buffer.Slice(0, payloadCount), out payloadCount);
+        Base64UrlSafe.EncodeToUtf8InPlace(buffer: buffer, dataLength: payloadCount, bytesWritten: out payloadCount);
         buffer[payloadCount++] = 0x2E;
 
         // Sign and encode signature part
@@ -64,29 +63,11 @@ public sealed class JwtTokenHandlerES256Alg : IJwtTokenHandler, IDisposable
         if (!ecdsa.TrySignData(dataSpan, signatureSpan, HashAlgorithmName.SHA256, SignatureFormat, out var signatureCount))
             ThrowSignatureComputeFailed();
 
-        Base64.EncodeToUtf8InPlace(signatureSpan, signatureCount, out signatureCount);
-        ConvertToUrlSafeInPlace(signatureSpan.Slice(0, signatureCount), out signatureCount);
+        Base64UrlSafe.EncodeToUtf8InPlace(signatureSpan, signatureCount, out signatureCount);
         var count = dataCount + signatureCount;
         bufWriter.Advance(count);
 
         return UTF8.GetString(bufWriter.WrittenSpan);
-
-        static void ConvertToUrlSafeInPlace(Span<byte> base64Bytes, out int bytesConverted)
-        {
-            var index = base64Bytes.Length - 1;
-
-            while (index >= 0 && base64Bytes[index] == '=') index--;
-            bytesConverted = index + 1;
-
-            for (; index >= 0; index--)
-            {
-                ref var b = ref base64Bytes[index];
-                if (b == '+')
-                    b = (byte)'-';
-                else if (b == '/')
-                    b = (byte)'_';
-            }
-        }
     }
 
     [DoesNotReturn]
