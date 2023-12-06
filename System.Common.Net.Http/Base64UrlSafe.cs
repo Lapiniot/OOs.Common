@@ -19,15 +19,24 @@ public static class Base64UrlSafe
     public static void EncodeToUtf8InPlace(Span<byte> buffer, int dataLength, out int bytesWritten)
     {
         Base64.EncodeToUtf8InPlace(buffer, dataLength, out bytesWritten);
+        ConvertToUrlSafe(buffer.Slice(0, bytesWritten), out bytesWritten);
+    }
 
-        var index = bytesWritten - 1;
+    public static void EncodeToUtf8(Span<byte> bytes, Span<byte> utf8, out int bytesConsumed, out int bytesWritten, bool isFinalBlock = true)
+    {
+        Base64.EncodeToUtf8(bytes, utf8, out bytesConsumed, out bytesWritten, isFinalBlock);
+        ConvertToUrlSafe(utf8.Slice(0, bytesWritten), out bytesWritten);
+    }
 
-        while (index >= 0 && buffer[index] == '=') index--;
+    private static void ConvertToUrlSafe(Span<byte> utf8, out int bytesWritten)
+    {
+        var index = utf8.Length - 1;
+        while (index >= 0 && utf8[index] == '=') index--;
         bytesWritten = index + 1;
 
         for (; index >= 0; index--)
         {
-            ref var b = ref buffer[index];
+            ref var b = ref utf8[index];
             if (b == '+')
                 b = (byte)'-';
             else if (b == '/')
