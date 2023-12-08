@@ -1,14 +1,8 @@
-﻿using BenchmarkDotNet.Columns;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Reports;
-using BenchmarkDotNet.Running;
-
-BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config: BuildGlobalConfig(args));
+﻿BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config: BuildGlobalConfig());
 
 internal sealed partial class Program
 {
-    private static ManualConfig BuildGlobalConfig(string[] args)
+    private static ManualConfig BuildGlobalConfig()
     {
         var config = ManualConfig.CreateMinimumViable()
             .WithOption(ConfigOptions.DisableLogFile, true)
@@ -18,9 +12,9 @@ internal sealed partial class Program
 
         config.AddJob(Job.Default
             .WithArguments([new MsBuildArgument("/p:UseArtifactsOutput=false")])
-        // .WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitDisasm", "WriteBufferAdvSmd"))
+        // .WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitDisasm", "System.Net.Http.Base64UrlSafe:EncodeToUtf8"))
         // .WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitDiffableDasm", "1"))
-        // .WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitStdOutFile", ""))
+        // .WithEnvironmentVariable(new EnvironmentVariable("DOTNET_JitStdOutFile", $"{Environment.CurrentDirectory}/EncodeToUtf8.asm"))
         );
 
         return config;

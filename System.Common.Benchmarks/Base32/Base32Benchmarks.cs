@@ -1,5 +1,3 @@
-using BenchmarkDotNet.Attributes;
-
 namespace System.Common.Benchmarks.Base32;
 
 #pragma warning disable CA1822

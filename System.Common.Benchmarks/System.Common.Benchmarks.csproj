@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../System.Common/System.Common.csproj" />
+    <ProjectReference Include="../System.Common.Net.Http/System.Common.Net.Http.csproj" />
   </ItemGroup>
 
 </Project>

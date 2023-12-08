@@ -1,5 +1,3 @@
-using BenchmarkDotNet.Attributes;
-
 namespace System.Common.Benchmarks.OrderedHashMap;
 
 #nullable disable

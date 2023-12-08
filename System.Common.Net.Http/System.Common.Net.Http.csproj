@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <RootNamespace>System.Net.Http</RootNamespace>
-    </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>System.Net.Http</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\System.Common\System.Common.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\System.Common\System.Common.csproj" />
+  </ItemGroup>
 
 </Project>
