@@ -6,6 +6,7 @@ namespace System.Common.Benchmarks.Base64UrlSafe;
 
 [MemoryDiagnoser]
 [HideColumns("Error", "StdDev", "RatioSD")]
+[GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
 public class Base64UrlSafeBenchmarks
 {
     private byte[]? bytes;
