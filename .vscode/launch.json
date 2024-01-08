@@ -13,9 +13,9 @@
         "request": "launch",
         "preLaunchTask": "build",
         // If you have changed target frameworks, make sure to update the program path.
-        "program": "${workspaceFolder}/artifacts/bin/System.Common.Benchmarks/debug/System.Common.Benchmarks.dll",
+        "program": "${workspaceFolder}/artifacts/bin/OOs.Common.Benchmarks/debug/OOs.Common.Benchmarks.dll",
         "args": [],
-        "cwd": "${workspaceFolder}/System.Common.Benchmarks",
+        "cwd": "${workspaceFolder}/OOs.Common.Benchmarks",
         // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
         "console": "internalConsole",
         "stopAtEntry": false

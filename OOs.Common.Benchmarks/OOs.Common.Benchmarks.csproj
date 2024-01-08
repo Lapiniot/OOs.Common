@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../OOs.Common.Net.Http/OOs.Common.Net.Http.csproj" />
+    <ProjectReference Include="../OOs.Common/OOs.Common.csproj" />
+  </ItemGroup>
+
+</Project>

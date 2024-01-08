@@ -9,7 +9,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/System.Common.sln",
+                "${workspaceFolder}/OOs.Common.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -37,7 +37,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/System.Common.sln",
+                "${workspaceFolder}/OOs.Common.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],
@@ -51,7 +51,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/System.Common.sln"
+                "${workspaceFolder}/OOs.Common.sln"
             ],
             "problemMatcher": "$msCompile"
         },
