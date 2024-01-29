@@ -5,12 +5,9 @@ using static System.Net.WebSockets.WebSocketCloseStatus;
 
 namespace OOs.Net.Connections;
 
-public abstract class WebSocketConnection<TWebSocket> : NetworkConnection where TWebSocket : WebSocket
+public abstract class WebSocketConnection<TWebSocket>(TWebSocket socket) : NetworkConnection where TWebSocket : WebSocket
 {
     private int disposed;
-    private TWebSocket socket;
-
-    protected WebSocketConnection(TWebSocket socket) => this.socket = socket;
 
     protected TWebSocket Socket { get => socket; set => socket = value; }
 

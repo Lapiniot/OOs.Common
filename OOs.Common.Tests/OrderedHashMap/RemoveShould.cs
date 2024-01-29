@@ -1,4 +1,4 @@
-﻿using OOs.Collections.Generic;
+using OOs.Collections.Generic;
 
 namespace OOs.Common.Tests.OrderedHashMap;
 
@@ -8,7 +8,7 @@ public class RemoveShould
     [TestMethod]
     public void ReturnTrueAndValueGivenExistingKey()
     {
-        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
+        var map = new OrderedHashMap<int, string>([new(1, "value 1"), new(2, "value 2"), new(3, "value 3")]);
 
         var actual = map.Remove(1, out var value);
 
@@ -19,13 +19,13 @@ public class RemoveShould
     [TestMethod]
     public void ReturnFalseAndDefaultValueGivenNonExistingKey()
     {
-        var stringMap = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
+        var stringMap = new OrderedHashMap<int, string>([new(1, "value 1"), new(2, "value 2"), new(3, "value 3")]);
 
         var actual = stringMap.Remove(5, out var strValue);
         Assert.IsFalse(actual);
         Assert.AreEqual(default, strValue);
 
-        var intMap = new OrderedHashMap<string, int>(new KeyValuePair<string, int>[] { new("1", 1), new("2", 2), new("3", 3) });
+        var intMap = new OrderedHashMap<string, int>([new("1", 1), new("2", 2), new("3", 3)]);
 
         actual = intMap.Remove("5", out var intValue);
         Assert.IsFalse(actual);
@@ -35,7 +35,7 @@ public class RemoveShould
     [TestMethod]
     public void RemoveFromMapGivenExistingKey()
     {
-        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
+        var map = new OrderedHashMap<int, string>([new(1, "value 1"), new(2, "value 2"), new(3, "value 3")]);
 
         map.Remove(2, out _);
 
@@ -45,7 +45,7 @@ public class RemoveShould
     [TestMethod]
     public void RemoveItemAndRetainOrderGivenFirstItemKey()
     {
-        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
+        var map = new OrderedHashMap<int, string>([new(1, "value 1"), new(2, "value 2"), new(3, "value 3")]);
 
         map.Remove(1, out _);
         using var enumerator = map.GetEnumerator();
@@ -62,7 +62,7 @@ public class RemoveShould
     [TestMethod]
     public void RemoveItemAndRetainOrderGivenLastItemKey()
     {
-        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3") });
+        var map = new OrderedHashMap<int, string>([new(1, "value 1"), new(2, "value 2"), new(3, "value 3")]);
 
         map.Remove(3, out _);
         using var enumerator = map.GetEnumerator();
@@ -79,7 +79,7 @@ public class RemoveShould
     [TestMethod]
     public void RemoveItemAndRetainOrder()
     {
-        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1"), new(2, "value 2"), new(3, "value 3"), new(4, "value 4") });
+        var map = new OrderedHashMap<int, string>([new(1, "value 1"), new(2, "value 2"), new(3, "value 3"), new(4, "value 4")]);
 
         map.Remove(2, out _);
         map.Remove(3, out _);

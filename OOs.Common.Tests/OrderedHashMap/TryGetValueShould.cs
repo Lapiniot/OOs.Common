@@ -8,7 +8,7 @@ public class TryGetValueShould
     [TestMethod]
     public void ReturnTrue_AndValue_GivenExistingKey()
     {
-        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1") });
+        var map = new OrderedHashMap<int, string>([new(1, "value 1")]);
 
         var actual = map.TryGetValue(1, out var value);
 
@@ -19,7 +19,7 @@ public class TryGetValueShould
     [TestMethod]
     public void ReturnFalse_AndDefaultValue_GivenExistingKey()
     {
-        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1") });
+        var map = new OrderedHashMap<int, string>([new(1, "value 1")]);
 
         var actual = map.TryGetValue(2, out var value);
 

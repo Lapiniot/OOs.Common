@@ -3,26 +3,20 @@ using System.Runtime.CompilerServices;
 
 namespace OOs.IO.Pipelines;
 
-public abstract class TransportPipe : IDuplexPipe, IAsyncDisposable
+public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions outputPipeOptions) : IDuplexPipe, IAsyncDisposable
 {
     private static readonly PipeOptions DefaultOptions = new(useSynchronizationContext: false);
     private const int Stopped = 0;
     private const int Starting = 1;
     private const int Started = 2;
     private const int Stopping = 3;
-    private readonly Pipe inputPipe;
-    private readonly Pipe outputPipe;
+    private readonly Pipe inputPipe = new(inputPipeOptions ?? DefaultOptions);
+    private readonly Pipe outputPipe = new(outputPipeOptions ?? DefaultOptions);
     private int disposed;
     private CancellationTokenSource globalCts;
     private Task inputWorker;
     private Task outputWorker;
     private long stateGuard;
-
-    protected TransportPipe(PipeOptions inputPipeOptions, PipeOptions outputPipeOptions)
-    {
-        inputPipe = new(inputPipeOptions ?? DefaultOptions);
-        outputPipe = new(outputPipeOptions ?? DefaultOptions);
-    }
 
     public Task InputCompletion => Read(ref inputWorker);
 

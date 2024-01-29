@@ -8,7 +8,7 @@ public class UpdateShould
     [TestMethod]
     public void ReturnTrue_AndUpdateValue_GivenExistingKey()
     {
-        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1") });
+        var map = new OrderedHashMap<int, string>([new(1, "value 1")]);
 
         var actual = map.Update(1, "updated value");
 
@@ -20,7 +20,7 @@ public class UpdateShould
     [TestMethod]
     public void ReturnFalse_AndDoNotAddValue_GivenExistingKey()
     {
-        var map = new OrderedHashMap<int, string>(new KeyValuePair<int, string>[] { new(1, "value 1") });
+        var map = new OrderedHashMap<int, string>([new(1, "value 1")]);
 
         var actual = map.Update(2, "updated value");
 

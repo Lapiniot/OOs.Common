@@ -1,4 +1,4 @@
-﻿using OOs.Collections.Generic;
+using OOs.Collections.Generic;
 
 namespace OOs.Common.Tests.OrderedHashMap;
 
@@ -6,7 +6,7 @@ namespace OOs.Common.Tests.OrderedHashMap;
 public class AddOrUpdateShould
 {
     internal static OrderedHashMap<string, string> CreateSampleHashQueue() =>
-        new(new KeyValuePair<string, string>[] { new("key1", "value 1"), new("key2", "value 2"), new("key3", "value 3") });
+        new([new("key1", "value 1"), new("key2", "value 2"), new("key3", "value 3")]);
 
     [TestMethod]
     public void ThrowArgumentNullExceptionGivenKeyNull() =>
@@ -19,7 +19,7 @@ public class AddOrUpdateShould
     [TestMethod]
     public void AppendItemAndRetainOriginalOrderGivenNotExistingKey()
     {
-        var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
+        var map = new OrderedHashMap<string, string>([new("key2", "value2"), new("key3", "value3")]);
 
         map.AddOrUpdate("key1", "add-value1");
         using var enumerator = map.GetEnumerator();
@@ -39,7 +39,7 @@ public class AddOrUpdateShould
     [TestMethod]
     public void ReplaceItemAndRetainOriginalOrderGivenExistingKey()
     {
-        var map = new OrderedHashMap<string, string>(new KeyValuePair<string, string>[] { new("key2", "value2"), new("key3", "value3") });
+        var map = new OrderedHashMap<string, string>([new("key2", "value2"), new("key3", "value3")]);
 
         map.AddOrUpdate("key2", "update-value2");
         map.AddOrUpdate("key3", "update-value3");
