@@ -10,7 +10,7 @@ trim_trailing_whitespace = true
 charset = utf-8
 
 # JSON files
-[*.json]
+[*.{json,props}]
 indent_size = 2
 
 [*.{sh}]
