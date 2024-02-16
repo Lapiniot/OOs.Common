@@ -10,7 +10,7 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 
     internal void Unsubscribe(IObserver<T> observer) => observers?.TryRemove(observer, out _);
 
-    public void Notify(T value)
+    public void Notify(in T value)
     {
         foreach (var (observer, _) in observers)
         {
