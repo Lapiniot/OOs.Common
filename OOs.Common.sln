@@ -3,21 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.001.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOS.Common", "OOs.Common\OOS.Common.csproj", "{A6EA8193-B06F-428F-9E8D-E6BEDA263E4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOS.Common", "OOs.Common\OOS.Common.csproj", "{A6EA8193-B06F-428F-9E8D-E6BEDA263E4E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.Tests", "OOs.Common.Tests\OOs.Common.Tests.csproj", "{8F4292EE-4A32-402F-AC91-1E653325DB86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.Tests", "OOs.Common.Tests\OOs.Common.Tests.csproj", "{8F4292EE-4A32-402F-AC91-1E653325DB86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.Benchmarks", "OOs.Common.Benchmarks\OOs.Common.Benchmarks.csproj", "{6167E334-F85E-4DB0-8FA7-E6E330CA9AE8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.Benchmarks", "OOs.Common.Benchmarks\OOs.Common.Benchmarks.csproj", "{6167E334-F85E-4DB0-8FA7-E6E330CA9AE8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.CommandLine", "OOs.Common.CommandLine\OOs.Common.CommandLine.csproj", "{7B26C527-A47A-4A0A-BC97-BF17676C6602}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.CommandLine", "OOs.Common.CommandLine\OOs.Common.CommandLine.csproj", "{7B26C527-A47A-4A0A-BC97-BF17676C6602}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.Configuration", "OOs.Common.Configuration\OOs.Common.Configuration.csproj", "{8D431A46-B1BA-45A1-9224-30830071A1DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.Configuration", "OOs.Common.Configuration\OOs.Common.Configuration.csproj", "{8D431A46-B1BA-45A1-9224-30830071A1DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.Net", "OOs.Common.Net\OOs.Common.Net.csproj", "{92CF1135-D3DB-4BEA-AA8C-D5A371317155}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.Net", "OOs.Common.Net\OOs.Common.Net.csproj", "{92CF1135-D3DB-4BEA-AA8C-D5A371317155}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.Net.Http", "OOs.Common.Net.Http\OOs.Common.Net.Http.csproj", "{5135946A-51B5-4C70-95FF-5FA28B826F78}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.Net.Http", "OOs.Common.Net.Http\OOs.Common.Net.Http.csproj", "{5135946A-51B5-4C70-95FF-5FA28B826F78}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Common.Net.Http.Tests", "OOs.Common.Net.Http.Tests\OOs.Common.Net.Http.Tests.csproj", "{AD70D8B2-FCFF-4A84-BD4C-FF5643C0356B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.Net.Http.Tests", "OOs.Common.Net.Http.Tests\OOs.Common.Net.Http.Tests.csproj", "{AD70D8B2-FCFF-4A84-BD4C-FF5643C0356B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Extensions.Diagnostics", "OOs.Extensions.Diagnostics\OOs.Extensions.Diagnostics.csproj", "{3804DDCD-7CC3-4EC9-ABB1-2804FA184273}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,10 @@ Global
 		{AD70D8B2-FCFF-4A84-BD4C-FF5643C0356B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD70D8B2-FCFF-4A84-BD4C-FF5643C0356B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD70D8B2-FCFF-4A84-BD4C-FF5643C0356B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3804DDCD-7CC3-4EC9-ABB1-2804FA184273}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3804DDCD-7CC3-4EC9-ABB1-2804FA184273}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3804DDCD-7CC3-4EC9-ABB1-2804FA184273}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3804DDCD-7CC3-4EC9-ABB1-2804FA184273}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
