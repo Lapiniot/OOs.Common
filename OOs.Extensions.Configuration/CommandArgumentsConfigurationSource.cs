@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace OOs.Configuration;
+namespace OOs.Extensions.Configuration;
 
 public class CommandArgumentsConfigurationSource(string[] args, bool strict) : IConfigurationSource
 {

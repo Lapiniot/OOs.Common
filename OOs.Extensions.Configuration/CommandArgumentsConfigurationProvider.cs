@@ -3,7 +3,7 @@ using System.Globalization;
 using Microsoft.Extensions.Configuration;
 using OOs.CommandLine;
 
-namespace OOs.Configuration;
+namespace OOs.Extensions.Configuration;
 
 public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvider
 {
