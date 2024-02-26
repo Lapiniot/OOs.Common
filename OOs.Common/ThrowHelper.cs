@@ -14,6 +14,10 @@ public static class ThrowHelper
         throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
 
     [DoesNotReturn]
+    public static void ThrowInvalidState(string state, [CallerMemberName] string callerName = null) =>
+    throw new InvalidOperationException($"Cannot call '{callerName}' in the current state: '{state}'.");
+
+    [DoesNotReturn]
     public static void ThrowInvalidOperation() => throw new InvalidOperationException();
 
     [DoesNotReturn]
