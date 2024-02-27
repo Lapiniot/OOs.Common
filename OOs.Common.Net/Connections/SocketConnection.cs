@@ -66,7 +66,7 @@ public abstract class SocketConnection : NetworkConnection
     protected override async Task StoppingAsync()
     {
         socket.Shutdown(SocketShutdown.Both);
-        await socket.DisconnectAsync(false).ConfigureAwait(false);
+        await socket.DisconnectAsync(true).ConfigureAwait(false);
     }
 
     public override async ValueTask DisposeAsync()
