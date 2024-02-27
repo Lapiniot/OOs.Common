@@ -1,5 +1,7 @@
 using System.IO.Pipelines;
-using System.Runtime.CompilerServices;
+using static System.Threading.Tasks.ConfigureAwaitOptions;
+
+#nullable enable
 
 namespace OOs.IO.Pipelines;
 
@@ -12,52 +14,49 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
     private const int Stopping = 3;
     private readonly Pipe inputPipe = new(inputPipeOptions ?? DefaultOptions);
     private readonly Pipe outputPipe = new(outputPipeOptions ?? DefaultOptions);
+    private volatile CancellationTokenSource? globalCts;
+    private volatile Task? inputWorker;
+    private volatile Task? outputWorker;
+    private int state;
     private int disposed;
-    private CancellationTokenSource globalCts;
-    private Task inputWorker;
-    private Task outputWorker;
-    private long stateGuard;
 
-    public Task InputCompletion => Read(ref inputWorker);
+    public Task? InputCompletion => inputWorker;
 
-    public Task OutputCompletion => Read(ref outputWorker);
+    public Task? OutputCompletion => outputWorker;
 
     public PipeReader Input => inputPipe.Reader;
 
     public PipeWriter Output => outputPipe.Writer;
 
-    private T Read<T>(ref T location, [CallerMemberName] string callerName = null) where T : class
-    {
-        if (Interlocked.Read(ref stateGuard) != Started)
-            ThrowHelper.ThrowInvalidState(callerName);
-
-        return Volatile.Read(ref location);
-    }
-
     public void Start()
     {
         CheckDisposed();
 
-        switch (Interlocked.CompareExchange(ref stateGuard, Starting, Stopped))
+        switch (Interlocked.CompareExchange(ref state, Starting, Stopped))
         {
             case Stopped:
+                var cts = new CancellationTokenSource();
                 try
                 {
-                    var cts = new CancellationTokenSource();
                     globalCts = cts;
                     inputWorker = StartInputPartAsync(inputPipe.Writer, cts.Token);
                     outputWorker = StartOutputPartAsync(outputPipe.Reader, cts.Token);
-                    Volatile.Write(ref stateGuard, Started);
+                    Volatile.Write(ref state, Started);
                 }
                 catch
                 {
-                    Volatile.Write(ref stateGuard, Stopped);
+                    using (cts)
+                    {
+                        Volatile.Write(ref state, Stopped);
+                        cts.Cancel();
+                    }
+
                     throw;
                 }
 
                 break;
             case Stopping:
-                ThrowHelper.ThrowInvalidState();
+                ThrowHelper.ThrowInvalidState("Stopping");
                 break;
         }
     }
@@ -73,55 +72,55 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
         outputPipe.Reset();
     }
 
-    public async ValueTask StopAsync()
+    public Task StopAsync()
     {
-        try
+        while (true)
         {
-            long state;
-            var sw = new SpinWait();
-            do
+            switch (Interlocked.CompareExchange(ref state, Stopping, Started))
             {
-                var localInputWorker = Volatile.Read(ref inputWorker);
-                var localOutputWorker = Volatile.Read(ref outputWorker);
-                var localCts = Volatile.Read(ref globalCts);
-                state = Interlocked.CompareExchange(ref stateGuard, Stopping, Started);
-                switch (state)
-                {
-                    case Starting:
-                        sw.SpinOnce();
-                        break;
-                    case Started:
-                        // we are responsible for cancellation and cleanup
-                        using (localCts)
-                        {
-                            await localCts!.CancelAsync().ConfigureAwait(false);
-                            try
-                            {
-                                await Task.WhenAll(inputWorker, outputWorker).ConfigureAwait(false);
-                            }
-                            finally
-                            {
-                                Volatile.Write(ref stateGuard, Stopped);
-                            }
-                        }
+                case Starting:
+                    // We are currently starting, the object might be in semi-initialized state, 
+                    // so better wait until started and then perform stopping gracefully.
+                    // Startup is very quick, so we can use simple spinning here to 
+                    // avoid heavy and expensive locking using SemaphoreSlim e.g.
+                    var spinWait = new SpinWait();
+                    do
+                    {
+                        spinWait.SpinOnce(sleep1Threshold: -1);
+                    } while (Volatile.Read(ref state) is Starting);
 
-                        break;
-                    case Stopping:
-                        // stopping in progress already, wait for currently active task in flight
-                        await Task.WhenAll(inputWorker, outputWorker).ConfigureAwait(false);
-                        break;
-                }
-            } while (state is Starting);
+                    break;
+
+                case Started:
+                    // we are responsible for cancellation and cleanup
+                    return CancelAndWaitCompleteAsync();
+
+                case Stopping:
+                    // stopping is already in progress
+                    return Task.WhenAll(inputWorker!, outputWorker!);
+
+                default:
+                    return Task.CompletedTask;
+            }
         }
-#pragma warning disable CA1031 // Do not catch general exception types
-        catch { /* by design */ }
-#pragma warning restore CA1031 // Do not catch general exception types
+
+        async Task CancelAndWaitCompleteAsync()
+        {
+            var captured = globalCts!;
+            using (captured)
+            {
+                await captured.CancelAsync().ConfigureAwait(SuppressThrowing);
+                await Task.WhenAll(inputWorker!, outputWorker!).ConfigureAwait(SuppressThrowing);
+                Volatile.Write(ref state, Stopped);
+            }
+        }
     }
 
     public async Task CompleteOutputAsync()
     {
         await Output.CompleteAsync().ConfigureAwait(false);
-        await OutputCompletion.ConfigureAwait(false);
+        if (outputWorker is { } worker)
+            await worker.ConfigureAwait(false);
     }
 
     protected void CheckDisposed() => ObjectDisposedException.ThrowIf(disposed is 1, this);
@@ -199,7 +198,10 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
 
     public async ValueTask DisposeAsync()
     {
-        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
+        if (Interlocked.Exchange(ref disposed, 1) is not 0)
+        {
+            return;
+        }
 
         GC.SuppressFinalize(this);
 
