@@ -8,7 +8,7 @@ namespace OOs.IO.Pipelines;
 public abstract class PipeConsumer : PipeConsumerCore
 {
     private readonly PipeReader reader;
-    private CancellationTokenSource abortTokenSource = new();
+    private CancellationTokenSource abortTokenSource;
 
     protected PipeConsumer(PipeReader reader)
     {
@@ -23,7 +23,7 @@ public abstract class PipeConsumer : PipeConsumerCore
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
         abortTokenSource ??= new();
-        ConsumerCompletion = RunConsumerAsync(reader, Aborted);
+        ConsumerCompletion = RunConsumerAsync(reader, abortTokenSource.Token);
         return Task.CompletedTask;
     }
 
