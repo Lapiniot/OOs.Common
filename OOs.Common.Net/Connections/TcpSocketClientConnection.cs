@@ -8,10 +8,12 @@ public sealed class TcpSocketClientConnection : SocketConnection
     private readonly string hostNameOrAddress;
     private readonly int port;
 
-    public TcpSocketClientConnection(IPEndPoint remoteEndPoint) : base(remoteEndPoint, ProtocolType.Tcp)
+    public TcpSocketClientConnection(IPEndPoint remoteEndPoint) :
+        base(remoteEndPoint, ProtocolType.Tcp, reuseSocket: true)
     { }
 
-    public TcpSocketClientConnection(string hostNameOrAddress, int port)
+    public TcpSocketClientConnection(string hostNameOrAddress, int port) :
+        base(reuseSocket: true)
     {
         ArgumentException.ThrowIfNullOrEmpty(hostNameOrAddress);
 

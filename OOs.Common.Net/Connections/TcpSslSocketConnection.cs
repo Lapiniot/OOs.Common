@@ -8,13 +8,15 @@ public abstract class TcpSslSocketConnection : SocketConnection
 {
     private SslStream sslStream;
 
-    protected TcpSslSocketConnection()
+    protected TcpSslSocketConnection(bool reuseSocket) : base(reuseSocket)
     { }
 
-    protected TcpSslSocketConnection(IPEndPoint remoteEndPoint) : base(remoteEndPoint, ProtocolType.Tcp)
+    protected TcpSslSocketConnection(IPEndPoint remoteEndPoint, bool reuseSocket) :
+        base(remoteEndPoint, ProtocolType.Tcp, reuseSocket)
     { }
 
-    protected TcpSslSocketConnection(Socket acceptedSocket) : base(acceptedSocket)
+    protected TcpSslSocketConnection(Socket socket, bool reuseSocket) :
+        base(socket, reuseSocket)
     { }
 
     protected SslStream SslStream { get => sslStream; set => sslStream = value; }

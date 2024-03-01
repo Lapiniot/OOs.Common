@@ -15,7 +15,7 @@ public sealed class TcpSslSocketClientConnection : TcpSslSocketConnection
 
     public TcpSslSocketClientConnection(IPEndPoint remoteEndPoint, string machineName,
         SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null) :
-        base(remoteEndPoint)
+        base(remoteEndPoint, reuseSocket: true)
     {
         ArgumentException.ThrowIfNullOrEmpty(machineName);
 
@@ -25,7 +25,8 @@ public sealed class TcpSslSocketClientConnection : TcpSslSocketConnection
     }
 
     public TcpSslSocketClientConnection(string hostNameOrAddress, int port, string machineName = null,
-        SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null)
+        SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[] certificates = null) :
+            base(reuseSocket: true)
     {
         ArgumentException.ThrowIfNullOrEmpty(hostNameOrAddress);
 

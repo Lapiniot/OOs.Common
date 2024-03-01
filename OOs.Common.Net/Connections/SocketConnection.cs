@@ -6,26 +6,24 @@ using System.Net;
 
 namespace OOs.Net.Connections;
 
-public abstract class SocketConnection : NetworkConnection
+public abstract class SocketConnection(bool reuseSocket) : NetworkConnection
 {
     private readonly ProtocolType protocolType;
+    private readonly bool reuseSocket = reuseSocket;
     private int disposed;
     private EndPoint remoteEndPoint;
     private EndPoint localEndPoint;
     private Socket socket;
 
-    protected SocketConnection()
-    { }
-
-    protected SocketConnection(Socket acceptedSocket)
+    protected SocketConnection(Socket socket, bool reuseSocket) : this(reuseSocket)
     {
-        ArgumentNullException.ThrowIfNull(acceptedSocket);
-        Socket = acceptedSocket;
-        remoteEndPoint = acceptedSocket.RemoteEndPoint;
-        localEndPoint = acceptedSocket.LocalEndPoint;
+        ArgumentNullException.ThrowIfNull(socket);
+        Socket = socket;
+        remoteEndPoint = socket.RemoteEndPoint;
+        localEndPoint = socket.LocalEndPoint;
     }
 
-    protected SocketConnection(EndPoint remoteEndPoint, ProtocolType protocolType)
+    protected SocketConnection(EndPoint remoteEndPoint, ProtocolType protocolType, bool reuseSocket) : this(reuseSocket)
     {
         ArgumentNullException.ThrowIfNull(remoteEndPoint);
         this.remoteEndPoint = remoteEndPoint;
@@ -66,7 +64,7 @@ public abstract class SocketConnection : NetworkConnection
     protected override async Task StoppingAsync()
     {
         socket.Shutdown(SocketShutdown.Both);
-        await socket.DisconnectAsync(true).ConfigureAwait(false);
+        await socket.DisconnectAsync(reuseSocket).ConfigureAwait(false);
     }
 
     public override async ValueTask DisposeAsync()

@@ -3,7 +3,8 @@ using System.Net.Sockets;
 
 namespace OOs.Net.Connections;
 
-public sealed class TcpSslSocketServerConnection(Socket acceptedSocket, SslServerAuthenticationOptions options) : TcpSslSocketConnection(acceptedSocket)
+public sealed class TcpSslSocketServerConnection(Socket acceptedSocket, SslServerAuthenticationOptions options) :
+    TcpSslSocketConnection(acceptedSocket, reuseSocket: false)
 {
     protected override async Task StartingAsync(CancellationToken cancellationToken)
     {
