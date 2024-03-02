@@ -10,10 +10,10 @@ namespace OOs.Threading;
 public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 {
     private static long waitingCount;
-    private readonly int maxCount;
     private readonly bool runContinuationsAsynchronously;
     private readonly object syncRoot;
     private Action<object?, CancellationToken>? cancelCallback;
+    private int maxCount;
     private int currentCount;
     private WaiterNode? head;
     private WaiterNode? tail;
@@ -169,5 +169,34 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Tries to reset current instance and initialize it with new <paramref name="initialCount"/> and 
+    /// <paramref name="maxCount"/> values.
+    /// </summary>
+    /// <param name="initialCount">New value for <see cref="CurrentCount"/>.</param>
+    /// <param name="maxCount">New value for <see cref="MaxCount"/>.</param>
+    /// <returns>
+    /// Returns <see langword="true"/> if current instance doesn't track 
+    /// pending asynchronouse waiters and can be reset for potential reuse.
+    /// </returns>
+    public bool TryReset(int initialCount, int maxCount = int.MaxValue)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxCount, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThan(initialCount, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCount, maxCount);
+
+        lock (syncRoot)
+        {
+            if (head is null)
+            {
+                currentCount = initialCount;
+                this.maxCount = maxCount;
+                return true;
+            }
+        }
+
+        return false;
     }
 }
