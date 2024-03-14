@@ -1,0 +1,24 @@
+<Project>
+  <Import Project="PublishAll.targets"/>
+
+  <PropertyGroup>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+  </PropertyGroup>
+
+  <Target Name="ConfigurePublishContainer">
+    <PropertyGroup>
+      <PublishProfile Condition=" '$(PublishProfile)' == '' OR '$(PublishProfile)' == 'Default' ">DefaultContainer</PublishProfile>
+      <ExtraPublishProps>PublishProfile=$(PublishProfile)</ExtraPublishProps>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="PublishAllImages" DependsOnTargets="ConfigurePublishContainer;PublishAll">
+    <PropertyGroup>
+      <ContainerManifest>$(ContainerRepository):latest</ContainerManifest>
+    </PropertyGroup>
+    <Exec Command="docker manifest rm $(ContainerManifest)" ConsoleToMsBuild="true" IgnoreExitCode="true" />
+    <Exec Command="docker manifest create $(ContainerManifest) @(RuntimeIdentifiersToPublish->'--amend $(ContainerRepository):%(Identity)', ' ')" />
+    <Exec Command="docker manifest push $(ContainerManifest)" />
+  </Target>
+
+</Project>

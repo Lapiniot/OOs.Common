@@ -21,7 +21,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Extensions.Diagnostics"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Extensions.Configuration", "OOs.Extensions.Configuration\OOs.Extensions.Configuration.csproj", "{288E69B3-2F5A-47F9-AD93-6DC3C97456C5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OOs.Extensions.Hosting", "OOs.Extensions.Hosting\OOs.Extensions.Hosting.csproj", "{6112EE1B-9C9E-493E-A321-A6E7FEE39030}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Extensions.Hosting", "OOs.Extensions.Hosting\OOs.Extensions.Hosting.csproj", "{6112EE1B-9C9E-493E-A321-A6E7FEE39030}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{BEE2E3BE-DC55-40BA-9BB5-4190E6056345}"
+	ProjectSection(SolutionItems) = preProject
+		publish.targets = publish.targets
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

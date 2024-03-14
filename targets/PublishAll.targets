@@ -1,0 +1,22 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+  </PropertyGroup>
+
+  <Target Name="GenerateRuntimeIdentifierItems">
+    <ItemGroup>
+      <RuntimeIdentifiersToPublish Include="$(RuntimeIdentifiers)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="PublishAll" DependsOnTargets="GenerateRuntimeIdentifierItems">
+    <ItemGroup>
+      <ProjectsToPublish Include="@(RuntimeIdentifiersToPublish->'$(MSBuildProjectFullPath)')">
+        <AdditionalProperties>RuntimeIdentifier=%(RuntimeIdentifiersToPublish.Identity)</AdditionalProperties>
+      </ProjectsToPublish>
+    </ItemGroup>
+    <MSBuild Projects="@(ProjectsToPublish)" Targets="Publish" Properties="$(ExtraPublishProps)" BuildInParallel="True" />
+  </Target>
+
+</Project>
