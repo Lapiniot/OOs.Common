@@ -23,9 +23,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Extensions.Configuratio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Extensions.Hosting", "OOs.Extensions.Hosting\OOs.Extensions.Hosting.csproj", "{6112EE1B-9C9E-493E-A321-A6E7FEE39030}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{BEE2E3BE-DC55-40BA-9BB5-4190E6056345}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{6BA0165A-3421-48A7-89C0-EA669DBE6473}"
 	ProjectSection(SolutionItems) = preProject
-		publish.targets = publish.targets
+		targets\PublishAll.targets = targets\PublishAll.targets
+		targets\PublishContainers.targets = targets\PublishContainers.targets
 	EndProjectSection
 EndProject
 Global
