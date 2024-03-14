@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace OOs.Extensions.Hosting;
 
+#pragma warning disable CA1812
 internal sealed partial class ApplicationInitService(
     IServiceProvider services, ILogger<ApplicationInitService> logger) :
     IHostedService, IHostedLifecycleService

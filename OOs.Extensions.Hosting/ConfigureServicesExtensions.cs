@@ -43,6 +43,9 @@ public static class ConfigureServicesExtensions
         services.Add(new ServiceDescriptor(typeof(IServiceInitializer), sp => new InitializeWrapper<TDep1, TDep2>(sp.GetRequiredService<TDep1>(), sp.GetRequiredService<TDep2>(), initializer), lifetime));
         return services;
     }
+
+    public static IServiceCollection AddCertificateGenInitializer(this IServiceCollection services) =>
+        services.AddTransient<IServiceInitializer, CertificateGenerateInitializer>();
 }
 
 internal sealed class InitializeWrapper(Func<CancellationToken, Task> initializer) : IServiceInitializer
