@@ -6,6 +6,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../OOs.Common/OOs.Common.csproj" />
+        <ProjectReference Include="../OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj" ReferenceOutputAssembly="false" PackAsAnalyzer="true" />
     </ItemGroup>
 
 </Project>
