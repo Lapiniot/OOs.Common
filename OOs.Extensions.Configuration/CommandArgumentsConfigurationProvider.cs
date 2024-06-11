@@ -26,7 +26,7 @@ public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvide
     public override void Load()
     {
         var arguments = Arguments.Parse(args, strict);
-        var values = arguments.ProvidedValues;
+        var values = arguments.Options;
 
         var data = new Dictionary<string, string>(capacity: values.Count, StringComparer.OrdinalIgnoreCase);
         foreach (var (key, value) in values)

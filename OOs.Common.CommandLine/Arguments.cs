@@ -1,47 +1,54 @@
+using System.Collections.Immutable;
 using System.Reflection;
 using OOs.Collections.Generic;
 
 namespace OOs.CommandLine;
 
-public class Arguments
+public readonly record struct Arguments : IArgumentsParser
 {
-    private Arguments(string command, IReadOnlyDictionary<string, object> parameters, IEnumerable<string> extras)
+    private Arguments(string command, IReadOnlyDictionary<string, object> options, ImmutableArray<string> values)
     {
         Command = command;
-        ProvidedValues = parameters;
-        Extras = extras;
+        Options = options;
+        Values = values;
     }
 
     public string Command { get; }
-
-    public IReadOnlyDictionary<string, object> ProvidedValues { get; }
-
-    public IEnumerable<string> Extras { get; }
-
-    public bool this[string name] => (bool)ProvidedValues[name];
+    public IReadOnlyDictionary<string, object> Options { get; }
+    public ImmutableArray<string> Values { get; }
 
     public static Arguments Parse(string[] args, bool strict)
     {
-        var queue = new Queue<string>(args);
-
-        var argumentByNameComparer = new EqualityComparerAdapter<ArgumentAttribute>((c1, c2) =>
-            string.Equals(c1.Name, c2.Name, StringComparison.OrdinalIgnoreCase));
-        var schema = Assembly.GetEntryAssembly()?
-            .GetCustomAttributes<ArgumentAttribute>()
-            .Distinct(argumentByNameComparer)
-            .ToArray() ?? [];
-
-        var commandByNameComparer = new EqualityComparerAdapter<CommandAttribute>((c1, c2) =>
-            string.Equals(c1.Name, c2.Name, StringComparison.OrdinalIgnoreCase));
         var commands = Assembly.GetEntryAssembly()?
             .GetCustomAttributes<CommandAttribute>()
-            .Distinct(commandByNameComparer)
+            .Distinct(EqualityComparerAdapter<CommandAttribute>.Create(
+                equals: (a1, a2) => string.Equals(a1.Name, a2.Name, StringComparison.OrdinalIgnoreCase),
+                getHashCode: a => a.Name.GetHashCode(StringComparison.OrdinalIgnoreCase)))
             .ToArray() ?? [];
 
-        var parser = new ArgumentParser(commands, schema, strict);
+        Parse(args, strict, out var options, out var values);
+        var command = commands.FirstOrDefault(c => c.Name == values[0]);
+        return new(command?.Name, options, values);
+    }
 
-        parser.Parse(queue, out var command, out var parameters, out var extras);
+    public static (IReadOnlyDictionary<string, string> Options, ImmutableArray<string> Arguments) Parse(string[] args)
+    {
+        Parse(args, false, out var options, out var values);
+        return (options.ToDictionary(kvp => kvp.Key, kvp => kvp.Value is { } value ? value.ToString() : null), values);
+    }
 
-        return new(command, parameters, extras);
+    private static void Parse(string[] args, bool strict, out IReadOnlyDictionary<string, object> options, out ImmutableArray<string> values)
+    {
+        var queue = new Queue<string>(args);
+
+        var schema = Assembly.GetEntryAssembly()?
+            .GetCustomAttributes<OptionAttribute>()
+            .Distinct(EqualityComparer<OptionAttribute>.Create(
+                equals: (a1, a2) => string.Equals(a1.Name, a2.Name, StringComparison.OrdinalIgnoreCase),
+                getHashCode: a => a.Name.GetHashCode(StringComparison.OrdinalIgnoreCase)))
+            .ToArray() ?? [];
+
+        var parser = new ArgumentParser(schema, strict);
+        parser.Parse(queue, out options, out values);
     }
 }

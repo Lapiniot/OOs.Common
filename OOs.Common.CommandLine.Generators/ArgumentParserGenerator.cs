@@ -14,19 +14,27 @@ public class ArgumentParserGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var attributes = context.SyntaxProvider.ForAttributeWithMetadataName("OOs.CommandLine.ArgumentAttribute",
+        var attributes = context.SyntaxProvider.ForAttributeWithMetadataName("OOs.CommandLine.OptionAttribute`1",
             predicate: (node, _) => node is CompilationUnitSyntax { AttributeLists.Count: > 0 },
             transform: (ctx, _) =>
             {
                 var builder = ImmutableArray.CreateBuilder<ArgumentData>();
                 foreach (var a in ctx.Attributes)
                 {
-                    if (a.ConstructorArguments is [{ Value: string name }, { Value: INamedTypeSymbol { SpecialType: var type } }, ..])
+                    if (a is
+                        {
+                            ConstructorArguments: [{ Value: string name }, { Value: string alias }, ..] cargs,
+                            AttributeClass:
+                            {
+                                IsGenericType: true,
+                                TypeArguments: [{ SpecialType: { } type }]
+                            }
+                        })
                     {
-                        if (a.ConstructorArguments is [_, _, { Value: string sname }])
-                            builder.Add(new ArgumentData(name, sname, type));
+                        if (cargs is [_, _, { Value: char shortAlias }])
+                            builder.Add(new ArgumentData(name, alias, shortAlias, type));
                         else
-                            builder.Add(new ArgumentData(name, null, type));
+                            builder.Add(new ArgumentData(name, alias, '\0', type));
                     }
                 }
 
@@ -51,4 +59,4 @@ public class ArgumentParserGenerator : IIncrementalGenerator
     }
 }
 
-public record struct ArgumentData(string Name, string? ShortName, SpecialType Type);
+public record struct ArgumentData(string Name, string Alias, char ShortAlias, SpecialType Type);

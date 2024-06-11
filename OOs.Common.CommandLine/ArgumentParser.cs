@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using static System.String;
 using static System.Globalization.CultureInfo;
-using OOs.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace OOs.CommandLine;
 
@@ -10,74 +10,60 @@ public class ArgumentParser
     private static readonly char[] Quotes = ['"', '\''];
     private static readonly char[] Separator = ['='];
 
-    private readonly IEnumerable<ICommandMetadata> commands;
     private readonly IEnumerable<IArgumentMetadata> schema;
     private readonly bool strict;
 
-    public ArgumentParser(IEnumerable<ICommandMetadata> commands, IEnumerable<IArgumentMetadata> schema, bool strict)
+    public ArgumentParser(IEnumerable<IArgumentMetadata> schema, bool strict)
     {
-        ArgumentNullException.ThrowIfNull(commands);
         ArgumentNullException.ThrowIfNull(schema);
 
-        this.commands = commands;
         this.schema = schema;
         this.strict = strict;
     }
 
-    public void Parse(Queue<string> tokens, out string command, out IReadOnlyDictionary<string, object> arguments, out IEnumerable<string> extras)
+    public void Parse(Queue<string> tokens, out IReadOnlyDictionary<string, object> options, out ImmutableArray<string> arguments)
     {
         ArgumentNullException.ThrowIfNull(tokens);
 
-        command = default;
-        var args = new Dictionary<string, object>();
-        var unknown = new List<string>();
-        arguments = args;
-        extras = unknown;
+        if (tokens.Count == 0)
+        {
+            options = new Dictionary<string, object>();
+            arguments = [];
+            return;
+        }
 
-        var comparer = new ComparerAdapter<string>(static (x1, x2) => CompareByLength(x1, x2));
-
-        var smap = new SortedDictionary<string, IArgumentMetadata>(comparer);
+        var opts = new Dictionary<string, object>();
+        var unknown = ImmutableArray.CreateBuilder<string>();
+        var smap = new SortedDictionary<string, IArgumentMetadata>(
+            Comparer<string>.Create(static (s1, s2) => CompareByLength(s1, s2)));
         var nmap = new SortedDictionary<string, IArgumentMetadata>();
 
         foreach (var item in schema)
         {
-            nmap.Add(item.Name, item);
+            nmap.Add(item.LongAlias, item);
 
-            if (item.ShortName != null) smap.Add(item.ShortName, item);
+            if (item.ShortAlias is not '\0')
+                smap.Add(item.ShortAlias.ToString(), item);
         }
 
-        command = commands.SingleOrDefault(c => c.IsDefault)?.Name;
-
-        if (tokens.Count == 0) return;
-
-        var arg = tokens.Peek();
-
-        if (!arg.StartsWith('-') && !arg.StartsWith('/'))
+        while (tokens.TryDequeue(out var arg))
         {
-            var name = arg;
-
-            command = commands.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase))?.Name;
-
-            tokens.Dequeue();
-        }
-
-        while (tokens.Count > 0)
-        {
-            arg = tokens.Dequeue();
-
             if (arg.StartsWith("--", false, InvariantCulture))
             {
-                AddByName(arg[2..], nmap, args);
+                AddByName(arg[2..], tokens, nmap, opts);
             }
             else if (arg[0] is '-' or '/')
             {
-                AddByShortName(arg[1..], tokens, smap, args);
+                AddByShortName(arg[1..], tokens, smap, opts);
             }
             else
             {
                 unknown.Add(arg);
             }
         }
+
+        options = opts.AsReadOnly();
+        arguments = unknown.ToImmutableArray();
     }
 
     private static int CompareByLength(string x, string y)
@@ -87,31 +73,32 @@ public class ArgumentParser
         return d != 0 ? d : CompareOrdinal(x, y);
     }
 
-    private void AddByShortName(string arg, Queue<string> queue, SortedDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
+    private void AddByShortName(string arg, Queue<string> tokens, SortedDictionary<string, IArgumentMetadata> metadata, Dictionary<string, object> arguments)
     {
         if (metadata.TryGetValue(arg, out var def))
         {
             // Try parse as exact match
             var type = def.Type;
+            var key = def.Name;
 
             if (type == typeof(bool))
             {
-                if (queue.TryPeek(out var str) && TryParseBoolean(str, out var value))
+                if (tokens.TryPeek(out var str) && TryParseBoolean(str, out var value))
                 {
-                    arguments[arg] = value;
-                    queue.Dequeue();
+                    arguments[key] = value;
+                    tokens.Dequeue();
                 }
                 else
                 {
-                    arguments[arg] = true;
+                    arguments[key] = true;
                 }
             }
             else
             {
-                if (queue.TryDequeue(out var value))
-                    arguments[arg] = type == typeof(string) ? value.Trim(Quotes) : Convert.ChangeType(value, type, InvariantCulture);
+                if (tokens.TryDequeue(out var value))
+                    arguments[key] = type == typeof(string) ? value.Trim(Quotes) : Convert.ChangeType(value, type, InvariantCulture);
                 else
-                    ThrowMissingArgValue(arg);
+                    ThrowMissingArgValue(key);
             }
         }
         else
@@ -126,28 +113,29 @@ public class ArgumentParser
 
             if (strict) ThrowInvalidArg(arg);
 
-            arguments[arg] = queue.TryPeek(out var next) && next[0] is not ('/' or '-') ? queue.Dequeue() : "";
+            arguments[arg] = tokens.TryPeek(out var next) && next[0] is not ('/' or '-') ? tokens.Dequeue() : "";
         }
     }
 
-    private static bool TryParseAsJointKeyValuePair(string arg, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
+    private static bool TryParseAsJointKeyValuePair(string arg, SortedDictionary<string, IArgumentMetadata> metadata, Dictionary<string, object> options)
     {
-        foreach (var (key, def) in metadata)
+        foreach (var (alias, def) in metadata)
         {
             var type = def.Type;
+            var key = def.Name;
 
-            if (!arg.StartsWith(key, false, InvariantCulture)) continue;
+            if (!arg.StartsWith(alias, false, InvariantCulture)) continue;
 
             if (type != typeof(bool))
             {
-                var value = arg[key.Length..];
-                arguments[key] = type == typeof(string) ? value.Trim(Quotes) : Convert.ChangeType(value, type, InvariantCulture);
+                var value = arg[alias.Length..];
+                options[key] = type == typeof(string) ? value.Trim(Quotes) : Convert.ChangeType(value, type, InvariantCulture);
                 return true;
             }
 
-            if (!TryParseBoolean(arg[key.Length..], out var b)) continue;
+            if (!TryParseBoolean(arg[alias.Length..], out var b)) continue;
 
-            arguments[key] = b;
+            options[key] = b;
 
             return true;
         }
@@ -155,7 +143,7 @@ public class ArgumentParser
         return false;
     }
 
-    private static bool TryParseJointSwitchesArgument(string arg, IDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
+    private static bool TryParseJointSwitchesArgument(string arg, SortedDictionary<string, IArgumentMetadata> metadata, Dictionary<string, object> options)
     {
         var keys = new HashSet<string>();
 
@@ -164,14 +152,14 @@ public class ArgumentParser
         {
             match = false;
 
-            foreach (var (key, value) in metadata)
+            foreach (var (alias, def) in metadata)
             {
-                if (value.Type != typeof(bool)) continue;
+                if (def.Type != typeof(bool)) continue;
 
-                if (!arg.StartsWith(key, false, InvariantCulture)) continue;
+                if (!arg.StartsWith(alias, false, InvariantCulture)) continue;
 
-                keys.Add(key);
-                arg = arg[key.Length..];
+                keys.Add(def.Name);
+                arg = arg[alias.Length..];
                 match = true;
 
                 if (arg.Length == 0) break;
@@ -180,15 +168,15 @@ public class ArgumentParser
 
         if (arg.Length > 0) return false;
 
-        foreach (var k in keys)
+        foreach (var key in keys)
         {
-            arguments[k] = true;
+            options[key] = true;
         }
 
         return true;
     }
 
-    private void AddByName(string arg, SortedDictionary<string, IArgumentMetadata> metadata, IDictionary<string, object> arguments)
+    private void AddByName(string arg, Queue<string> tokens, SortedDictionary<string, IArgumentMetadata> metadata, Dictionary<string, object> options)
     {
         var pair = arg.Split(Separator, 2);
 
@@ -197,7 +185,7 @@ public class ArgumentParser
         if (!metadata.TryGetValue(key, out var def))
         {
             if (strict) ThrowInvalidArg(key);
-            arguments[key] = pair.Length > 1 ? pair[1] : "";
+            options[key] = pair.Length > 1 ? pair[1] : "";
             return;
         }
 
@@ -206,8 +194,8 @@ public class ArgumentParser
 
         if (type == typeof(bool))
         {
-            if (pair.Length == 1) arguments[key] = true;
-            else if (TryParseBoolean(pair[1], out var value)) arguments[key] = value;
+            if (pair.Length == 1) options[key] = true;
+            else if (TryParseBoolean(pair[1], out var value)) options[key] = value;
             else ThrowInvalidSwitchValue(key);
         }
         else
@@ -215,7 +203,11 @@ public class ArgumentParser
             if (pair.Length == 2)
             {
                 var value = pair[1];
-                arguments[key] = type == typeof(string) ? value.Trim(Quotes) : Convert.ChangeType(value, type, InvariantCulture);
+                options[key] = type == typeof(string) ? value.Trim(Quotes) : Convert.ChangeType(value, type, InvariantCulture);
+            }
+            else if (tokens.TryPeek(out var next) && next[0] is not ('/' or '-'))
+            {
+                options[key] = tokens.Dequeue();
             }
             else
             {
