@@ -48,8 +48,18 @@ public class ArgumentParser
 
         while (tokens.TryDequeue(out var arg))
         {
-            if (arg.StartsWith("--", false, InvariantCulture))
+            if (arg.StartsWith("--", StringComparison.Ordinal))
             {
+                if (arg.Length is 2)
+                {
+                    while (tokens.TryDequeue(out arg))
+                    {
+                        unknown.Add(arg);
+                    }
+
+                    break;
+                }
+
                 AddByName(arg[2..], tokens, nmap, opts);
             }
             else if (arg[0] is '-' or '/')
@@ -124,7 +134,7 @@ public class ArgumentParser
             var type = def.Type;
             var key = def.Name;
 
-            if (!arg.StartsWith(alias, false, InvariantCulture)) continue;
+            if (!arg.StartsWith(alias, StringComparison.Ordinal)) continue;
 
             if (type != typeof(bool))
             {
@@ -156,7 +166,7 @@ public class ArgumentParser
             {
                 if (def.Type != typeof(bool)) continue;
 
-                if (!arg.StartsWith(alias, false, InvariantCulture)) continue;
+                if (!arg.StartsWith(alias, StringComparison.Ordinal)) continue;
 
                 keys.Add(def.Name);
                 arg = arg[alias.Length..];

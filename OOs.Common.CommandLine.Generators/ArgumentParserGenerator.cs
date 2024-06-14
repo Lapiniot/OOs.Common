@@ -23,7 +23,8 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                 {
                     if (a is
                         {
-                            ConstructorArguments: [{ Value: string name }, { Value: string alias }, ..] cargs,
+                            ConstructorArguments: [{ Value: string name }, { Value: string longAlias }, ..] cargs,
+                            NamedArguments: var nargs,
                             AttributeClass:
                             {
                                 IsGenericType: true,
@@ -32,9 +33,13 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                         })
                     {
                         if (cargs is [_, _, { Value: char shortAlias }])
-                            builder.Add(new ArgumentData(name, alias, shortAlias, type));
+                            builder.Add(new ArgumentData(name, longAlias, shortAlias, type));
+                        else if (nargs is [{ Key: "ShortAlias", Value.Value: char shortAlias1 }, ..])
+                            builder.Add(new ArgumentData(name, longAlias, shortAlias1, type));
+                        else if (nargs is [_, { Key: "ShortAlias", Value.Value: char shortAlias2 }, ..])
+                            builder.Add(new ArgumentData(name, longAlias, shortAlias2, type));
                         else
-                            builder.Add(new ArgumentData(name, alias, '\0', type));
+                            builder.Add(new ArgumentData(name, longAlias, '\0', type));
                     }
                 }
 

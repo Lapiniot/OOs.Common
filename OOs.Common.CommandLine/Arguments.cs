@@ -37,7 +37,7 @@ public readonly record struct Arguments : IArgumentsParser
         return (options.ToDictionary(kvp => kvp.Key, kvp => kvp.Value is { } value ? value.ToString() : null), values);
     }
 
-    private static void Parse(string[] args, bool strict, out IReadOnlyDictionary<string, object> options, out ImmutableArray<string> values)
+    private static void Parse(string[] args, bool strict, out IReadOnlyDictionary<string, object> options, out ImmutableArray<string> arguments)
     {
         var queue = new Queue<string>(args);
 
@@ -49,6 +49,6 @@ public readonly record struct Arguments : IArgumentsParser
             .ToArray() ?? [];
 
         var parser = new ArgumentParser(schema, strict);
-        parser.Parse(queue, out options, out values);
+        parser.Parse(queue, out options, out arguments);
     }
 }

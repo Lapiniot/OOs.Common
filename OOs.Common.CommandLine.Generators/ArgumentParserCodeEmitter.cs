@@ -54,6 +54,19 @@ public readonly struct {{className}}: global::OOs.CommandLine.IArgumentsParser
             {
                 span = span.Slice(2);
 
+                if (span.IsEmpty)
+                {
+                    // Special "--" (end of option arguments) marker detected - 
+                    // read the rest of args as regular positional arguments
+                    while (enumerator.MoveNext())
+                    {
+                        builder.Add(enumerator.Current);
+                    }
+
+                    break;
+                }
+
+
 """);
         var i = 0;
         foreach (var attr in attributes)
