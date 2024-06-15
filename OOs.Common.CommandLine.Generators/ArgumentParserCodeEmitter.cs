@@ -85,7 +85,7 @@ public readonly struct {{className}}: global::OOs.CommandLine.IArgumentsParser
 
 """);
                 }
-                else if (type is SpecialType.System_String or SpecialType.System_Int32)
+                else
                 {
                     sb.Append($$"""
                     name = "{{name}}";

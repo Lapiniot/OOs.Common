@@ -43,13 +43,10 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                 return builder.ToImmutable();
             }).WithComparer(ImmutableArrayStructuralComparer<ArgumentData>.Instance);
 
-        var assemblyName = context.CompilationProvider.Select((p, _) => p.AssemblyName);
-
-        context.RegisterSourceOutput(attributes.Combine(assemblyName), static (ctx, source) =>
+        context.RegisterSourceOutput(attributes, static (ctx, source) =>
         {
-            var (attributes, assemblyName) = source;
-            if (attributes.Length is 0) return;
-            var code = ArgumentParserCodeEmitter.Emit(assemblyName!, "ArgumentParser", attributes);
+            if (source.Length is 0) return;
+            var code = ArgumentParserCodeEmitter.Emit("OOs.CommandLine.Generated", "ArgumentParser", source);
             ctx.AddSource("ArgumentParser.g.cs", SourceText.From(code, Encoding.UTF8));
         });
     }
