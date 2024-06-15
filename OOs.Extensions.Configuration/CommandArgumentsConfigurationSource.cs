@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
+using OOs.CommandLine;
 
 namespace OOs.Extensions.Configuration;
 
-public class CommandArgumentsConfigurationSource(string[] args, bool strict) : IConfigurationSource
+internal sealed class CommandArgumentsConfigurationSource<TParser>(string[] args, string argsSectionKey) : IConfigurationSource
+    where TParser : IArgumentsParser
 {
     public IConfigurationProvider Build(IConfigurationBuilder builder) =>
-        new CommandArgumentsConfigurationProvider(args, "args", strict);
+        new CommandArgumentsConfigurationProvider<TParser>(args, argsSectionKey);
 }
