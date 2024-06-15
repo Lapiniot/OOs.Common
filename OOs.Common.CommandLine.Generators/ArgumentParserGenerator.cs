@@ -9,9 +9,6 @@ namespace OOs.Common.CommandLine.Generators;
 [Generator]
 public class ArgumentParserGenerator : IIncrementalGenerator
 {
-    private static readonly DiagnosticDescriptor GeneralWarning = new("CLAPGEN001",
-        "General warning", "{0}", nameof(ArgumentParserGenerator), DiagnosticSeverity.Warning, true);
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var attributes = context.SyntaxProvider.ForAttributeWithMetadataName("OOs.CommandLine.OptionAttribute`1",
@@ -52,12 +49,6 @@ public class ArgumentParserGenerator : IIncrementalGenerator
         {
             var (attributes, assemblyName) = source;
             if (attributes.Length is 0) return;
-
-            // foreach (var item in attributes)
-            // {
-            //     ctx.ReportDiagnostic(Diagnostic.Create(GeneralWarning, null, [$"AssemblyName: {item}"]));
-            // }
-
             var code = ArgumentParserCodeEmitter.Emit(assemblyName!, "ArgumentParser", attributes);
             ctx.AddSource("ArgumentParser.g.cs", SourceText.From(code, Encoding.UTF8));
         });

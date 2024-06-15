@@ -47,7 +47,6 @@ public readonly struct {{className}}: global::OOs.CommandLine.IArgumentsParser
         var enumerator = args.AsSpan().GetEnumerator();
         while (enumerator.MoveNext())
         {
-        EnterLoop:
             var span = enumerator.Current.AsSpan();
             string name;
             if (span.StartsWith("--"))
@@ -182,16 +181,20 @@ public readonly struct {{className}}: global::OOs.CommandLine.IArgumentsParser
                 if (!value.StartsWith('-'))
                 {
                     options[name] = value;
-                }
-                else
-                {
-                    options[name] = null;
-                    goto EnterLoop;
+                    continue;
                 }
             }
+
+            ThrowMissingOptionValue(name);
         }
 
         return (options, builder.ToImmutable());
+    }
+
+    [global::System.Diagnostics.CodeAnalysis.DoesNotReturn]
+    static void ThrowMissingOptionValue(string optionName)
+    {
+        throw new InvalidOperationException($"Missing value for '{optionName}' option.");
     }
 }
 """);
