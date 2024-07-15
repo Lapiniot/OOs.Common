@@ -1,3 +1,5 @@
+root = false
+
 [*.cs]
 
 # CA1707: Identifiers should not contain underscores
@@ -8,6 +10,9 @@ dotnet_diagnostic.CS3016.severity = none
 
 # IDE0230: Use UTF-8 string literal
 dotnet_diagnostic.IDE0230.severity = silent
+
+# CA1515: Consider making public types internal
+dotnet_diagnostic.CA1515.severity = silent
 
 [*.{cs,vb}]
 

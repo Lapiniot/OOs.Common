@@ -19,7 +19,7 @@ public class CertificateGenerateInitializer(IHostEnvironment environment, IConfi
         var certPath = Path.Combine(configPath, $"{appName}.pfx");
         var genCert = configuration.GetValue<string>("GENERATE_SSL_CERTIFICATE") is { Length: > 0 } value && (
             int.TryParse(value, out var n) && n is > 0 ||
-            bool.TryParse(value, out var b) && b is true);
+            bool.TryParse(value, out var b) && b);
 
         if (genCert && !File.Exists(certPath))
         {
