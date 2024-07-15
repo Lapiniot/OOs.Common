@@ -7,6 +7,10 @@
             "label": "build",
             "command": "dotnet",
             "type": "process",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "args": [
                 "build",
                 "${workspaceFolder}/OOs.Common.sln",
@@ -20,15 +24,15 @@
             "detail": "Runs all unit-tests in this solution",
             "command": "dotnet",
             "type": "process",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
             "args": [
                 "test",
-                // Ask dotnet build to generate full paths for file names.
                 "/property:GenerateFullPaths=true",
-                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
                 "/consoleloggerparameters:NoSummary"
             ],
-            "group": "test",
-            "isTestCommand": true,
             "problemMatcher": "$msCompile"
         },
         {
@@ -54,6 +58,6 @@
                 "${workspaceFolder}/OOs.Common.sln"
             ],
             "problemMatcher": "$msCompile"
-        },
+        }
     ]
 }
