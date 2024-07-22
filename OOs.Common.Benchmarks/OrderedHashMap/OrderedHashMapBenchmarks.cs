@@ -5,7 +5,6 @@ namespace OOs.Common.Benchmarks.OrderedHashMap;
 #nullable disable
 
 [HideColumns("Error", "StdDev", "RatioSD", "Median")]
-[DisassemblyDiagnoser]
 [MemoryDiagnoser]
 public class OrderedHashMapBenchmarks
 {
@@ -42,10 +41,22 @@ public class OrderedHashMapBenchmarks
     }
 
     [Benchmark(Baseline = true)]
-    public void AddOrUpdateV1() => Parallel.ForEach(sampledData, p => mapV1.AddOrUpdate(p.Key, p.Value));
+    public void AddOrUpdateV1() => Parallel.ForEach(sampledData, p =>
+    {
+        lock (mapV1)
+        {
+            mapV1.AddOrUpdate(p.Key, p.Value);
+        }
+    });
 
     [Benchmark]
-    public void AddOrUpdateCurrent() => Parallel.ForEach(sampledData, p => map.AddOrUpdate(p.Key, p.Value));
+    public void AddOrUpdateCurrent() => Parallel.ForEach(sampledData, p =>
+    {
+        lock (map)
+        {
+            map.AddOrUpdate(p.Key, p.Value);
+        }
+    });
 }
 
 public enum Mode
