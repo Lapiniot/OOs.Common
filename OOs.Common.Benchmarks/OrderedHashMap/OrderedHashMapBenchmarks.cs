@@ -41,22 +41,22 @@ public class OrderedHashMapBenchmarks
     }
 
     [Benchmark(Baseline = true)]
-    public void AddOrUpdateV1() => Parallel.ForEach(sampledData, p =>
+    public void AddOrUpdateV1()
     {
-        lock (mapV1)
+        foreach (var (k, v) in sampledData)
         {
-            mapV1.AddOrUpdate(p.Key, p.Value);
+            mapV1.AddOrUpdate(k, v);
         }
-    });
+    }
 
     [Benchmark]
-    public void AddOrUpdateCurrent() => Parallel.ForEach(sampledData, p =>
+    public void AddOrUpdateCurrent()
     {
-        lock (map)
+        foreach (var (k, v) in sampledData)
         {
-            map.AddOrUpdate(p.Key, p.Value);
+            map.AddOrUpdate(k, v);
         }
-    });
+    }
 }
 
 public enum Mode
