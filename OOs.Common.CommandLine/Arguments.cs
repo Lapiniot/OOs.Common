@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using System.Reflection;
-using OOs.Collections.Generic;
 
 namespace OOs.CommandLine;
 
@@ -21,7 +20,7 @@ public readonly record struct Arguments : IArgumentsParser
     {
         var commands = Assembly.GetEntryAssembly()?
             .GetCustomAttributes<CommandAttribute>()
-            .Distinct(EqualityComparerAdapter<CommandAttribute>.Create(
+            .Distinct(EqualityComparer<CommandAttribute>.Create(
                 equals: (a1, a2) => string.Equals(a1.Name, a2.Name, StringComparison.OrdinalIgnoreCase),
                 getHashCode: a => a.Name.GetHashCode(StringComparison.OrdinalIgnoreCase)))
             .ToArray() ?? [];
