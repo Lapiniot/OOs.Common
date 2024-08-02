@@ -51,7 +51,7 @@ public static class CertificateHelpers
         return subjBuilder.Build();
     }
 
-    public static X509Extension BuildSubjectAlternateNamesExtension(string[] dnsNames, IPAddress[] iPAddresses, bool critical = false)
+    public static X509Extension BuildSubjectAlternateNamesExtension(IEnumerable<string> dnsNames, IEnumerable<IPAddress> iPAddresses, bool critical = false)
     {
         ArgumentNullException.ThrowIfNull(dnsNames);
         ArgumentNullException.ThrowIfNull(iPAddresses);
@@ -69,5 +69,18 @@ public static class CertificateHelpers
         }
 
         return sanBuilder.Build(critical);
+    }
+
+    public static byte[] GenerateSelfSignedCertificate(string commonName, string organization,
+        string organizationalUnit, DateTimeOffset notBefore, DateTimeOffset notAfter,
+        IEnumerable<string> dnsNames, IEnumerable<IPAddress> ipAddresses,
+        X509ContentType contentType = X509ContentType.Pfx)
+    {
+        using var certificate = CreateSelfSignedCertificate(
+            BuildSubjectNameExtension(commonName, organization, organizationalUnit: organizationalUnit),
+            BuildSubjectAlternateNamesExtension([commonName, "localhost"],
+                [IPAddress.Loopback, IPAddress.IPv6Loopback, .. ipAddresses]),
+                        notBefore, notAfter);
+        return certificate.Export(contentType, "");
     }
 }
