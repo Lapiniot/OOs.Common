@@ -1,9 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="PublishTrimmed">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AnalyzerLanguage>cs</AnalyzerLanguage>
     <IsTrimmable>false</IsTrimmable>
+    <PublishTrimmed>false</PublishTrimmed>
     <Nullable>enable</Nullable>
     <Version>1.8.0</Version>
     <Title>OOs.Common.CommandLine Code Generators</Title>
