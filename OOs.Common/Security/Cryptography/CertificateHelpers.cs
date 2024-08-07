@@ -78,9 +78,7 @@ public static class CertificateHelpers
     {
         using var certificate = CreateSelfSignedCertificate(
             BuildSubjectNameExtension(commonName, organization, organizationalUnit: organizationalUnit),
-            BuildSubjectAlternateNamesExtension([commonName, "localhost"],
-                [IPAddress.Loopback, IPAddress.IPv6Loopback, .. ipAddresses]),
-                        notBefore, notAfter);
+            BuildSubjectAlternateNamesExtension(dnsNames, ipAddresses), notBefore, notAfter);
         return certificate.Export(contentType, "");
     }
 }

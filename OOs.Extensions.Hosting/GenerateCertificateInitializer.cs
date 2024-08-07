@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using OOs.Net;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -35,14 +34,62 @@ public class CertificateGenerateInitializer(IHostEnvironment environment, IConfi
                 Directory.CreateDirectory(certDir);
             }
 
-            var commonName = configuration.GetValue<string>("SSL_CERTIFICATE_HOSTNAME") ?? Dns.GetHostName();
+            var dnsNames = GetDnsNames(configuration).ToList();
+            var commonName = dnsNames.First();
             var bytes = GenerateSelfSignedCertificate(commonName, $"{appName} on {commonName}", "development",
                 DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(365),
-                dnsNames: [],
-                ipAddresses: NetworkInterface.GetAllNetworkInterfaces().GetActiveExternalInterfaces().
-                    SelectMany(iface => iface.GetIPProperties().UnicastAddresses.Select(uai => uai.Address)));
+                dnsNames, GetIPAddresses(configuration));
 
             await File.WriteAllBytesAsync(certPath, bytes, cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    private static IEnumerable<IPAddress> GetIPAddresses(IConfiguration configuration)
+    {
+        if (configuration.GetValue<string>("SSL_CERTIFICATE_IP_ADDRESSES") is { Length: > 0 } addresses)
+        {
+            foreach (var address in addresses.Split([',', ';', ' '], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            {
+                yield return IPAddress.Parse(address);
+            }
+        }
+        else
+        {
+            var externalAddresses = from iface in NetworkInterface.GetAllNetworkInterfaces()
+                                    where iface is
+                                    {
+                                        OperationalStatus: OperationalStatus.Up,
+                                        NetworkInterfaceType: not (NetworkInterfaceType.Unknown
+                                            or NetworkInterfaceType.Tunnel or NetworkInterfaceType.Loopback)
+                                    }
+                                    let properties = iface.GetIPProperties()
+                                    where properties.GatewayAddresses.Count > 0
+                                    from addressInformation in properties.UnicastAddresses
+                                    select addressInformation.Address;
+            foreach (var address in externalAddresses)
+            {
+                yield return address;
+            }
+        }
+
+        yield return IPAddress.Loopback;
+        yield return IPAddress.IPv6Loopback;
+    }
+
+    private static IEnumerable<string> GetDnsNames(IConfiguration configuration)
+    {
+        if (configuration.GetValue<string>("SSL_CERTIFICATE_HOSTS") is { Length: > 0 } dnsNames)
+        {
+            foreach (var dnsName in dnsNames.Split([',', ';', ' '], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            {
+                yield return dnsName;
+            }
+        }
+        else
+        {
+            yield return Dns.GetHostName();
+        }
+
+        yield return "localhost";
     }
 }
