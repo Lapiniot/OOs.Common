@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.001.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOS.Common", "OOs.Common\OOS.Common.csproj", "{A6EA8193-B06F-428F-9E8D-E6BEDA263E4E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common", "OOs.Common\OOs.Common.csproj", "{A6EA8193-B06F-428F-9E8D-E6BEDA263E4E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OOs.Common.Tests", "OOs.Common.Tests\OOs.Common.Tests.csproj", "{8F4292EE-4A32-402F-AC91-1E653325DB86}"
 EndProject
