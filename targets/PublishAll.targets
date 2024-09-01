@@ -16,7 +16,7 @@
         <AdditionalProperties>RuntimeIdentifier=%(RuntimeIdentifiersToPublish.Identity)</AdditionalProperties>
       </ProjectsToPublish>
     </ItemGroup>
-    <MSBuild Projects="@(ProjectsToPublish)" Targets="Publish" Properties="$(ExtraPublishProps)" BuildInParallel="True" />
+    <MSBuild Projects="@(ProjectsToPublish)" Targets="Publish" Properties="$(PublishProperties)" BuildInParallel="True" />
   </Target>
 
 </Project>
