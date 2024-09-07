@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="GetGlobalProperties.targets" />
   <Import Project="PublishAll.targets" />
 
   <PropertyGroup>
@@ -6,53 +7,23 @@
     <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PublishProperty Include="Configuration" Default="Release" />
-    <PublishProperty Include="PublishProfile" Default="DefaultContainer" />
-    <PublishProperty Include="SelfContained" Default="true" />
-    <PublishProperty Include="PublishTrimmed" Default="true" />
-    <PublishProperty Include="SuppressTrimAnalysisWarnings" Default="true" />
-  </ItemGroup>
-
-  <!-- Capture initial values of related properties into local private props -->
-  <!-- Try to set properties value to some dummy string -->
-  <!-- Only local properties will be affected -->
-  <!-- Global properties will stay intact (overriden from command-line) -->
-  <!-- Set flag property to indicate whether specific property is global -->
-  <!-- Restore initial values-->
-  <PropertyGroup>
-    <__Configuration>$(Configuration)</__Configuration>
-    <Configuration>__dummy</Configuration>
-    <__ConfigurationGlobal Condition=" '$(Configuration)' == '$(__Configuration)' ">true</__ConfigurationGlobal>
-    <Configuration>$(__Configuration)</Configuration>
-
-    <__PublishProfile>$(PublishProfile)</__PublishProfile>
-    <PublishProfile>__dummy</PublishProfile>
-    <__PublishProfileGlobal Condition=" '$(PublishProfile)' == '$(__PublishProfile)' ">true</__PublishProfileGlobal>
-    <PublishProfile>$(__PublishProfile)</PublishProfile>
-
-    <__SelfContained>$(SelfContained)</__SelfContained>
-    <SelfContained>__dummy</SelfContained>
-    <__SelfContainedGlobal Condition=" '$(SelfContained)' == '$(__SelfContained)' ">true</__SelfContainedGlobal>
-    <SelfContained>$(__SelfContained)</SelfContained>
-
-    <__PublishTrimmed>$(PublishTrimmed)</__PublishTrimmed>
-    <PublishTrimmed>__dummy</PublishTrimmed>
-    <__PublishTrimmedGlobal Condition=" '$(PublishTrimmed)' == '$(__PublishTrimmed)' ">true</__PublishTrimmedGlobal>
-    <PublishTrimmed>$(__PublishTrimmed)</PublishTrimmed>
-
-    <__SuppressTrimAnalysisWarnings>$(SuppressTrimAnalysisWarnings)</__SuppressTrimAnalysisWarnings>
-    <SuppressTrimAnalysisWarnings>__dummy</SuppressTrimAnalysisWarnings>
-    <__SuppressTrimAnalysisWarningsGlobal Condition=" '$(SuppressTrimAnalysisWarnings)' == '$(__SuppressTrimAnalysisWarnings)' ">true</__SuppressTrimAnalysisWarningsGlobal>
-    <SuppressTrimAnalysisWarnings>$(__SuppressTrimAnalysisWarnings)</SuppressTrimAnalysisWarnings>
-  </PropertyGroup>
-
   <Target Name="ConfigurePublishContainer">
     <ItemGroup>
-      <PublishPropertyOverride Include="@(PublishProperty)" Condition=" '$(__%(Identity)Global)' != 'true' " />
+      <PublishProperty Include="Configuration" Default="Release" />
+      <PublishProperty Include="PublishProfile" Default="DefaultContainer" />
+      <PublishProperty Include="SelfContained" Default="true" />
+      <PublishProperty Include="PublishTrimmed" Default="true" />
+      <PublishProperty Include="SuppressTrimAnalysisWarnings" Default="true" />
+    </ItemGroup>
+    <GetGlobalProperties>
+      <Output TaskParameter="GlobalProperties" ItemName="GlobalProperty" />
+    </GetGlobalProperties>
+    <!-- Exclude all properties that are global, so values passed from command-line will override task specific defaults-->
+    <ItemGroup>
+      <PublishProperty Remove="@(GlobalProperty)" />
     </ItemGroup>
     <PropertyGroup>
-      <PublishProperties>@(PublishPropertyOverride->'%(Identity)=%(Default)')</PublishProperties>
+      <PublishProperties>@(PublishProperty->'%(Identity)=%(Default)')</PublishProperties>
     </PropertyGroup>
   </Target>
 

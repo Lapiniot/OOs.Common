@@ -1,0 +1,36 @@
+<Project>
+  <UsingTask TaskName="GetGlobalProperties" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <Task>
+      <Code Type="Class" Language="cs">
+        <![CDATA[
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using System.Collections.Generic;
+
+namespace OOs.Build.Tasks
+{
+  public class GetGlobalProperties : Task
+  {
+    [Output]
+    public ITaskItem[] GlobalProperties { get; set; }
+
+    public override bool Execute()
+    {
+      var props = BuildEngine6.GetGlobalProperties();
+      var items = new TaskItem[props.Count];
+      var i = 0;
+      foreach(var pair in props)
+      {
+        (items[i++] = new TaskItem(pair.Key)).SetMetadata("Value", pair.Value);
+      }
+
+      GlobalProperties = items;
+      return true;
+    }
+  }
+}
+]]>
+      </Code>
+    </Task>
+  </UsingTask>
+</Project>
