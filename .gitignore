@@ -6,3 +6,4 @@ _ReSharper.Caches/
 *.csproj.user
 *.user
 artifacts
+BenchmarkDotNet.Artifacts/
