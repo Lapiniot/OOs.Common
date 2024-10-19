@@ -2,6 +2,9 @@
 using System.Diagnostics.Metrics;
 using OOs.Diagnostics;
 using static System.Threading.Tasks.TaskCreationOptions;
+#if NET8_0
+using Lock = System.Object;
+#endif
 
 namespace OOs.Threading;
 
@@ -11,7 +14,7 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 {
     private static long waitingCount;
     private readonly bool runContinuationsAsynchronously;
-    private readonly object syncRoot;
+    private readonly Lock syncRoot;
     private Action<object?, CancellationToken>? cancelCallback;
     private int maxCount;
     private int currentCount;
