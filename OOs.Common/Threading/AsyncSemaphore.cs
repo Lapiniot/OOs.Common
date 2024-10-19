@@ -11,7 +11,7 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 {
     private static long waitingCount;
     private readonly bool runContinuationsAsynchronously;
-    private readonly object syncRoot;
+    private readonly Lock syncRoot;
     private Action<object?, CancellationToken>? cancelCallback;
     private int maxCount;
     private int currentCount;

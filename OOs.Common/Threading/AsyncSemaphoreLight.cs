@@ -18,7 +18,7 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
 {
     private static long waitingCount;
     private readonly int maxCount;
-    private readonly object syncRoot;
+    private readonly Lock syncRoot;
     private int currentCount;
     private ManualResetValueTaskSourceCore<int> mrvtsc;
     private CancellationTokenRegistration ctr;
