@@ -1,6 +1,9 @@
 using System.Diagnostics.Metrics;
 using System.Threading.Tasks.Sources;
 using OOs.Diagnostics;
+#if NET8_0
+using Lock = System.Object;
+#endif
 
 #nullable enable
 

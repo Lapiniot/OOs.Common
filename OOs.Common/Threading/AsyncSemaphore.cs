@@ -2,6 +2,9 @@
 using System.Diagnostics.Metrics;
 using OOs.Diagnostics;
 using static System.Threading.Tasks.TaskCreationOptions;
+#if NET8_0
+using Lock = System.Object;
+#endif
 
 namespace OOs.Threading;
 

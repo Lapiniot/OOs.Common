@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <IsTrimmable>true</IsTrimmable>
     <LangVersion>preview</LangVersion>
