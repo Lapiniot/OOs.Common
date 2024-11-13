@@ -11,6 +11,9 @@ public class OrderedHashMapBenchmarks
     private Dictionary<string, string> sampledData;
     private OrderedHashMapV1<string, string> mapV1;
     private OrderedHashMap<string, string> map;
+#if NET9_0_OR_GREATER
+    private OrderedDictionary<string, string> orderedDictionary;
+#endif
 
     private static Dictionary<string, string> GetSampleData(int count)
     {
@@ -26,19 +29,21 @@ public class OrderedHashMapBenchmarks
     [ParamsAllValues]
     public static Mode Mode { get; set; }
 
-    [IterationSetup(Target = nameof(AddOrUpdateV1))]
-    public void SetupForAddOrUpdateV1()
-    {
-        sampledData = GetSampleData(Count);
-        mapV1 = Mode is Mode.Add ? new() : new(sampledData);
-    }
+    [GlobalSetup]
+    public void Setup() => sampledData = GetSampleData(Count);
 
-    [IterationSetup(Target = nameof(AddOrUpdateCurrent))]
-    public void SetupForAddOrUpdateCurrent()
-    {
-        sampledData = GetSampleData(Count);
-        map = Mode is Mode.Add ? new() : new(sampledData);
-    }
+    [IterationSetup(Targets = [nameof(AddOrUpdateV1), nameof(AddOrUpdateV1Concurrent)])]
+    public void SetupForAddOrUpdateV1() => mapV1 = Mode is Mode.Add ? new() : new(sampledData);
+
+    [IterationSetup(Targets = [nameof(AddOrUpdateCurrent), nameof(AddOrUpdateCurrentConcurrent)])]
+    public void SetupForAddOrUpdateCurrent() => map = Mode is Mode.Add ? new() : new(sampledData);
+
+#if NET9_0_OR_GREATER
+
+    [IterationSetup(Targets = [nameof(AddOrUpdateOrderedDictionary), nameof(AddOrUpdateOrderedDictionaryConcurrent)])]
+    public void SetupForAddOrUpdateOrderedDictionary() => orderedDictionary = Mode is Mode.Add ? new() : new(sampledData);
+
+#endif
 
     [Benchmark(Baseline = true)]
     public void AddOrUpdateV1()
@@ -57,6 +62,43 @@ public class OrderedHashMapBenchmarks
             map.AddOrUpdate(k, v);
         }
     }
+
+#if NET9_0_OR_GREATER
+
+    [Benchmark]
+    public void AddOrUpdateOrderedDictionary()
+    {
+        foreach (var (k, v) in sampledData)
+        {
+            orderedDictionary[k] = v;
+        }
+    }
+
+#endif
+
+    [Benchmark]
+    public void AddOrUpdateV1Concurrent() =>
+        Parallel.ForEach(sampledData, item => mapV1.AddOrUpdate(item.Key, item.Value));
+
+    [Benchmark]
+    public void AddOrUpdateCurrentConcurrent() =>
+        Parallel.ForEach(sampledData, item => map.AddOrUpdate(item.Key, item.Value));
+
+#if NET9_0_OR_GREATER
+
+    [Benchmark]
+    public void AddOrUpdateOrderedDictionaryConcurrent()
+    {
+        Parallel.ForEach(sampledData, item =>
+        {
+            lock (orderedDictionary)
+            {
+                orderedDictionary[item.Key] = item.Value;
+            }
+        });
+    }
+
+#endif
 }
 
 public enum Mode
