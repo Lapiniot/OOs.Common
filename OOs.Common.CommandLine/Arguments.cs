@@ -26,7 +26,7 @@ public readonly record struct Arguments : IArgumentsParser
             .ToArray() ?? [];
 
         Parse(args, strict, out var options, out var values);
-        var command = commands.FirstOrDefault(c => c.Name == values[0]);
+        var command = values is [{ } cmd, ..] ? commands.FirstOrDefault(c => c.Name == cmd) : null;
         return new(command?.Name, options, values);
     }
 
