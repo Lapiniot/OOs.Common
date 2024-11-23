@@ -54,7 +54,7 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
             if (--currentCount >= 0)
                 return Task.CompletedTask;
 
-            if (RuntimeSettings.ThreadingInstrumentationSupport)
+            if (RuntimeOptions.ThreadingInstrumentationSupported)
                 Interlocked.Increment(ref waitingCount);
 
             var waiter = new WaiterNode(runContinuationsAsynchronously);
@@ -164,7 +164,7 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 
     public static IDisposable? EnableInstrumentation(string? meterName = null)
     {
-        if (RuntimeSettings.ThreadingInstrumentationSupport)
+        if (RuntimeOptions.ThreadingInstrumentationSupported)
         {
             var meter = new Meter(meterName ?? "OOs.Threading.AsyncSemaphore");
             meter.CreateObservableGauge("waiting-count", static () => waitingCount, description: "Number of asynchronous waits");

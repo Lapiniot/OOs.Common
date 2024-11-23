@@ -104,7 +104,7 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
 
         ValueTask WaitCoreAsync(CancellationToken cancellationToken)
         {
-            if (RuntimeSettings.ThreadingInstrumentationSupport)
+            if (RuntimeOptions.ThreadingInstrumentationSupported)
                 Interlocked.Increment(ref waitingCount);
 
             waiting = true;
@@ -120,7 +120,7 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
 
     public static IDisposable? EnableInstrumentation(string? meterName = null)
     {
-        if (RuntimeSettings.ThreadingInstrumentationSupport)
+        if (RuntimeOptions.ThreadingInstrumentationSupported)
         {
             var meter = new Meter(meterName ?? "OOs.Threading.AsyncSemaphoreLight");
             meter.CreateObservableGauge("waiting-count", static () => waitingCount, description: "Number of asynchronous waits");
