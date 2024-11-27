@@ -66,7 +66,7 @@ public static class SocketBuilderExtensions
             }
             else
             {
-                socket.SetSocketOption(optionLevel, MulticastInterface, mcintAddress.ScopeId);
+                socket.SetSocketOption(optionLevel, MulticastInterface, (int)mcintAddress.ScopeId);
             }
         }
 
