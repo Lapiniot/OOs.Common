@@ -14,9 +14,14 @@ public delegate Socket CreateSocketFactory(IPEndPoint remoteEndPoint);
 
 public static class SocketBuilderExtensions
 {
-    public static IPEndPoint GetIPv4MulticastGroup(int port) => new(new IPAddress(0xfaffffef /* 239.255.255.250 */), port);
+    public static IPEndPoint GetIPv4MulticastGroup(int port) => new(0xfaffffef /* 239.255.255.250 */, port);
+
+    public static IPEndPoint GetIPv6MulticastGroup(int port) =>
+        new(new IPAddress([0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x0c]) /* ff02::c (IPv6 link-local) */, port);
 
     public static IPEndPoint GetIPv4SSDPGroup() => GetIPv4MulticastGroup(1900);
+
+    public static IPEndPoint GetIPv6SSDPGroup() => GetIPv6MulticastGroup(1900);
 
     public static UnixDomainSocketEndPoint ResolveUnixDomainSocketPath(string path)
     {
