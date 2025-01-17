@@ -2,6 +2,18 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "problemMatcher": {
+        "base": "$msCompile",
+        "source": "dotnet",
+        "pattern": {
+            "regexp": "^([^\\\\s].*)\\((\\d+,\\d+)\\):\\s+(error|warning|message)\\s+(.*):\\s+(.*)$",
+            "file": 1,
+            "location": 2,
+            "message": 5,
+            "severity": 3,
+            "code": 4
+        }
+    },
     "tasks": [
         {
             "label": "build",
@@ -16,8 +28,7 @@
                 "${workspaceFolder}/OOs.Common.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
+            ]
         },
         {
             "label": "Run Tests",
@@ -32,8 +43,7 @@
             "group": {
                 "kind": "test",
                 "isDefault": true
-            },
-            "problemMatcher": "$msCompile"
+            }
         },
         {
             "label": "publish",
@@ -44,8 +54,7 @@
                 "${workspaceFolder}/OOs.Common.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
+            ]
         },
         {
             "label": "watch",
@@ -56,8 +65,7 @@
                 "run",
                 "--project",
                 "${workspaceFolder}/OOs.Common.sln"
-            ],
-            "problemMatcher": "$msCompile"
+            ]
         }
     ]
 }
