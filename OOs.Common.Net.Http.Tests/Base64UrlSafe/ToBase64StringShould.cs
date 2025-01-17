@@ -4,10 +4,9 @@ namespace OOs.Common.Net.Http.Tests.Base64UrlSafe;
 public class ToBase64StringShould
 {
     [TestMethod]
-    [ExpectedException(typeof(ArgumentNullException))]
     public void ReturnEmptyString_GivenNullArray()
     {
-        _ = OOs.Net.Http.Base64UrlSafe.ToBase64String(null);
+        Assert.ThrowsException<ArgumentNullException>(() => _ = OOs.Net.Http.Base64UrlSafe.ToBase64String(null));
     }
 
     [TestMethod]

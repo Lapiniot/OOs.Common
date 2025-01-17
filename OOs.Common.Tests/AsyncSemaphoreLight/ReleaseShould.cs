@@ -6,11 +6,10 @@ namespace OOs.Common.Tests.AsyncSemaphoreLight;
 public class ReleaseShould
 {
     [TestMethod]
-    [ExpectedException(typeof(SemaphoreFullException))]
     public void ThrowSemaphoreFullException_WhenCurrentCountEqualsToMaxCount()
     {
         var semaphore = new ASL(1, 1);
-        semaphore.Release();
+        Assert.ThrowsException<SemaphoreFullException>(() => semaphore.Release());
     }
 
     [TestMethod]

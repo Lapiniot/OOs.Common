@@ -26,14 +26,14 @@ public class WaitAsyncShould
     }
 
     [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
     public void ThrowInvalidOperationException_ForWaitingSemaphore()
     {
         // Arrange
         var semaphore = new ASL(0, 1);
         semaphore.WaitAsync(default).AsTask();
-        // Act
-        semaphore.WaitAsync(default).AsTask();
+        Assert.ThrowsException<InvalidOperationException>(() =>
+                // Act
+                semaphore.WaitAsync(default).AsTask());
     }
 
     [TestMethod]
