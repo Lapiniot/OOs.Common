@@ -2,13 +2,14 @@ using System.Collections.Immutable;
 
 namespace OOs.Policies;
 
+#pragma warning disable IDE0350 // Use implicitly typed lambda
 public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition> Conditions)
 {
     /// <summary>
     /// Creates new instance of the repeat policy
     /// </summary>
     /// <returns>New instance of the policy</returns>
-    public IRepeatPolicy Build() => new ConditionalRepeatPolicy([.. (Conditions ?? [])]);
+    public IRepeatPolicy Build() => new ConditionalRepeatPolicy([.. Conditions ?? []]);
 
     /// <summary>
     /// Appends custom repeat condition handler to the current instance of the builder

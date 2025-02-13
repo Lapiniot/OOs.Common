@@ -56,7 +56,7 @@ public sealed class TcpSslSocketClientConnection : TcpSslSocketConnection
             };
 
             if (certificates is not null)
-                options.ClientCertificates = new(certificates);
+                options.ClientCertificates = [.. certificates];
 
             await SslStream.AuthenticateAsClientAsync(options, cancellationToken).ConfigureAwait(false);
         }

@@ -12,17 +12,17 @@ public interface INetworkConnection : IAsyncDisposable
     /// Correlation ID of the current connection (used for debugging and tracing purpose primarily).
     /// </summary>
     /// <value>correlation ID value</value>
-    public string Id { get; }
+    string Id { get; }
 
     /// <summary>
     /// Gets the local endpoint
     /// </summary>
-    public EndPoint LocalEndPoint { get; }
+    EndPoint LocalEndPoint { get; }
 
     /// <summary>
     /// Gets the remote endpoint
     /// </summary>
-    public EndPoint RemoteEndPoint { get; }
+    EndPoint RemoteEndPoint { get; }
 
     /// <summary>
     /// Sends data to the other party
