@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.Sockets;
 using OOs.Net.Connections;
+using OOs.Net.Pipelines;
 
 namespace OOs.Net.Listeners;
 
-public abstract class SocketListener : IAsyncEnumerable<NetworkConnection>
+public abstract class SocketListener : IAsyncEnumerable<NetworkTransportPipe>
 {
     private readonly int backlog;
     private readonly Action<Socket> configureAccepted;
@@ -30,7 +31,7 @@ public abstract class SocketListener : IAsyncEnumerable<NetworkConnection>
 
     #region Implementation of IAsyncEnumerable<INetworkConnection>
 
-    public async IAsyncEnumerator<NetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    public async IAsyncEnumerator<NetworkTransportPipe> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         using var socket = CreateSocket();
 
@@ -64,7 +65,7 @@ public abstract class SocketListener : IAsyncEnumerable<NetworkConnection>
             }
 
             if (connection is not null)
-                yield return connection;
+                yield return new(connection);
         }
     }
 

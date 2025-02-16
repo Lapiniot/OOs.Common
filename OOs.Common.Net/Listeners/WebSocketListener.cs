@@ -1,9 +1,10 @@
 ﻿using System.Net;
 using OOs.Net.Connections;
+using OOs.Net.Pipelines;
 
 namespace OOs.Net.Listeners;
 
-public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
+public sealed class WebSocketListener : IAsyncEnumerable<NetworkTransportPipe>
 {
     private const int ReceiveBufferSize = 16384;
     private const int KeepAliveSeconds = 120;
@@ -31,12 +32,12 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
 
     #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
-    public IAsyncEnumerator<NetworkConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
+    public IAsyncEnumerator<NetworkTransportPipe> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
         new WebSocketEnumerator(prefixes, subProtocols, keepAliveInterval, receiveBufferSize, cancellationToken);
 
     #endregion
 
-    private sealed class WebSocketEnumerator : IAsyncEnumerator<NetworkConnection>
+    private sealed class WebSocketEnumerator : IAsyncEnumerator<NetworkTransportPipe>
     {
         private static readonly char[] Separators = [' ', ','];
         private readonly CancellationToken cancellationToken;
@@ -120,8 +121,10 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
                     {
                         var socketContext = await context.AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval)
                             .WaitAsync(cancellationToken).ConfigureAwait(false);
-                        Current = new WebSocketServerConnection(socketContext.WebSocket,
-                            context.Request.LocalEndPoint, context.Request.RemoteEndPoint);
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                        Current = new(new WebSocketServerConnection(socketContext.WebSocket,
+                            context.Request.LocalEndPoint, context.Request.RemoteEndPoint));
+#pragma warning restore CA2000 // Dispose objects before losing scope
                         return true;
                     }
                     catch
@@ -139,7 +142,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkConnection>
             return false;
         }
 
-        public NetworkConnection Current { get; private set; }
+        public NetworkTransportPipe Current { get; private set; }
 
         #endregion
     }

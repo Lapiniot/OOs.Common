@@ -28,7 +28,7 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
 
     public PipeWriter Output => outputPipe.Writer;
 
-    public void Start()
+    public async ValueTask StartAsync(CancellationToken cancellationToken)
     {
         CheckDisposed();
 
@@ -39,6 +39,7 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
                 try
                 {
                     globalCts = cts;
+                    await OnStartingAsync(cancellationToken).ConfigureAwait(false);
                     inputWorker = StartInputPartAsync(inputPipe.Writer, cts.Token);
                     outputWorker = StartOutputPartAsync(outputPipe.Reader, cts.Token);
                     Volatile.Write(ref state, Started);
@@ -48,7 +49,7 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
                     using (cts)
                     {
                         Volatile.Write(ref state, Stopped);
-                        cts.Cancel();
+                        await cts.CancelAsync().ConfigureAwait(false);
                     }
 
                     throw;
@@ -60,6 +61,8 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
                 break;
         }
     }
+
+    protected abstract ValueTask OnStartingAsync(CancellationToken cancellationToken);
 
     public void Reset()
     {
@@ -196,7 +199,7 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
 
     #region Implementation of IAsyncDisposable
 
-    public async ValueTask DisposeAsync()
+    public virtual async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref disposed, 1) is not 0)
         {
