@@ -3,9 +3,9 @@ using static System.Threading.Tasks.ConfigureAwaitOptions;
 
 #nullable enable
 
-namespace OOs.IO.Pipelines;
+namespace OOs.Net.Connections;
 
-public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions outputPipeOptions) : IDuplexPipe, IAsyncDisposable
+public abstract class TransportConnectionPipeAdapter(PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions) : TransportConnection
 {
     private static readonly PipeOptions DefaultOptions = new(useSynchronizationContext: false);
     private const int Stopped = 0;
@@ -20,15 +20,18 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
     private int state;
     private int disposed;
 
-    public Task? InputCompletion => inputWorker;
+    public sealed override PipeReader Input => inputPipe.Reader;
 
-    public Task? OutputCompletion => outputWorker;
+    public sealed override PipeWriter Output => outputPipe.Writer;
 
-    public PipeReader Input => inputPipe.Reader;
+    public sealed override async Task CompleteOutputAsync()
+    {
+        await Output.CompleteAsync().ConfigureAwait(false);
+        if (outputWorker is { } worker)
+            await worker.ConfigureAwait(false);
+    }
 
-    public PipeWriter Output => outputPipe.Writer;
-
-    public async ValueTask StartAsync(CancellationToken cancellationToken)
+    public override async ValueTask StartAsync(CancellationToken cancellationToken)
     {
         CheckDisposed();
 
@@ -39,6 +42,7 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
                 try
                 {
                     globalCts = cts;
+                    Reset();
                     await OnStartingAsync(cancellationToken).ConfigureAwait(false);
                     inputWorker = StartInputPartAsync(inputPipe.Writer, cts.Token);
                     outputWorker = StartOutputPartAsync(outputPipe.Reader, cts.Token);
@@ -62,9 +66,7 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
         }
     }
 
-    protected abstract ValueTask OnStartingAsync(CancellationToken cancellationToken);
-
-    public void Reset()
+    private void Reset()
     {
         inputPipe.Reader.Complete();
         inputPipe.Writer.Complete();
@@ -75,7 +77,7 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
         outputPipe.Reset();
     }
 
-    public Task StopAsync()
+    public override Task StopAsync()
     {
         while (true)
         {
@@ -114,16 +116,10 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
             {
                 await captured.CancelAsync().ConfigureAwait(SuppressThrowing);
                 await Task.WhenAll(inputWorker!, outputWorker!).ConfigureAwait(SuppressThrowing);
+                await OnStoppingAsync().AsTask().ConfigureAwait(SuppressThrowing);
                 Volatile.Write(ref state, Stopped);
             }
         }
-    }
-
-    public async Task CompleteOutputAsync()
-    {
-        await Output.CompleteAsync().ConfigureAwait(false);
-        if (outputWorker is { } worker)
-            await worker.ConfigureAwait(false);
     }
 
     protected void CheckDisposed() => ObjectDisposedException.ThrowIf(disposed is 1, this);
@@ -194,23 +190,24 @@ public abstract class TransportPipe(PipeOptions inputPipeOptions, PipeOptions ou
         }
     }
 
+    protected abstract ValueTask OnStartingAsync(CancellationToken cancellationToken);
+    protected abstract ValueTask OnStoppingAsync();
     protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
     protected abstract ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken);
 
     #region Implementation of IAsyncDisposable
 
-    public virtual async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref disposed, 1) is not 0)
-        {
             return;
-        }
 
         GC.SuppressFinalize(this);
 
         using (globalCts)
         {
             await StopAsync().ConfigureAwait(false);
+            await base.DisposeAsync().ConfigureAwait(false);
         }
     }
 

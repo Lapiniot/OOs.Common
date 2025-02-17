@@ -1,10 +1,9 @@
 ﻿using System.Net;
 using OOs.Net.Connections;
-using OOs.Net.Pipelines;
 
 namespace OOs.Net.Listeners;
 
-public sealed class WebSocketListener : IAsyncEnumerable<NetworkTransportPipe>
+public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>
 {
     private const int ReceiveBufferSize = 16384;
     private const int KeepAliveSeconds = 120;
@@ -32,12 +31,12 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkTransportPipe>
 
     #region Implementation of IAsyncEnumerable<out INetworkConnection>
 
-    public IAsyncEnumerator<NetworkTransportPipe> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
+    public IAsyncEnumerator<TransportConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
         new WebSocketEnumerator(prefixes, subProtocols, keepAliveInterval, receiveBufferSize, cancellationToken);
 
     #endregion
 
-    private sealed class WebSocketEnumerator : IAsyncEnumerator<NetworkTransportPipe>
+    private sealed class WebSocketEnumerator : IAsyncEnumerator<TransportConnection>
     {
         private static readonly char[] Separators = [' ', ','];
         private readonly CancellationToken cancellationToken;
@@ -122,7 +121,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkTransportPipe>
                         var socketContext = await context.AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval)
                             .WaitAsync(cancellationToken).ConfigureAwait(false);
 #pragma warning disable CA2000 // Dispose objects before losing scope
-                        Current = new(new WebSocketServerConnection(socketContext.WebSocket,
+                        Current = new NetworkConnectionAdapter(new WebSocketServerConnection(socketContext.WebSocket,
                             context.Request.LocalEndPoint, context.Request.RemoteEndPoint));
 #pragma warning restore CA2000 // Dispose objects before losing scope
                         return true;
@@ -142,7 +141,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<NetworkTransportPipe>
             return false;
         }
 
-        public NetworkTransportPipe Current { get; private set; }
+        public TransportConnection Current { get; private set; }
 
         #endregion
     }
