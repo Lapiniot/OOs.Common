@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 
 namespace OOs.Net.Connections;
 
+[Obsolete("Consider usage of OOs.Net.Connections.ServerWebSocketTransportConnection instead.")]
 public class WebSocketServerConnection(WebSocket socket, EndPoint localEndPoint, EndPoint remoteEndPoint) : WebSocketConnection<WebSocket>(socket)
 {
     public sealed override EndPoint LocalEndPoint => localEndPoint;

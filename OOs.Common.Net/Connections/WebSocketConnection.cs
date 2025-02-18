@@ -47,7 +47,7 @@ public abstract class WebSocketConnection<TWebSocket>(TWebSocket socket) : Netwo
             wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
             wse.WebSocketErrorCode is InvalidState && socket.State is Aborted or Closed)
         {
-            ThrowConnectionClosed(wse);
+            ThrowHelper.ThrowConnectionClosed(wse);
         }
     }
 
@@ -67,7 +67,7 @@ public abstract class WebSocketConnection<TWebSocket>(TWebSocket socket) : Netwo
             wse.WebSocketErrorCode is ConnectionClosedPrematurely ||
             wse.WebSocketErrorCode is InvalidState && socket.State is Aborted or Closed)
         {
-            ThrowConnectionClosed(wse);
+            ThrowHelper.ThrowConnectionClosed(wse);
         }
 
         return 0;

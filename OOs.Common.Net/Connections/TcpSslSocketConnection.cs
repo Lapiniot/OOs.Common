@@ -31,7 +31,7 @@ public abstract class TcpSslSocketConnection : SocketConnection
         }
         catch (SocketException se) when (se.SocketErrorCode is SocketError.ConnectionAborted or SocketError.ConnectionReset or SocketError.Shutdown)
         {
-            ThrowConnectionClosed(se);
+            ThrowHelper.ThrowConnectionClosed(se);
         }
     }
 
@@ -45,7 +45,7 @@ public abstract class TcpSslSocketConnection : SocketConnection
         }
         catch (SocketException se) when (se.SocketErrorCode is SocketError.ConnectionAborted or SocketError.ConnectionReset or SocketError.Shutdown)
         {
-            ThrowConnectionClosed(se);
+            ThrowHelper.ThrowConnectionClosed(se);
             return 0;
         }
     }

@@ -26,7 +26,7 @@ public abstract class SocketListener : IAsyncEnumerable<TransportConnection>
     protected EndPoint EndPoint => endPoint;
 
     protected abstract Socket CreateSocket();
-    protected abstract NetworkConnection CreateConnection(Socket acceptedSocket);
+    protected abstract TransportConnection CreateConnection(Socket acceptedSocket);
 
     #region Implementation of IAsyncEnumerable<INetworkConnection>
 
@@ -44,7 +44,7 @@ public abstract class SocketListener : IAsyncEnumerable<TransportConnection>
             cancellationToken.ThrowIfCancellationRequested();
 
             Socket acceptedSocket = null;
-            NetworkConnection connection;
+            TransportConnection connection;
 
             try
             {
@@ -64,7 +64,7 @@ public abstract class SocketListener : IAsyncEnumerable<TransportConnection>
             }
 
             if (connection is not null)
-                yield return new NetworkConnectionAdapter(connection);
+                yield return connection;
         }
     }
 

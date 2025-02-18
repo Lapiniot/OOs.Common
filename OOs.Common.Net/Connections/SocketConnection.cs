@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Sockets;
-using static System.Net.Sockets.SocketFlags;
-using static System.Net.Sockets.SocketError;
 using System.Net;
+using System.Net.Sockets;
+using static System.Net.Sockets.SocketError;
+using static System.Net.Sockets.SocketFlags;
 
 namespace OOs.Net.Connections;
 
@@ -44,7 +44,7 @@ public abstract class SocketConnection(bool reuseSocket) : NetworkConnection
         }
         catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
-            ThrowConnectionClosed(se);
+            ThrowHelper.ThrowConnectionClosed(se);
         }
     }
 
@@ -56,7 +56,7 @@ public abstract class SocketConnection(bool reuseSocket) : NetworkConnection
         }
         catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
         {
-            ThrowConnectionClosed(se);
+            ThrowHelper.ThrowConnectionClosed(se);
             return 0;
         }
     }
@@ -90,7 +90,7 @@ public abstract class SocketConnection(bool reuseSocket) : NetworkConnection
         }
         catch (SocketException se) when (se.SocketErrorCode == HostNotFound)
         {
-            ThrowHostNotFound(se);
+            ThrowHelper.ThrowHostNotFound(se);
             return default;
         }
     }
@@ -112,7 +112,7 @@ public abstract class SocketConnection(bool reuseSocket) : NetworkConnection
         }
         catch (SocketException se)
         {
-            ThrowServerUnavailable(se);
+            ThrowHelper.ThrowServerUnavailable(se);
         }
     }
 }

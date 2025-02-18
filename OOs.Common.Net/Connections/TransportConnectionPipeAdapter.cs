@@ -31,7 +31,7 @@ public abstract class TransportConnectionPipeAdapter(PipeOptions? inputPipeOptio
             await worker.ConfigureAwait(false);
     }
 
-    public override async ValueTask StartAsync(CancellationToken cancellationToken)
+    public sealed override async ValueTask StartAsync(CancellationToken cancellationToken)
     {
         CheckDisposed();
 
@@ -61,7 +61,7 @@ public abstract class TransportConnectionPipeAdapter(PipeOptions? inputPipeOptio
 
                 break;
             case Stopping:
-                ThrowHelper.ThrowInvalidState("Stopping");
+                OOs.ThrowHelper.ThrowInvalidState("Stopping");
                 break;
         }
     }
@@ -77,7 +77,7 @@ public abstract class TransportConnectionPipeAdapter(PipeOptions? inputPipeOptio
         outputPipe.Reset();
     }
 
-    public override Task StopAsync()
+    public sealed override Task StopAsync()
     {
         while (true)
         {

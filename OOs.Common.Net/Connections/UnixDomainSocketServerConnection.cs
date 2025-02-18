@@ -2,6 +2,7 @@
 
 namespace OOs.Net.Connections;
 
+[Obsolete("Consider usage of OOs.Net.Connections.ServerUnixDomainSocketTransportConnection instead.")]
 public sealed class UnixDomainSocketServerConnection(Socket acceptedSocket) :
     SocketConnection(acceptedSocket, reuseSocket: false)
 {

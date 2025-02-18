@@ -40,11 +40,11 @@ public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSoc
         catch (WebSocketException wse) when (
             wse.InnerException is HttpRequestException { InnerException: SocketException { SocketErrorCode: SocketError.HostNotFound } })
         {
-            ThrowHostNotFound(wse);
+            ThrowHelper.ThrowHostNotFound(wse);
         }
         catch (WebSocketException wse)
         {
-            ThrowServerUnavailable(wse);
+            ThrowHelper.ThrowServerUnavailable(wse);
         }
     }
 

@@ -3,13 +3,17 @@ using OOs.Net.Connections;
 
 namespace OOs.Net.Listeners;
 
-public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>
+public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>, IAsyncDisposable
 {
+#if NET9_0_OR_GREATER
+    private static readonly System.Buffers.SearchValues<char> Separators = System.Buffers.SearchValues.Create(' ', ',');
+#endif
     private const int ReceiveBufferSize = 16384;
     private const int KeepAliveSeconds = 120;
     private readonly TimeSpan keepAliveInterval;
     private readonly string[] prefixes;
     private readonly int receiveBufferSize;
+    private readonly HttpListener listener;
     private readonly string[] subProtocols;
 
     public WebSocketListener(string[] prefixes, string[] subProtocols, TimeSpan keepAliveInterval, int receiveBufferSize)
@@ -21,6 +25,11 @@ public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>
         this.subProtocols = subProtocols;
         this.keepAliveInterval = keepAliveInterval;
         this.receiveBufferSize = receiveBufferSize;
+        listener = new HttpListener();
+        foreach (var prefix in prefixes)
+        {
+            listener.Prefixes.Add(prefix);
+        }
     }
 
     public WebSocketListener(string[] prefixes, string[] subProtocols) :
@@ -28,121 +37,110 @@ public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>
     { }
 
     public override string ToString() => $"{nameof(WebSocketListener)} ({string.Join(";", prefixes)}) ({string.Join(";", subProtocols)})";
-
-    #region Implementation of IAsyncEnumerable<out INetworkConnection>
-
-    public IAsyncEnumerator<TransportConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
-        new WebSocketEnumerator(prefixes, subProtocols, keepAliveInterval, receiveBufferSize, cancellationToken);
-
-    #endregion
-
-    private sealed class WebSocketEnumerator : IAsyncEnumerator<TransportConnection>
+    public async IAsyncEnumerator<TransportConnection> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        private static readonly char[] Separators = [' ', ','];
-        private readonly CancellationToken cancellationToken;
-        private readonly TimeSpan keepAliveInterval;
-        private readonly HttpListener listener;
-        private readonly int receiveBufferSize;
-        private readonly bool shouldMatchSubProtocol;
-        private readonly string[] subProtocols;
+        var shouldMatchSubProtocol = subProtocols is { Length: > 0 };
+        listener.Start();
 
-        public WebSocketEnumerator(string[] prefixes, string[] subProtocols, in TimeSpan keepAliveInterval,
-            in int receiveBufferSize, CancellationToken cancellationToken)
+        try
         {
-            ArgumentNullException.ThrowIfNull(prefixes);
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var context = await listener.GetContextAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
 
-            this.subProtocols = subProtocols;
-            this.keepAliveInterval = keepAliveInterval;
-            this.receiveBufferSize = receiveBufferSize;
-            this.cancellationToken = cancellationToken;
-            shouldMatchSubProtocol = subProtocols is { Length: > 0 };
+                if (!context.Request.IsWebSocketRequest)
+                {
+                    CloseResponse(context.Response, "Only Web Socket handshake requests are supported.");
+                    continue;
+                }
 
-            listener = new();
-            foreach (var prefix in prefixes) listener.Prefixes.Add(prefix);
-            listener.Start();
+                var clientSubProtocol = context.Request.Headers["Sec-WebSocket-Protocol"];
+
+                if (shouldMatchSubProtocol)
+                {
+                    if (string.IsNullOrEmpty(clientSubProtocol))
+                    {
+                        CloseResponse(context.Response, "At least one sub-protocol must be specified.");
+                        continue;
+                    }
+
+                    clientSubProtocol = MatchSubProtocol(clientSubProtocol);
+                    if (clientSubProtocol is null)
+                    {
+                        CloseResponse(context.Response, "Not supported sub-protocol(s).");
+                        continue;
+                    }
+                }
+
+                ServerWebSocketTransportConnection connection = null;
+
+                try
+                {
+                    var ctx = await context.AcceptWebSocketAsync(clientSubProtocol, receiveBufferSize, keepAliveInterval)
+                        .WaitAsync(cancellationToken).ConfigureAwait(false);
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                    connection = new(ctx.WebSocket, context.Request.LocalEndPoint, context.Request.RemoteEndPoint);
+#pragma warning restore CA2000 // Dispose objects before losing scope
+                }
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch
+#pragma warning restore CA1031 // Do not catch general exception types
+                {
+                    await using (connection)
+                    {
+                        CloseResponse(context.Response);
+                    }
+
+                    connection = null;
+                }
+
+                if (connection is not null)
+                {
+                    yield return connection;
+                }
+            }
+        }
+        finally
+        {
+            listener.Stop();
         }
 
-        private static void Close(HttpListenerResponse response, string statusDescription = "Bad request", int statusCode = 400)
+        static void CloseResponse(HttpListenerResponse response, string statusDescription = "Bad request", int statusCode = 400)
         {
             response.StatusCode = statusCode;
             response.StatusDescription = statusDescription;
             response.Close();
         }
 
-        #region Implementation of IAsyncDisposable
-
-        public ValueTask DisposeAsync()
+#if NET9_0_OR_GREATER
+        string MatchSubProtocol(string clientSubProtocols)
         {
-            listener.Close();
-            return default;
-        }
-
-        #endregion
-
-        #region Implementation of IAsyncEnumerator<out INetworkConnection>
-
-        public async ValueTask<bool> MoveNextAsync()
-        {
-            try
+            var span = clientSubProtocols.AsSpan();
+            foreach (var range in span.SplitAny(Separators))
             {
-                while (true)
+                var clientSubProtocol = span[range];
+                foreach (var subProtocol in subProtocols)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    var context = await listener.GetContextAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
-
-                    if (!context.Request.IsWebSocketRequest)
+                    if (subProtocol.SequenceEqual(clientSubProtocol))
                     {
-                        Close(context.Response, "Only Web Socket handshake requests are supported.");
-                        continue;
-                    }
-
-                    var subProtocol = context.Request.Headers["Sec-WebSocket-Protocol"];
-
-                    if (shouldMatchSubProtocol)
-                    {
-                        if (string.IsNullOrEmpty(subProtocol))
-                        {
-                            Close(context.Response, "At least one sub-protocol must be specified.");
-                            continue;
-                        }
-
-                        var headers = subProtocol.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
-                        subProtocol = subProtocols.Intersect(headers).FirstOrDefault();
-                        if (subProtocol is null)
-                        {
-                            Close(context.Response, "Not supported sub-protocol(s).");
-                            continue;
-                        }
-                    }
-
-                    try
-                    {
-                        var socketContext = await context.AcceptWebSocketAsync(subProtocol, receiveBufferSize, keepAliveInterval)
-                            .WaitAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning disable CA2000 // Dispose objects before losing scope
-                        Current = new NetworkConnectionAdapter(new WebSocketServerConnection(socketContext.WebSocket,
-                            context.Request.LocalEndPoint, context.Request.RemoteEndPoint));
-#pragma warning restore CA2000 // Dispose objects before losing scope
-                        return true;
-                    }
-                    catch
-                    {
-                        Close(context.Response);
-                        throw;
+                        return subProtocol;
                     }
                 }
             }
-            catch (OperationCanceledException)
-            {
-                listener.Stop();
-            }
 
-            return false;
+            return null;
         }
+#else
+        string MatchSubProtocol(string clientSubProtocols) => subProtocols
+            .Intersect(clientSubProtocols.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries))
+            .FirstOrDefault();
+#endif
+    }
 
-        public TransportConnection Current { get; private set; }
-
-        #endregion
+    public ValueTask DisposeAsync()
+    {
+        listener.Close();
+        return default;
     }
 }

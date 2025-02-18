@@ -3,6 +3,7 @@ using System.Net.Sockets;
 
 namespace OOs.Net.Connections;
 
+[Obsolete("Consider usage of OOs.Net.Connections.ServerTcpSslSocketTransportConnection instead.")]
 public sealed class TcpSslSocketServerConnection(Socket acceptedSocket, SslServerAuthenticationOptions options) :
     TcpSslSocketConnection(acceptedSocket, reuseSocket: false)
 {
@@ -23,4 +24,7 @@ public sealed class TcpSslSocketServerConnection(Socket acceptedSocket, SslServe
             }
         }
     }
+
+    protected override Task StoppingAsync() => base.StoppingAsync();
+
 }

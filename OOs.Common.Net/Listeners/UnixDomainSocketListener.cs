@@ -16,8 +16,8 @@ public sealed class UnixDomainSocketListener(UnixDomainSocketEndPoint endPoint, 
         return new(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
     }
 
-    protected override NetworkConnection CreateConnection(Socket acceptedSocket) =>
-        new UnixDomainSocketServerConnection(acceptedSocket);
+    protected override TransportConnection CreateConnection(Socket acceptedSocket) =>
+        new ServerUnixDomainSocketTransportConnection(acceptedSocket);
 
     public override string ToString() => $"{nameof(UnixDomainSocketListener)} (unix://{EndPoint})";
 }
