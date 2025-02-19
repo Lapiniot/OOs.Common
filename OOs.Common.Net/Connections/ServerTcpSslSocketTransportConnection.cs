@@ -6,76 +6,37 @@ using System.Net.Sockets;
 
 namespace OOs.Net.Connections;
 
-public sealed class ServerTcpSslSocketTransportConnection(Socket acceptedSocket,
-    SslServerAuthenticationOptions options,
-    PipeOptions? inputPipeOptions = null,
-    PipeOptions? outputPipeOptions = null) :
-    ServerSocketTransportConnection(acceptedSocket, inputPipeOptions, outputPipeOptions)
+public sealed class ServerTcpSslSocketTransportConnection : SslSocketTransportConnection
 {
-    private SslStream? stream;
+    private readonly SslServerAuthenticationOptions options;
+
+    public ServerTcpSslSocketTransportConnection(Socket acceptedSocket, SslServerAuthenticationOptions options,
+        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
+        base(acceptedSocket, inputPipeOptions, outputPipeOptions)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        this.options = options;
+    }
 
     public override string ToString() => $"{Id}-TCP.SSL ({RemoteEndPoint})";
 
     protected override async ValueTask OnStartingAsync(CancellationToken cancellationToken)
     {
-        var innerStream = new NetworkStream(Socket, FileAccess.ReadWrite, true);
-        try
-        {
-            stream = new SslStream(innerStream, false);
-            await stream.AuthenticateAsServerAsync(options, cancellationToken).ConfigureAwait(false);
-        }
-        catch
-        {
-            using (innerStream)
-            using (stream)
-            {
-                throw;
-            }
-        }
-
         await base.OnStartingAsync(cancellationToken).ConfigureAwait(false);
+        await Stream!.AuthenticateAsServerAsync(options, cancellationToken).ConfigureAwait(false);
     }
 
     protected override async ValueTask OnStoppingAsync()
     {
-        await using (stream)
+        try
         {
             await base.OnStoppingAsync().ConfigureAwait(false);
         }
-    }
-
-    protected override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        try
+        finally
         {
-            return await stream!.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-        }
-        catch (SocketException se) when (se.SocketErrorCode is SocketError.ConnectionAborted
-            or SocketError.ConnectionReset or SocketError.Shutdown)
-        {
-            ThrowHelper.ThrowConnectionClosed(se);
-            return 0;
-        }
-    }
-
-    protected override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await stream!.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
-        }
-        catch (SocketException se) when (se.SocketErrorCode is SocketError.ConnectionAborted
-            or SocketError.ConnectionReset or SocketError.Shutdown)
-        {
-            ThrowHelper.ThrowConnectionClosed(se);
-        }
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        await using (stream)
-        {
-            await base.DisposeAsync().ConfigureAwait(false);
+            Socket.Shutdown(SocketShutdown.Both);
+            await Socket.DisconnectAsync(reuseSocket: false).ConfigureAwait(false);
         }
     }
 }

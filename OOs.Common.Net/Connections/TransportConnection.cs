@@ -17,7 +17,9 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
     public abstract Task StopAsync();
     public abstract Task CompleteOutputAsync();
 
-#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
-    public virtual ValueTask DisposeAsync() => ValueTask.CompletedTask;
-#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
+    public virtual ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+        return ValueTask.CompletedTask;
+    }
 }

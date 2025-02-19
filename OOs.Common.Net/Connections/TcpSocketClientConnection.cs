@@ -3,6 +3,7 @@ using System.Net.Sockets;
 
 namespace OOs.Net.Connections;
 
+[Obsolete("Consider usage of OOs.Net.Connections.ClientTcpSocketTransportConnection instead.")]
 public sealed class TcpSocketClientConnection : SocketConnection
 {
     private readonly string hostNameOrAddress;

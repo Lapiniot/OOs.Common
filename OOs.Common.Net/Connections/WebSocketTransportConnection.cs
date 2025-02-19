@@ -5,6 +5,8 @@ using static System.Net.WebSockets.WebSocketCloseStatus;
 using static System.Net.WebSockets.WebSocketError;
 using static System.Net.WebSockets.WebSocketState;
 
+#nullable enable
+
 namespace OOs.Net.Connections;
 
 public abstract class WebSocketTransportConnection : TransportConnectionPipeAdapter
@@ -12,13 +14,11 @@ public abstract class WebSocketTransportConnection : TransportConnectionPipeAdap
     private readonly WebSocket webSocket;
 
     protected WebSocketTransportConnection(WebSocket webSocket,
-        IPEndPoint localEndPoint, IPEndPoint remoteEndPoint,
-        PipeOptions inputPipeOptions = null, PipeOptions outputPipeOptions = null) :
+        EndPoint? localEndPoint, EndPoint? remoteEndPoint,
+        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
         base(inputPipeOptions, outputPipeOptions)
     {
         ArgumentNullException.ThrowIfNull(webSocket);
-        ArgumentNullException.ThrowIfNull(localEndPoint);
-        ArgumentNullException.ThrowIfNull(remoteEndPoint);
 
         this.webSocket = webSocket;
         LocalEndPoint = localEndPoint;
@@ -26,8 +26,8 @@ public abstract class WebSocketTransportConnection : TransportConnectionPipeAdap
     }
 
     public sealed override string Id { get; } = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
-    public override EndPoint LocalEndPoint { get; }
-    public override EndPoint RemoteEndPoint { get; }
+    public override EndPoint? LocalEndPoint { get; }
+    public override EndPoint? RemoteEndPoint { get; }
     protected WebSocket WebSocket => webSocket;
 
     protected override ValueTask OnStartingAsync(CancellationToken cancellationToken) => ValueTask.CompletedTask;

@@ -5,6 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace OOs.Net.Connections;
 
+[Obsolete("Consider usage of OOs.Net.Connections.ClientTcpSslSocketTransportConnection instead.")]
 public sealed class TcpSslSocketClientConnection : TcpSslSocketConnection
 {
     private readonly X509Certificate[] certificates;

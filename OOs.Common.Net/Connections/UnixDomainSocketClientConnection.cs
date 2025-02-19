@@ -2,6 +2,7 @@ using System.Net.Sockets;
 
 namespace OOs.Net.Connections;
 
+[Obsolete("Consider usage of OOs.Net.Connections.ClientUnixDomainSocketTransportConnection instead.")]
 public sealed class UnixDomainSocketClientConnection(UnixDomainSocketEndPoint remoteEndPoint) :
     SocketConnection(remoteEndPoint, ProtocolType.IP, reuseSocket: true)
 {

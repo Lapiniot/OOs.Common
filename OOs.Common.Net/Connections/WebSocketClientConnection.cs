@@ -4,6 +4,7 @@ using System.Net.WebSockets;
 
 namespace OOs.Net.Connections;
 
+[Obsolete("Consider usage of OOs.Net.Connections.ClientWebSocketTransportConnection instead.")]
 public sealed class WebSocketClientConnection : WebSocketConnection<ClientWebSocket>
 {
     private readonly Action<ClientWebSocketOptions> configureOptions;

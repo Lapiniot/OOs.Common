@@ -6,15 +6,14 @@ using System.Net.Sockets;
 namespace OOs.Net.Connections;
 
 public abstract class ServerSocketTransportConnection(Socket acceptedSocket,
-    PipeOptions? inputPipeOptions = null,
-    PipeOptions? outputPipeOptions = null) :
+    PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
     SocketTransportConnection(acceptedSocket, inputPipeOptions, outputPipeOptions)
 {
     protected override ValueTask OnStartingAsync(CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
-    protected override async ValueTask OnStoppingAsync()
+    protected override ValueTask OnStoppingAsync()
     {
         Socket.Shutdown(SocketShutdown.Both);
-        await Socket.DisconnectAsync(false).ConfigureAwait(false);
+        return Socket.DisconnectAsync(reuseSocket: false);
     }
 }

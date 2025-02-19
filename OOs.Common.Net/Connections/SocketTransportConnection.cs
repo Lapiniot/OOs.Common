@@ -13,8 +13,7 @@ public abstract class SocketTransportConnection : TransportConnectionPipeAdapter
     private readonly Socket socket;
 
     protected SocketTransportConnection(Socket socket,
-        PipeOptions? inputPipeOptions = null,
-        PipeOptions? outputPipeOptions = null) :
+        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
         base(inputPipeOptions, outputPipeOptions)
     {
         ArgumentNullException.ThrowIfNull(socket);
