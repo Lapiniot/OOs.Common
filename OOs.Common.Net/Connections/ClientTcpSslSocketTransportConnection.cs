@@ -63,14 +63,14 @@ public sealed class ClientTcpSslSocketTransportConnection : SslSocketTransportCo
         string? machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
         X509Certificate[]? clientCertificates = null,
         PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
-        CreateInternal(remoteEndPoint, machineName, enabledSslProtocols,
+        CreateInternal(remoteEndPoint, machineName ?? remoteEndPoint?.Address.ToString(), enabledSslProtocols,
             clientCertificates, inputPipeOptions, outputPipeOptions);
 
     public static ClientTcpSslSocketTransportConnection Create(string host, int port,
         AddressFamily addressFamily = AddressFamily.InterNetwork, string? machineName = null,
         SslProtocols enabledSslProtocols = SslProtocols.None, X509Certificate[]? clientCertificates = null,
         PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
-        CreateInternal(new DnsEndPoint(host, port, addressFamily), machineName, enabledSslProtocols,
+        CreateInternal(new DnsEndPoint(host, port, addressFamily), machineName ?? host, enabledSslProtocols,
             clientCertificates, inputPipeOptions, outputPipeOptions);
 
     private static ClientTcpSslSocketTransportConnection CreateInternal(EndPoint remoteEndPoint, string? machineName,
