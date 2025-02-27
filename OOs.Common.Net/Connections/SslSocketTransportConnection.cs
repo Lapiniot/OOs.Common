@@ -15,7 +15,7 @@ public abstract class SslSocketTransportConnection(Socket socket,
 
     protected SslStream? Stream => stream;
 
-    protected override ValueTask OnStartingAsync(CancellationToken cancellationToken)
+    protected override ValueTask OnStartingAsync()
     {
         var networkStream = new NetworkStream(Socket, FileAccess.ReadWrite, ownsSocket: false);
         try

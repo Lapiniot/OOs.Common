@@ -18,11 +18,11 @@ public abstract class ClientSocketTransportConnection : SocketTransportConnectio
         this.remoteEndPoint = remoteEndPoint;
     }
 
-    protected override async ValueTask OnStartingAsync(CancellationToken cancellationToken)
+    protected override async ValueTask OnStartingAsync()
     {
         try
         {
-            await Socket.ConnectAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
+            await Socket.ConnectAsync(remoteEndPoint).ConfigureAwait(false);
         }
         catch (SocketException se) when (se.SocketErrorCode == SocketError.HostNotFound)
         {

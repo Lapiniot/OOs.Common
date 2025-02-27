@@ -27,11 +27,11 @@ public sealed class ClientTcpSslSocketTransportConnection : SslSocketTransportCo
 
     public override string ToString() => $"{Id}-TCP.SSL ({RemoteEndPoint?.ToString() ?? "Not connected"})";
 
-    protected override async ValueTask OnStartingAsync(CancellationToken cancellationToken)
+    protected override async ValueTask OnStartingAsync()
     {
         try
         {
-            await Socket.ConnectAsync(remoteEndPoint, cancellationToken).ConfigureAwait(false);
+            await Socket.ConnectAsync(remoteEndPoint).ConfigureAwait(false);
         }
         catch (SocketException se) when (se.SocketErrorCode == SocketError.HostNotFound)
         {
@@ -42,8 +42,8 @@ public sealed class ClientTcpSslSocketTransportConnection : SslSocketTransportCo
             ThrowHelper.ThrowServerUnavailable(se);
         }
 
-        await base.OnStartingAsync(cancellationToken).ConfigureAwait(false);
-        await Stream!.AuthenticateAsClientAsync(options, cancellationToken).ConfigureAwait(false);
+        await base.OnStartingAsync().ConfigureAwait(false);
+        await Stream!.AuthenticateAsClientAsync(options).ConfigureAwait(false);
     }
 
     protected override async ValueTask OnStoppingAsync()
