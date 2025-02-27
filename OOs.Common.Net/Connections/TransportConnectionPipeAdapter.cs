@@ -16,7 +16,11 @@ public abstract partial class TransportConnectionPipeAdapter(
     private readonly Pipe inputPipe = new(inputPipeOptions ?? DefaultOptions);
     private readonly Pipe outputPipe = new(outputPipeOptions ?? DefaultOptions);
     private int state;
+#if NET9_0_OR_GREATER
     private bool disposed;
+#else
+    private int disposed;
+#endif
     private Task completion = Task.CompletedTask;
 
     public sealed override PipeReader Input => inputPipe.Reader;
@@ -107,7 +111,13 @@ public abstract partial class TransportConnectionPipeAdapter(
         outputPipe.Reset();
     }
 
-    protected void CheckDisposed() => ObjectDisposedException.ThrowIf(disposed, this);
+    protected void CheckDisposed() => ObjectDisposedException.ThrowIf(
+#if NET9_0_OR_GREATER
+        disposed,
+#else
+        disposed is 1,
+#endif
+        this);
 
     protected abstract ValueTask OnStartingAsync();
     protected abstract ValueTask OnStoppingAsync();
@@ -118,7 +128,11 @@ public abstract partial class TransportConnectionPipeAdapter(
 
     public override ValueTask DisposeAsync()
     {
+#if NET9_0_OR_GREATER
         if (Interlocked.Exchange(ref disposed, true))
+#else
+        if (Interlocked.Exchange(ref disposed, 1) is not 0)
+#endif
             return ValueTask.CompletedTask;
 
         GC.SuppressFinalize(this);
