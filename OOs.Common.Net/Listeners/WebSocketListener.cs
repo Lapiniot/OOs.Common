@@ -122,7 +122,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>, I
                 var clientSubProtocol = span[range];
                 foreach (var subProtocol in subProtocols)
                 {
-                    if (subProtocol.SequenceEqual(clientSubProtocol))
+                    if (subProtocol.AsSpan().SequenceEqual(clientSubProtocol))
                     {
                         return subProtocol;
                     }
