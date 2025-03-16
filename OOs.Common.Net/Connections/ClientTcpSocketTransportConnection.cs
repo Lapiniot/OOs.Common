@@ -16,10 +16,9 @@ public sealed class ClientTcpSocketTransportConnection(Socket socket, EndPoint r
         PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
         CreateInternal(remoteEndPoint, inputPipeOptions, outputPipeOptions);
 
-    public static ClientTcpSocketTransportConnection Create(string host, int port,
-        AddressFamily addressFamily = AddressFamily.InterNetwork,
+    public static ClientTcpSocketTransportConnection Create(DnsEndPoint remoteEndPoint,
         PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
-        CreateInternal(new DnsEndPoint(host, port, addressFamily), inputPipeOptions, outputPipeOptions);
+        CreateInternal(remoteEndPoint, inputPipeOptions, outputPipeOptions);
 
     private static ClientTcpSocketTransportConnection CreateInternal(EndPoint remoteEndPoint,
         PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions)

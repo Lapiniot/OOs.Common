@@ -2,18 +2,20 @@ using System.Net;
 using System.Net.Sockets;
 using OOs.Net.Connections;
 
+#nullable enable
+
 namespace OOs.Net.Listeners;
 
 public abstract class SocketListener : IAsyncEnumerable<TransportConnection>
 {
     private readonly int backlog;
-    private readonly Action<Socket> configureAccepted;
-    private readonly Action<Socket> configureListening;
+    private readonly Action<Socket>? configureAccepted;
+    private readonly Action<Socket>? configureListening;
     private readonly EndPoint endPoint;
 
     protected SocketListener(EndPoint endPoint, int backlog = 100,
-        Action<Socket> configureListening = null,
-        Action<Socket> configureAccepted = null)
+        Action<Socket>? configureListening = null,
+        Action<Socket>? configureAccepted = null)
     {
         ArgumentNullException.ThrowIfNull(endPoint);
 
@@ -41,20 +43,17 @@ public abstract class SocketListener : IAsyncEnumerable<TransportConnection>
 
         while (true)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            Socket acceptedSocket = null;
-            TransportConnection connection;
+            Socket? acceptedSocket = null;
+            TransportConnection? transportConnection = null;
 
             try
             {
                 acceptedSocket = await socket.AcceptAsync(cancellationToken).ConfigureAwait(false);
                 configureAccepted?.Invoke(acceptedSocket);
-                connection = CreateConnection(acceptedSocket);
+                transportConnection = CreateConnection(acceptedSocket);
             }
             catch (OperationCanceledException)
             {
-                acceptedSocket?.Dispose();
                 yield break;
             }
             catch
@@ -63,8 +62,7 @@ public abstract class SocketListener : IAsyncEnumerable<TransportConnection>
                 throw;
             }
 
-            if (connection is not null)
-                yield return connection;
+            yield return transportConnection;
         }
     }
 
