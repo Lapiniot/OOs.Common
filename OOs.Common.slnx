@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/targets/">
+    <File Path="targets/PublishAll.targets" />
+    <File Path="targets/PublishContainers.targets" />
+  </Folder>
+  <Project Path="OOs.Common.Benchmarks/OOs.Common.Benchmarks.csproj" />
+  <Project Path="OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj" />
+  <Project Path="OOs.Common.CommandLine/OOs.Common.CommandLine.csproj" />
+  <Project Path="OOs.Common.Net.Http.Tests/OOs.Common.Net.Http.Tests.csproj" />
+  <Project Path="OOs.Common.Net.Http/OOs.Common.Net.Http.csproj" />
+  <Project Path="OOs.Common.Net/OOs.Common.Net.csproj" />
+  <Project Path="OOs.Common.Tests/OOs.Common.Tests.csproj" />
+  <Project Path="OOs.Common/OOs.Common.csproj" />
+  <Project Path="OOs.Extensions.Configuration/OOs.Extensions.Configuration.csproj" />
+  <Project Path="OOs.Extensions.Diagnostics/OOs.Extensions.Diagnostics.csproj" />
+  <Project Path="OOs.Extensions.Hosting/OOs.Extensions.Hosting.csproj" />
+</Solution>
