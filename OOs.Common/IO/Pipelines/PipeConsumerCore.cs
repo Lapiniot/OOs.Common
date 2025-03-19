@@ -13,22 +13,19 @@ public abstract class PipeConsumerCore : ActivityObject
             while (true)
             {
                 var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-
                 if (result.IsCanceled)
-                    break;
-
-                var buffer = result.Buffer;
-
-                while (!cancellationToken.IsCancellationRequested && Consume(ref buffer))
                 {
+                    break;
                 }
 
+                var buffer = result.Buffer;
+                Consume(ref buffer);
                 reader.AdvanceTo(buffer.Start, buffer.End);
 
-                cancellationToken.ThrowIfCancellationRequested();
-
                 if (result.IsCompleted)
+                {
                     break;
+                }
             }
         }
         finally
@@ -41,8 +38,14 @@ public abstract class PipeConsumerCore : ActivityObject
     /// Method gets called every time new data is available.
     /// </summary>
     /// <param name="buffer">Incoming data buffer.</param>
-    /// <returns><see langword="true" /> if data was successfully consumed.</returns>
-    /// <remarks>Implementations should update <paramref name="buffer" /> reference
-    /// with unprocessed buffer reminder.</remarks>
-    protected abstract bool Consume(ref ReadOnlySequence<byte> buffer);
+    /// <remarks>
+    /// Implementations should update <paramref name="buffer" /> value before returning from the call 
+    /// to indicate unprocessed buffer reminder.
+    /// Please, notice: 
+    /// <see cref="ReadOnlySequence{T}.Start" /> of the ref <paramref name="buffer"/> should contain 
+    /// the extent of the data that has been successfully processed. Whereas
+    /// <see cref="ReadOnlySequence{T}.End" />, respectively, should mark the extent 
+    /// of the data which was previewed but not processed.
+    /// </remarks>
+    protected abstract void Consume(ref ReadOnlySequence<byte> buffer);
 }
