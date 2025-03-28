@@ -7,6 +7,6 @@
         "artifacts": true,
         "**/*.sln": true
     },
-    "dotnet.defaultSolution": "OOs.Common.sln",
+    "dotnet.defaultSolution": "OOs.Common.slnx",
     "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "openFiles"
 }

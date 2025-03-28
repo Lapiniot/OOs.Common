@@ -25,7 +25,6 @@
             },
             "args": [
                 "build",
-                "${workspaceFolder}/OOs.Common.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ]
@@ -51,7 +50,6 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/OOs.Common.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ]
@@ -63,8 +61,7 @@
             "args": [
                 "watch",
                 "run",
-                "--project",
-                "${workspaceFolder}/OOs.Common.sln"
+                "--project"
             ]
         }
     ]
