@@ -18,6 +18,11 @@ public sealed class ClientQuicTransportConnection : QuicTransportConnection
 {
     private readonly QuicClientConnectionOptions options;
 
+    public static ReadOnlySpan<SslApplicationProtocol> DefaultSslApplicationProtocols => new[] {
+        new("mqtt-quic"),
+        SslApplicationProtocol.Http3
+    };
+
     public ClientQuicTransportConnection(QuicClientConnectionOptions options,
         PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
         base(inputPipeOptions, outputPipeOptions)
@@ -46,23 +51,40 @@ public sealed class ClientQuicTransportConnection : QuicTransportConnection
     }
 
     public static ClientQuicTransportConnection Create(IPEndPoint remoteEndPoint,
-        SslApplicationProtocol protocol, string? targetHost = null,
-        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
-        CreateInternal(remoteEndPoint, protocol, targetHost ?? remoteEndPoint?.Address.ToString(),
-            inputPipeOptions, outputPipeOptions);
-
-    public static ClientQuicTransportConnection Create(DnsEndPoint remoteEndPoint,
-        SslApplicationProtocol protocol, string? targetHost = null,
-        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
-        CreateInternal(remoteEndPoint, protocol, targetHost ?? remoteEndPoint?.Host,
-            inputPipeOptions, outputPipeOptions);
-
-    private static ClientQuicTransportConnection CreateInternal(EndPoint remoteEndPoint,
-        SslApplicationProtocol protocol, string? targetHost,
-        PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions)
+        SslClientAuthenticationOptions? clientAuthenticationOptions = null,
+        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null)
     {
         ArgumentNullException.ThrowIfNull(remoteEndPoint);
 
+        return CreateCore(remoteEndPoint,
+            clientAuthenticationOptions ?? CreateDefaultOptions(remoteEndPoint.Address.ToString()),
+            inputPipeOptions, outputPipeOptions);
+    }
+
+    public static ClientQuicTransportConnection Create(DnsEndPoint remoteEndPoint,
+        SslClientAuthenticationOptions? clientAuthenticationOptions = null,
+        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null)
+    {
+        ArgumentNullException.ThrowIfNull(remoteEndPoint);
+
+        return CreateCore(remoteEndPoint,
+            clientAuthenticationOptions ?? CreateDefaultOptions(remoteEndPoint.Host),
+            inputPipeOptions, outputPipeOptions);
+    }
+
+    private static SslClientAuthenticationOptions CreateDefaultOptions(string targetHost)
+    {
+        return new()
+        {
+            TargetHost = targetHost,
+            ApplicationProtocols = [.. DefaultSslApplicationProtocols]
+        };
+    }
+
+    private static ClientQuicTransportConnection CreateCore(EndPoint remoteEndPoint,
+        SslClientAuthenticationOptions clientAuthenticationOptions,
+        PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions)
+    {
         QuicClientConnectionOptions options = new()
         {
             IdleTimeout = Timeout.InfiniteTimeSpan,
@@ -73,11 +95,7 @@ public sealed class ClientQuicTransportConnection : QuicTransportConnection
             // Used to close the connection if it's not done by the user.
             // See https://www.rfc-editor.org/rfc/rfc9000#section-20.2
             DefaultCloseErrorCode = 0x0B, // Protocol-dependent error code.
-            ClientAuthenticationOptions = new()
-            {
-                ApplicationProtocols = [protocol],
-                TargetHost = targetHost
-            }
+            ClientAuthenticationOptions = clientAuthenticationOptions
         };
 
         return new(options, inputPipeOptions, outputPipeOptions);

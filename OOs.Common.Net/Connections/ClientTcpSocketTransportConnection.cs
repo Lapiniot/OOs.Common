@@ -14,13 +14,13 @@ public sealed class ClientTcpSocketTransportConnection(Socket socket, EndPoint r
 
     public static ClientTcpSocketTransportConnection Create(IPEndPoint remoteEndPoint,
         PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
-        CreateInternal(remoteEndPoint, inputPipeOptions, outputPipeOptions);
+        CreateCore(remoteEndPoint, inputPipeOptions, outputPipeOptions);
 
     public static ClientTcpSocketTransportConnection Create(DnsEndPoint remoteEndPoint,
         PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
-        CreateInternal(remoteEndPoint, inputPipeOptions, outputPipeOptions);
+        CreateCore(remoteEndPoint, inputPipeOptions, outputPipeOptions);
 
-    private static ClientTcpSocketTransportConnection CreateInternal(EndPoint remoteEndPoint,
+    private static ClientTcpSocketTransportConnection CreateCore(EndPoint remoteEndPoint,
         PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions)
     {
         ArgumentNullException.ThrowIfNull(remoteEndPoint);

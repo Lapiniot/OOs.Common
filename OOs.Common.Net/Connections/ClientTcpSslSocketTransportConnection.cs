@@ -2,8 +2,6 @@ using System.IO.Pipelines;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 
 #nullable enable
 
@@ -60,38 +58,40 @@ public sealed class ClientTcpSslSocketTransportConnection : SslSocketTransportCo
     }
 
     public static ClientTcpSslSocketTransportConnection Create(IPEndPoint remoteEndPoint,
-        string? machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[]? clientCertificates = null,
-        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
-        CreateInternal(remoteEndPoint, machineName ?? remoteEndPoint?.Address.ToString(), enabledSslProtocols,
-            clientCertificates, inputPipeOptions, outputPipeOptions);
-
-    public static ClientTcpSslSocketTransportConnection Create(DnsEndPoint remoteEndPoint,
-        string? machineName = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        X509Certificate[]? clientCertificates = null,
-        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) =>
-        CreateInternal(remoteEndPoint, machineName ?? remoteEndPoint?.Host, enabledSslProtocols,
-            clientCertificates, inputPipeOptions, outputPipeOptions);
-
-    private static ClientTcpSslSocketTransportConnection CreateInternal(EndPoint remoteEndPoint, string? machineName,
-        SslProtocols enabledSslProtocols, X509Certificate[]? clientCertificates,
-        PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions)
+        SslClientAuthenticationOptions? clientAuthenticationOptions = null,
+        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null)
     {
         ArgumentNullException.ThrowIfNull(remoteEndPoint);
 
+        return CreateCore(remoteEndPoint, clientAuthenticationOptions ?? new()
+        {
+            TargetHost = remoteEndPoint.Address.ToString()
+        }, inputPipeOptions, outputPipeOptions);
+    }
+
+    public static ClientTcpSslSocketTransportConnection Create(DnsEndPoint remoteEndPoint,
+        SslClientAuthenticationOptions? clientAuthenticationOptions = null,
+        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null)
+    {
+        ArgumentNullException.ThrowIfNull(remoteEndPoint);
+
+        return CreateCore(remoteEndPoint, clientAuthenticationOptions ?? new()
+        {
+            TargetHost = remoteEndPoint.Host
+        }, inputPipeOptions, outputPipeOptions);
+    }
+
+    private static ClientTcpSslSocketTransportConnection CreateCore(EndPoint remoteEndPoint,
+        SslClientAuthenticationOptions clientAuthenticationOptions,
+        PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions)
+    {
 #pragma warning disable CA2000 // Dispose objects before losing scope
         var socket = new Socket(remoteEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
         try
         {
-            var options = new SslClientAuthenticationOptions()
-            {
-                TargetHost = machineName,
-                EnabledSslProtocols = enabledSslProtocols,
-                ClientCertificates = clientCertificates is { Length: > 0 } ? [.. clientCertificates] : null,
-            };
-            return new(socket, remoteEndPoint, options, inputPipeOptions, outputPipeOptions);
+            return new(socket, remoteEndPoint, clientAuthenticationOptions, inputPipeOptions, outputPipeOptions);
         }
         catch
         {
