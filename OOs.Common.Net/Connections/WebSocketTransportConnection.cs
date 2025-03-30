@@ -30,7 +30,7 @@ public abstract class WebSocketTransportConnection : TransportConnectionPipeAdap
     public override EndPoint? RemoteEndPoint { get; }
     protected WebSocket WebSocket => webSocket;
 
-    protected override ValueTask OnStartingAsync() => ValueTask.CompletedTask;
+    protected override ValueTask OnStartingAsync(CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
     protected override ValueTask OnStoppingAsync() => webSocket switch
     {

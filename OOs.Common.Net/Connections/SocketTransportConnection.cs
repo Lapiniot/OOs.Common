@@ -28,7 +28,13 @@ public abstract class SocketTransportConnection : TransportConnectionPipeAdapter
 
     protected Socket Socket => socket;
 
-    public override void Abort() => socket.Shutdown(SocketShutdown.Both);
+    public override void Abort()
+    {
+        if (socket.Connected)
+        {
+            socket.Shutdown(SocketShutdown.Both);
+        }
+    }
 
     protected override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {

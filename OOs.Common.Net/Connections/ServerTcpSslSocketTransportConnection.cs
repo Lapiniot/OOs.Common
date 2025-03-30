@@ -21,10 +21,10 @@ public sealed class ServerTcpSslSocketTransportConnection : SslSocketTransportCo
 
     public override string ToString() => $"{Id}-TCP.SSL ({RemoteEndPoint})";
 
-    protected override async ValueTask OnStartingAsync()
+    protected override async ValueTask OnStartingAsync(CancellationToken cancellationToken)
     {
-        await base.OnStartingAsync().ConfigureAwait(false);
-        await Stream!.AuthenticateAsServerAsync(options).ConfigureAwait(false);
+        await base.OnStartingAsync(cancellationToken).ConfigureAwait(false);
+        await Stream!.AuthenticateAsServerAsync(options, cancellationToken).ConfigureAwait(false);
     }
 
     protected override async ValueTask OnStoppingAsync()

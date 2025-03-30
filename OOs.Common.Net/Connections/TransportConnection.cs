@@ -44,10 +44,12 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
     public abstract Task Completion { get; }
 
     /// <summary>
-    /// Initializes underlaying connection and starts IO operations. After this call <see cref="Input"/> and 
-    /// <see cref="Output"/> can be used to perform read/write from the pipe.
+    /// Initializes underlaying connection and starts IO operations. After this call completes 
+    /// sucessfully <see cref="Input"/> and <see cref="Output"/> can be used to perform read/write ops from the pipe.
     /// </summary>
-    public abstract void Start();
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to signal about completion.</param>
+    /// <returns>The <see cref="ValueTask"/> to be awaited for async. operation result.</returns>
+    public abstract ValueTask StartAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Aborts the underlaying connection and initiates <see cref="Completion"/> transition to the completed state.

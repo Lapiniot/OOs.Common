@@ -16,8 +16,8 @@ public sealed class ServerQuicTransportConnection(QuicConnection connection,
 {
     public override string ToString() => $"{Id}-QUIC ({RemoteEndPoint})";
 
-    protected override async ValueTask OnStartingAsync()
+    protected override async ValueTask OnStartingAsync(CancellationToken cancellationToken)
     {
-        Stream = await Connection.AcceptInboundStreamAsync().ConfigureAwait(false);
+        Stream = await Connection.AcceptInboundStreamAsync(cancellationToken).ConfigureAwait(false);
     }
 }

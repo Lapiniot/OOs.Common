@@ -24,14 +24,14 @@ public sealed class ClientWebSocketTransportConnection : WebSocketTransportConne
         this.messageInvoker = messageInvoker;
     }
 
-    protected override async ValueTask OnStartingAsync()
+    protected override async ValueTask OnStartingAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await webSocket.ConnectAsync(remoteUri, messageInvoker, default).ConfigureAwait(false);
+            await webSocket.ConnectAsync(remoteUri, messageInvoker, cancellationToken).ConfigureAwait(false);
             // Discard HTTP Response Headers in order to release some memory
             webSocket.HttpResponseHeaders = null;
-            await base.OnStartingAsync().ConfigureAwait(false);
+            await base.OnStartingAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (WebSocketException wse) when (wse.InnerException is HttpRequestException
         {

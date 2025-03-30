@@ -9,17 +9,24 @@ public abstract partial class TransportConnectionPipeAdapter(
     PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions) :
     TransportConnection
 {
+#if !NET9_0_OR_GREATER
+    private static class State
+    {
+        public const int Stopped = 0;
+        public const int Starting = 1;
+        public const int Started = 2;
+        public const int Stopping = 3;
+        public const int Disposed = 4;
+    }
+#endif
+
     private static readonly PipeOptions DefaultOptions = new(useSynchronizationContext: false);
-    private const int Stopped = 0;
-    private const int Starting = 1;
-    private const int Started = 2;
     private readonly Pipe inputPipe = new(inputPipeOptions ?? DefaultOptions);
     private readonly Pipe outputPipe = new(outputPipeOptions ?? DefaultOptions);
-    private int state;
 #if NET9_0_OR_GREATER
-    private bool disposed;
+    private State state;
 #else
-    private int disposed;
+    private int state;
 #endif
     private Task completion = Task.CompletedTask;
 
@@ -29,23 +36,25 @@ public abstract partial class TransportConnectionPipeAdapter(
 
     public override Task Completion => completion;
 
-    public sealed override void Start()
+    public sealed override async ValueTask StartAsync(CancellationToken cancellationToken)
     {
-        CheckDisposed();
-
-        if (Interlocked.CompareExchange(ref state, Starting, Stopped) is not Stopped)
+        switch (Interlocked.CompareExchange(ref state, State.Starting, State.Stopped))
         {
-            return;
+            case State.Stopped: break;
+            case State.Starting: OOs.ThrowHelper.ThrowInvalidState(nameof(State.Starting)); return;
+            case State.Started: return;
+            case State.Stopping: OOs.ThrowHelper.ThrowInvalidState(nameof(State.Stopping)); return;
+            case State.Disposed: ObjectDisposedException.ThrowIf(true, this); return;
         }
 
         try
         {
+            await OnStartingAsync(cancellationToken).ConfigureAwait(false);
             completion = RunAsync();
-            Volatile.Write(ref state, Started);
         }
         catch
         {
-            Volatile.Write(ref state, Stopped);
+            Interlocked.CompareExchange(ref state, State.Stopped, State.Starting);
             throw;
         }
     }
@@ -57,14 +66,17 @@ public abstract partial class TransportConnectionPipeAdapter(
         using var cts = new CancellationTokenSource();
         var cancellationToken = cts.Token;
 
-        await OnStartingAsync().ConfigureAwait(false);
-
         try
         {
-            var inputWorker = StartReceiverAsync(inputPipe.Writer, cancellationToken);
-            var outputWorker = StartSenderAsync(outputPipe.Reader, cancellationToken);
+            var receiver = StartReceiverAsync(inputPipe.Writer, cancellationToken);
+            var sender = StartSenderAsync(outputPipe.Reader, cancellationToken);
+            Interlocked.CompareExchange(ref state, State.Started, State.Starting);
 
-            if (await Task.WhenAny(inputWorker, outputWorker).ConfigureAwait(false) == outputWorker)
+            var completed = await Task.WhenAny(receiver, sender).ConfigureAwait(false);
+            Interlocked.CompareExchange(ref state, State.Stopping, State.Started);
+            await cts.CancelAsync().ConfigureAwait(SuppressThrowing);
+
+            if (completed == sender)
             {
                 // This is highly expected branch. We normally get here 
                 // when trasnport should be terminated due to one of:
@@ -73,13 +85,12 @@ public abstract partial class TransportConnectionPipeAdapter(
                 // - any other underlaying connection erroneous state
                 // In this case also terminate INPUT activity by cancelling 
                 // reading partner task respectively via cancellationToken
-                await cts.CancelAsync().ConfigureAwait(SuppressThrowing);
                 // Wait until inputWorker task also transits to the completed state, 
                 // so we can be sure that all IO activity is over on the underlaying connection.
                 // Notice: we purposely swallow potential exception here because we better observe outputWorker task 
                 // for potential exception upon completion as it holds real root cause of the transport termination
-                await inputWorker.ConfigureAwait(SuppressThrowing);
-                await outputWorker.ConfigureAwait(false);
+                await receiver.ConfigureAwait(SuppressThrowing);
+                await sender.ConfigureAwait(false);
             }
             else
             {
@@ -88,15 +99,14 @@ public abstract partial class TransportConnectionPipeAdapter(
                 // - client side gracefully shuts down underlaying connection
                 // - our side aborts connection via call to the Abort() method
                 // - some connection related error happens
-                await cts.CancelAsync().ConfigureAwait(SuppressThrowing);
-                await outputWorker.ConfigureAwait(SuppressThrowing);
-                await inputWorker.ConfigureAwait(false);
+                await sender.ConfigureAwait(SuppressThrowing);
+                await receiver.ConfigureAwait(false);
             }
         }
         finally
         {
             await OnStoppingAsync().AsTask().ConfigureAwait(SuppressThrowing);
-            Volatile.Write(ref state, Stopped);
+            Interlocked.CompareExchange(ref state, State.Stopped, State.Stopping);
         }
     }
 
@@ -111,15 +121,7 @@ public abstract partial class TransportConnectionPipeAdapter(
         outputPipe.Reset();
     }
 
-    protected void CheckDisposed() => ObjectDisposedException.ThrowIf(
-#if NET9_0_OR_GREATER
-        disposed,
-#else
-        disposed is 1,
-#endif
-        this);
-
-    protected abstract ValueTask OnStartingAsync();
+    protected abstract ValueTask OnStartingAsync(CancellationToken cancellationToken);
     protected abstract ValueTask OnStoppingAsync();
     protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
     protected abstract ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken);
@@ -128,12 +130,10 @@ public abstract partial class TransportConnectionPipeAdapter(
 
     public override ValueTask DisposeAsync()
     {
-#if NET9_0_OR_GREATER
-        if (Interlocked.Exchange(ref disposed, true))
-#else
-        if (Interlocked.Exchange(ref disposed, 1) is not 0)
-#endif
+        if (Interlocked.Exchange(ref state, State.Disposed) is State.Disposed)
+        {
             return ValueTask.CompletedTask;
+        }
 
         GC.SuppressFinalize(this);
 

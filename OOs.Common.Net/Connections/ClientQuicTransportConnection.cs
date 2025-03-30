@@ -33,12 +33,12 @@ public sealed class ClientQuicTransportConnection : QuicTransportConnection
 
     public override string ToString() => $"{Id}-QUIC ({RemoteEndPoint?.ToString() ?? "Not connected"})";
 
-    protected override async ValueTask OnStartingAsync()
+    protected override async ValueTask OnStartingAsync(CancellationToken cancellationToken)
     {
         try
         {
-            Connection = await QuicConnection.ConnectAsync(options).ConfigureAwait(false);
-            Stream = await Connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, default).ConfigureAwait(false);
+            Connection = await QuicConnection.ConnectAsync(options, cancellationToken).ConfigureAwait(false);
+            Stream = await Connection.OpenOutboundStreamAsync(QuicStreamType.Bidirectional, cancellationToken).ConfigureAwait(false);
         }
         catch (SocketException se) when (se.SocketErrorCode == SocketError.HostNotFound)
         {

@@ -9,7 +9,7 @@ public abstract class ServerSocketTransportConnection(Socket acceptedSocket,
     PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
     SocketTransportConnection(acceptedSocket, inputPipeOptions, outputPipeOptions)
 {
-    protected override ValueTask OnStartingAsync() => ValueTask.CompletedTask;
+    protected override ValueTask OnStartingAsync(CancellationToken cancellationToken) => ValueTask.CompletedTask;
 
     protected override ValueTask OnStoppingAsync()
     {
