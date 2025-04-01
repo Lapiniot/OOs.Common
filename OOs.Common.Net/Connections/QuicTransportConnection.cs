@@ -55,7 +55,17 @@ public abstract class QuicTransportConnection : TransportConnectionPipeAdapter
     protected QuicConnection? Connection { get => connection; set => connection = value; }
     public override void Abort() => stream?.Abort(QuicAbortDirection.Both, 0x00);
 
-    protected override ValueTask OnStoppingAsync() => connection?.CloseAsync(0x00) ?? ValueTask.CompletedTask;
+    protected override async ValueTask OnStoppingAsync()
+    {
+        await using (connection)
+        await using (stream)
+        {
+            stream!.CompleteWrites();
+            await stream.WritesClosed.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+
+            await connection!.CloseAsync(0x00).ConfigureAwait(false);
+        }
+    }
 
     protected override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {

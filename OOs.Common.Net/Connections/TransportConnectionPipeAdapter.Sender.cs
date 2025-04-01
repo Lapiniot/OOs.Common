@@ -16,7 +16,9 @@ public partial class TransportConnectionPipeAdapter
                 var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
 
                 if (result.IsCanceled)
+                {
                     break;
+                }
 
                 var buffer = result.Buffer;
 
@@ -29,7 +31,9 @@ public partial class TransportConnectionPipeAdapter
                 reader.AdvanceTo(buffer.End, buffer.End);
 
                 if (result.IsCompleted)
+                {
                     break;
+                }
             }
         }
         catch (OperationCanceledException)
