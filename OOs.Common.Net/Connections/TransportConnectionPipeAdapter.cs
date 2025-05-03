@@ -19,10 +19,18 @@ public abstract partial class TransportConnectionPipeAdapter(
         public const int Disposed = 4;
     }
 #endif
+    private static readonly PipeOptions DefaultInputPipeOptions = new(
+        readerScheduler: PipeScheduler.ThreadPool,
+        writerScheduler: PipeScheduler.Inline,
+        useSynchronizationContext: false);
 
-    private static readonly PipeOptions DefaultOptions = new(useSynchronizationContext: false);
-    private readonly Pipe inputPipe = new(inputPipeOptions ?? DefaultOptions);
-    private readonly Pipe outputPipe = new(outputPipeOptions ?? DefaultOptions);
+    private static readonly PipeOptions DefaultOutputPipeOptions = new(
+        readerScheduler: PipeScheduler.Inline,
+        writerScheduler: PipeScheduler.ThreadPool,
+        useSynchronizationContext: false);
+
+    private readonly Pipe inputPipe = new(inputPipeOptions ?? DefaultInputPipeOptions);
+    private readonly Pipe outputPipe = new(outputPipeOptions ?? DefaultOutputPipeOptions);
 #if NET9_0_OR_GREATER
     private State state;
 #else
