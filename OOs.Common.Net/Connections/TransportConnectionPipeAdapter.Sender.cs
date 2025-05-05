@@ -22,13 +22,20 @@ public partial class TransportConnectionPipeAdapter
 
                 var buffer = result.Buffer;
 
-                // TODO: Test hot path when sequence consists of single span for potential performance impact
-                foreach (var chunk in buffer)
+                if (buffer.IsSingleSegment)
                 {
-                    await SendAsync(chunk, cancellationToken).ConfigureAwait(false);
+                    await SendAsync(buffer.First, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    var position = buffer.Start;
+                    while (buffer.TryGet(ref position, out var segment))
+                    {
+                        await SendAsync(segment, cancellationToken).ConfigureAwait(false);
+                    }
                 }
 
-                reader.AdvanceTo(buffer.End, buffer.End);
+                reader.AdvanceTo(consumed: buffer.End, examined: buffer.End);
 
                 if (result.IsCompleted)
                 {
