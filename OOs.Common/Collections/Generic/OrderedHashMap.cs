@@ -45,10 +45,12 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
     {
         if (map.Remove(key, out var node))
         {
-            if (node.Next is not null) node.Next.Prev = node.Prev;
-            if (node.Prev is not null) node.Prev.Next = node!.Next;
-            if (head == node) head = node.Next;
-            if (tail == node) tail = node.Prev;
+            node.Next?.Prev = node.Prev;
+            node.Prev?.Next = node.Next;
+            if (head == node)
+                head = node.Next;
+            if (tail == node)
+                tail = node.Prev;
             value = node.Value;
             return true;
         }
@@ -77,7 +79,7 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
         {
             node = new Node(key, value, tail, null);
             head ??= node;
-            if (tail is not null) tail.Next = node;
+            tail?.Next = node;
             tail = node;
         }
         else
@@ -127,7 +129,6 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
             {
                 case Init:
                     node = map.head;
-
                     if (node is not null)
                     {
                         state = InProgress;
@@ -136,18 +137,16 @@ public sealed class OrderedHashMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey
 
                     state = Done;
                     return false;
+
                 case InProgress:
                     node = node!.Next;
-
                     if (node is not null)
-                    {
                         return true;
-                    }
-
                     state = Done;
                     return false;
 
-                default: return false;
+                default:
+                    return false;
             }
         }
 

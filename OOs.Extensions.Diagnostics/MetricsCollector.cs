@@ -105,8 +105,7 @@ public abstract class MetricsCollector : IMetricsListener, IDisposable
             if (recordInterval == value)
                 return;
             recordInterval = value;
-            if (timer is not null)
-                timer.Period = recordInterval;
+            timer?.Period = recordInterval;
         }
     }
 }

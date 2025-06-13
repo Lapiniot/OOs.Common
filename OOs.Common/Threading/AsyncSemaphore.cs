@@ -53,15 +53,11 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
         {
             if (--currentCount >= 0)
                 return Task.CompletedTask;
-
             if (RuntimeOptions.ThreadingInstrumentationSupported)
                 Interlocked.Increment(ref waitingCount);
-
             var waiter = new WaiterNode(runContinuationsAsynchronously);
-
             if (cancellationToken != CancellationToken.None)
                 waiter.CtReg = cancellationToken.UnsafeRegister(cancelCallback ??= CancelWaiter, waiter);
-
             Enqueue(waiter);
             return waiter.Task;
         }
@@ -70,8 +66,8 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
     private void CancelWaiter(object? state, CancellationToken token)
     {
         var waiter = (WaiterNode)state!;
-
-        if (!waiter.TrySetCanceled(token)) return;
+        if (!waiter.TrySetCanceled(token))
+            return;
 
         lock (syncRoot)
         {
@@ -97,18 +93,16 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
         lock (syncRoot)
         {
             var current = currentCount;
-
             if (current + releaseCount > maxCount)
                 return false;
-
             currentCount += releaseCount;
-
             if (current >= 0)
                 return true;
 
             while (releaseCount > 0 && TryDequeue(out var waiter))
             {
-                if (!waiter.TrySetResult()) continue;
+                if (!waiter.TrySetResult())
+                    continue;
                 waiter.CtReg.Dispose();
                 releaseCount--;
             }
@@ -132,25 +126,29 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 
     private void TryRemove(WaiterNode waiter)
     {
-        if (waiter is { Next: null, Prev: null } && waiter != head) return;
-
+        if (waiter is { Next: null, Prev: null } && waiter != head)
+            return;
         var prev = waiter.Prev;
         var next = waiter.Next;
-        if (prev is not null) prev.Next = waiter.Next;
-        if (next is not null) next.Prev = waiter.Prev;
-        if (head == waiter) head = waiter.Next;
-        if (tail == waiter) tail = waiter.Prev;
+        prev?.Next = waiter.Next;
+        next?.Prev = waiter.Prev;
+        if (head == waiter)
+            head = waiter.Next;
+        if (tail == waiter)
+            tail = waiter.Prev;
         waiter.Prev = waiter.Next = null;
     }
 
     private bool TryDequeue([NotNullWhen(true)] out WaiterNode? waiter)
     {
         waiter = head;
-        if (waiter is null) return false;
+        if (waiter is null)
+            return false;
         head = waiter.Next;
         waiter.Next = waiter.Prev = null;
-        if (head is not null) head.Prev = null;
-        if (tail == waiter) tail = null;
+        head?.Prev = null;
+        if (tail == waiter)
+            tail = null;
         return true;
     }
 
