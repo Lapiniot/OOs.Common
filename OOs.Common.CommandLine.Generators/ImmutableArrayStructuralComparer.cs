@@ -10,12 +10,12 @@ internal sealed class ImmutableArrayStructuralComparer<T> : IEqualityComparer<Im
 
     public int GetHashCode(ImmutableArray<T> obj)
     {
-        var hash = 0;
-        foreach (var x in obj)
+        HashCode hashCode = default;
+        for (var index = 0; index < obj.Length; index++)
         {
-            hash = HashCode.Combine(hash, EqualityComparer<T>.Default.GetHashCode(x));
+            hashCode.Add(obj[index]);
         }
 
-        return hash;
+        return hashCode.ToHashCode();
     }
 }
