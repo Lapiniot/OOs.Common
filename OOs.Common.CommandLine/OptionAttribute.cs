@@ -1,6 +1,6 @@
 namespace OOs.CommandLine;
 
-[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
 public abstract class OptionAttribute : Attribute, IArgumentMetadata
 {
     protected OptionAttribute(string name, Type type, string longAlias)

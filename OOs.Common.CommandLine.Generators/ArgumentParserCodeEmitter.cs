@@ -6,7 +6,9 @@ namespace OOs.Common.CommandLine.Generators;
 
 public static class ArgumentParserCodeEmitter
 {
-    internal static string Emit(string namespaceName, string className, ImmutableArray<ArgumentData> attributes)
+    internal static string Emit(string namespaceName, string typeName,
+        TypeKind kind, Accessibility accessibility,
+        ImmutableArray<OptionData> options)
     {
         var sb = new StringBuilder();
         sb.Append($$"""
@@ -35,7 +37,7 @@ public static class ArgumentParserCodeEmitter
 namespace {{namespaceName}};
 
 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{ProductInfo.Product}}", "{{ProductInfo.Version}}")]
-public readonly struct {{className}}: global::OOs.CommandLine.IArgumentsParser
+{{(accessibility is Accessibility.Public ? "public" : "internal")}} partial {{(kind is TypeKind.Struct ? "struct" : "class")}} {{typeName}}: global::OOs.CommandLine.IArgumentsParser
 {
     public static (global::System.Collections.Generic.IReadOnlyDictionary<string, string?> Options, global::System.Collections.Immutable.ImmutableArray<string> Arguments) Parse(string[] args)
     {
@@ -68,9 +70,9 @@ public readonly struct {{className}}: global::OOs.CommandLine.IArgumentsParser
 
 """);
         var i = 0;
-        foreach (var attr in attributes)
+        foreach (var option in options)
         {
-            if (attr is { Name: { } name, Alias: { Length: var len } alias, Type: { } type })
+            if (option is { Name: { } name, Alias: { Length: var len } alias, Type: { } type })
             {
                 sb.Append($$"""
                 {{(i++ is 0 ? "if" : "else if")}} ((span.Length == {{len}} || span.Length > {{len}} && span[{{len}}] == '=') && span.Slice(0, {{len}}).SequenceEqual("{{alias}}"))
@@ -125,9 +127,9 @@ public readonly struct {{className}}: global::OOs.CommandLine.IArgumentsParser
                     {
 
 """);
-        foreach (var attr in attributes)
+        foreach (var option in options)
         {
-            if (attr is { Name: { } name, ShortAlias: not '\0' and var alias, Type: { } type })
+            if (option is { Name: { } name, ShortAlias: not '\0' and var alias, Type: { } type })
             {
                 sb.Append($$"""
                         case '{{alias}}':
