@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 namespace OOs.Common.CommandLine.Generators;
 
 public record struct SourceData(string Name, string Namespace, TypeKind Kind,
-    Accessibility Accessibility, ImmutableArray<OptionData> Options) :
+    Accessibility Accessibility, ImmutableArray<OptionData> Options, bool GenerateSynopsis) :
     IEquatable<SourceData>
 {
 #pragma warning disable IDE0251 // Make member 'readonly'
@@ -15,6 +15,7 @@ public record struct SourceData(string Name, string Namespace, TypeKind Kind,
             EqualityComparer<string>.Default.Equals(Namespace, other.Namespace) &&
             EqualityComparer<TypeKind>.Default.Equals(Kind, other.Kind) &&
             EqualityComparer<Accessibility>.Default.Equals(Accessibility, other.Accessibility) &&
+            EqualityComparer<bool>.Default.Equals(GenerateSynopsis, other.GenerateSynopsis) &&
             ImmutableArrayStructuralComparer<OptionData>.Instance.Equals(Options, other.Options);
     }
 
@@ -25,8 +26,9 @@ public record struct SourceData(string Name, string Namespace, TypeKind Kind,
             EqualityComparer<string>.Default.GetHashCode(Namespace),
             EqualityComparer<TypeKind>.Default.GetHashCode(Kind),
             EqualityComparer<Accessibility>.Default.GetHashCode(Accessibility),
+            EqualityComparer<bool>.Default.GetHashCode(GenerateSynopsis),
             ImmutableArrayStructuralComparer<OptionData>.Instance.GetHashCode(Options));
     }
 }
 
-public record struct OptionData(string Name, string Alias, char ShortAlias, SpecialType Type);
+public record struct OptionData(string Name, string Alias, char ShortAlias, SpecialType Type, string? Description, string? Hint);

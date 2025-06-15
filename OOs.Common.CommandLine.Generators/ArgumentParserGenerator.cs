@@ -28,7 +28,7 @@ public class ArgumentParserGenerator : IIncrementalGenerator
 
                     if (attr is
                         {
-                            ConstructorArguments: [{ Value: string name }, { Value: string longAlias }, ..] cargs,
+                            ConstructorArguments: [{ Value: string name }, { Value: string longAlias }, .. var cargs],
                             NamedArguments: var nargs,
                             AttributeClass:
                             {
@@ -37,18 +37,56 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                             }
                         })
                     {
-                        if (cargs is [_, _, { Value: char shortAlias }])
-                            builder.Add(new(name, longAlias, shortAlias, type));
-                        else if (nargs is [{ Key: "ShortAlias", Value.Value: char shortAlias1 }, ..])
-                            builder.Add(new(name, longAlias, shortAlias1, type));
-                        else if (nargs is [_, { Key: "ShortAlias", Value.Value: char shortAlias2 }, ..])
-                            builder.Add(new(name, longAlias, shortAlias2, type));
-                        else
-                            builder.Add(new(name, longAlias, '\0', type));
+                        var shortAlias = cargs is [{ Value: char sa }] ? sa : '\0';
+                        string? description = null;
+                        string? hint = null;
+
+                        foreach (var item in nargs)
+                        {
+                            switch (item)
+                            {
+                                case { Key: "ShortAlias", Value.Value: char s }:
+                                    shortAlias = s; break;
+                                case { Key: "Description", Value.Value: string d }:
+                                    description = d; break;
+                                case { Key: "Hint", Value.Value: string h }:
+                                    hint = h; break;
+                            }
+                        }
+
+                        builder.Add(new(name, longAlias, shortAlias, type, description, hint));
                     }
                 }
 
                 var arguments = builder.ToImmutable();
+
+                var generateSynopsis = false;
+                foreach (var item in ctx.TargetSymbol.GetAttributes())
+                {
+                    if (item is
+                        {
+                            AttributeClass:
+                            {
+                                Name: "ArgumentParserGenerationOptionsAttribute",
+                                ContainingNamespace:
+                                {
+                                    Name: "CommandLine",
+                                    ContainingNamespace:
+                                    {
+                                        Name: "OOs",
+                                        ContainingNamespace.IsGlobalNamespace: true
+                                    }
+                                }
+                            },
+                            NamedArguments: var args
+                        })
+                    {
+                        generateSynopsis = args.FirstOrDefault(x =>
+                            x.Key == "GenerateSynopsis" &&
+                            x.Value.Type?.SpecialType == SpecialType.System_Boolean).Value.Value is true;
+                        break;
+                    }
+                }
 
                 return ctx.TargetSymbol is ITypeSymbol
                 {
@@ -57,9 +95,9 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                     DeclaredAccessibility: var accessibility,
                     TypeKind: var kind,
                 }
-                    ? new(typeName, cns.ToDisplayString(), kind, accessibility, arguments)
+                    ? new(typeName, cns.ToDisplayString(), kind, accessibility, arguments, generateSynopsis)
                     : new("ArgumentParser", "OOs.CommandLine.Generated",
-                        Kind: TypeKind.Class, Accessibility: Accessibility.Public, arguments);
+                        Kind: TypeKind.Class, Accessibility: Accessibility.Public, arguments, generateSynopsis);
 
             }).WithComparer(EqualityComparer<SourceData>.Default);
 
@@ -70,7 +108,8 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                 return;
             }
 
-            var code = ArgumentParserCodeEmitter.Emit(source.Namespace, source.Name, source.Kind, source.Accessibility, source.Options);
+            var code = ArgumentParserCodeEmitter.Emit(source.Namespace, source.Name, source.Kind,
+                source.Accessibility, source.Options, source.GenerateSynopsis);
             ctx.AddSource($"{source.Namespace}.{source.Name}.g.cs", SourceText.From(code, Encoding.UTF8));
         });
     }

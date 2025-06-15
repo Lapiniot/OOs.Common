@@ -19,10 +19,17 @@ public abstract class OptionAttribute : Attribute, IArgumentMetadata
     public string LongAlias { get; }
     public char ShortAlias { get; set; }
     public string Description { get; set; }
+    public string Hint { get; set; }
 }
 
 public sealed class OptionAttribute<T>(string name, string longAlias) : OptionAttribute(name, typeof(T), longAlias)
 {
     public OptionAttribute(string name, string longAlias, char shortAlias) :
         this(name, longAlias) => ShortAlias = shortAlias;
+}
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Assembly, AllowMultiple = false)]
+public sealed class ArgumentParserGenerationOptionsAttribute() : Attribute
+{
+    public bool GenerateSynopsis { get; set; }
 }

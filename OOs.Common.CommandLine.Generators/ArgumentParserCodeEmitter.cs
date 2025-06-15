@@ -2,14 +2,18 @@ using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
+#pragma warning disable CA1308 // Normalize strings to uppercase
+
 namespace OOs.Common.CommandLine.Generators;
 
 public static class ArgumentParserCodeEmitter
 {
-    internal static string Emit(string namespaceName, string typeName,
-        TypeKind kind, Accessibility accessibility,
-        ImmutableArray<OptionData> options)
+    internal static string Emit(string namespaceName, string typeName, TypeKind kind, Accessibility accessibility,
+        ImmutableArray<OptionData> options, bool generateSynopsis)
     {
+        var typeAccessibility = accessibility is Accessibility.Public ? "public" : "internal";
+        var typeKind = kind is TypeKind.Struct ? "struct" : "class";
+
         var sb = new StringBuilder();
         sb.Append($$"""
 //-------------------------------------------------------------------------------
@@ -37,7 +41,7 @@ public static class ArgumentParserCodeEmitter
 namespace {{namespaceName}};
 
 [global::System.CodeDom.Compiler.GeneratedCodeAttribute("{{ProductInfo.Product}}", "{{ProductInfo.Version}}")]
-{{(accessibility is Accessibility.Public ? "public" : "internal")}} partial {{(kind is TypeKind.Struct ? "struct" : "class")}} {{typeName}}: global::OOs.CommandLine.IArgumentsParser
+{{typeAccessibility}} partial {{typeKind}} {{typeName}}: global::OOs.CommandLine.IArgumentsParser
 {
     public static (global::System.Collections.Generic.IReadOnlyDictionary<string, string?> Options, global::System.Collections.Immutable.ImmutableArray<string> Arguments) Parse(string[] args)
     {
@@ -198,6 +202,49 @@ namespace {{namespaceName}};
     {
         throw new InvalidOperationException($"Missing value for '{optionName}' option.");
     }
+""");
+        if (generateSynopsis)
+        {
+            sb.Append(""""
+
+
+    public static string GetSynopsis()
+    {
+        return """
+
+"""");
+
+            var maxLen = 0;
+            var lines = new (string Alias, string? Description)[options.Length];
+            for (var index = 0; index < options.Length; index++)
+            {
+                var (name, longAlias, shortAlias, type, description, hint) = options[index];
+                var shortAliasPart = shortAlias is not '\0' ? "-" + shortAlias + ", " : null;
+                var hintPart = type is not SpecialType.System_Boolean ? $" <{hint ?? name.ToLowerInvariant()}>" : null;
+                var alias = @$"{shortAliasPart}--{longAlias}{hintPart}";
+                lines[index] = (alias, description);
+                if (alias.Length > maxLen)
+                {
+                    maxLen = alias.Length;
+                }
+            }
+
+            foreach (var (Alias, Description) in lines)
+            {
+                sb.Append($"""
+    {Alias.PadRight(maxLen)}    {Description}
+
+""");
+            }
+
+            sb.Append(""""
+""";
+    }
+"""");
+        }
+
+        sb.Append("""
+
 }
 """);
 
