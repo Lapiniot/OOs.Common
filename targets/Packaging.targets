@@ -1,0 +1,82 @@
+<Project>
+
+  <PropertyGroup>
+    <BeforePack>$(BeforePack);AddAnalyzerFilesToPack</BeforePack>
+  </PropertyGroup>
+
+  <Target Name="GetAnalyzerFilesToPackForProject" DependsOnTargets="$(GenerateNuspecDependsOn)"
+    Returns="@(AnalyzerFilesToPack)">
+    <PropertyGroup>
+      <AnalyzersPath>analyzers/dotnet</AnalyzersPath>
+      <AnalyzersPath Condition=" '$(AnalyzerLanguage)' != '' ">$(AnalyzersPath)/$(AnalyzerLanguage)</AnalyzersPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <AnalyzerFilesToPack Include="@(_BuildOutputInPackage->WithMetadataValue('TargetFramework', 'netstandard2.0'))" />
+      <AnalyzerFilesToPack Include="@(_TargetPathsToSymbols->WithMetadataValue('TargetFramework', 'netstandard2.0'))"
+        IsSymbol="True" />
+      <AnalyzerFilesToPack PackagePath="$(AnalyzersPath)" />
+      <AnalyzerFilesToPack Include="@(_PackageFiles)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GetAnalyzerFilesToPack">
+    <MSBuild Projects="@(ProjectReference->WithMetadataValue('PackAsAnalyzer', 'true'))"
+      Targets="GetAnalyzerFilesToPackForProject" Properties="IncludeBuildOutput=true">
+      <Output TaskParameter="TargetOutputs" ItemName="AnalyzerFilesToPack" />
+    </MSBuild>
+  </Target>
+
+  <Target Name="_GenerateMSBuildAssetsToPack" Inputs="@(AnalyzerFilesToPack)" Outputs="%(Extension)">
+    <PropertyGroup>
+      <FilesToPackExtension>%(AnalyzerFilesToPack.Extension)</FilesToPackExtension>
+    </PropertyGroup>
+    <ItemGroup>
+      <PackageOwnMSBuildAssetsOfType
+        Include="@(None->WithMetadataValue('Filename', '$(PackageId)')->
+          WithMetadataValue('Extension', '$(FilesToPackExtension)')->
+          WithMetadataValue('Pack', 'true'))"
+        Condition=" '%(None.PackagePath)' == 'build' or $([System.IO.Path]::GetDirectoryName('%(None.PackagePath)')) == 'build' " />
+      <PackageOwnMSBuildAssetsOfType
+        Include="@(Content->WithMetadataValue('Filename', '$(PackageId)')->
+          WithMetadataValue('Extension', '$(FilesToPackExtension)')->
+          WithMetadataValue('Pack', 'true'))"
+        Condition=" '%(Content.PackagePath)' == 'build' or $([System.IO.Path]::GetDirectoryName('%(Content.PackagePath)')) == 'build' " />
+    </ItemGroup>
+    <ItemGroup
+      Condition=" ('$(FilesToPackExtension)' == '.props' or '$(FilesToPackExtension)' == '.targets') and 
+        '@(PackageOwnMSBuildAssetsOfType)' == '' ">
+      <!-- Extract all assets intended for packaging to the build/ directory -->
+      <MSBuildAssets Include="@(AnalyzerFilesToPack)"
+        Condition=" '$([System.IO.Path]::GetDirectoryName(%(AnalyzerFilesToPack.PackagePath)))' == 'build' or 
+          '%(AnalyzerFilesToPack.PackagePath)' == 'build' " />
+    </ItemGroup>
+    <PropertyGroup>
+      <MSBuildAssetsCount>@(MSBuildAssets->Count())</MSBuildAssetsCount>
+    </PropertyGroup>
+    <!-- Simply relocate sole build asset to build/{PackageId}.{extension} directory according to Nuget's convension -->
+    <ItemGroup Condition="'$(MSBuildAssetsCount)' == 1">
+      <AnalyzerFilesToPack PackagePath="build/$(PackageId)%(Extension)" />
+    </ItemGroup>
+    <!-- Generate new build/{PackageId}.{extension} build asset file and merge multiple build assets to this file via
+    msbuild project file imports -->
+    <WriteLinesToFile Condition="'$(MSBuildAssetsCount)' > 1"
+      File="$(IntermediateOutputPath)$(PackageId)$(FilesToPackExtension)"
+      Lines="&lt;Project&gt;;@(AnalyzerFilesToPack->'  &lt;Import Project=&quot;%(Filename)%(Extension)&quot; /&gt;');&lt;/Project&gt;"
+      Overwrite="True" />
+    <ItemGroup Condition="'$(MSBuildAssetsCount)' > 1">
+      <AnalyzerFilesToPack Include="$(IntermediateOutputPath)$(PackageId)$(FilesToPackExtension)"
+        PackagePath="build" Pack="True" Visible="False" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AddAnalyzerFilesToPack"
+    DependsOnTargets="_GetAnalyzerFilesToPack;_GenerateMSBuildAssetsToPack"
+    Condition="'@(ProjectReference)' != '' and @(ProjectReference->AnyHaveMetadataValue('PackAsAnalyzer', 'true'))">
+    <ItemGroup>
+      <Content Include="@(AnalyzerFilesToPack->WithMetadataValue('IsSymbol', ''))" Pack="True" />
+      <_TargetPathsToSymbols Include="@(AnalyzerFilesToPack->WithMetadataValue('IsSymbol', 'true'))"
+        TargetPath="/%(AnalyzerFilesToPack.PackagePath)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
