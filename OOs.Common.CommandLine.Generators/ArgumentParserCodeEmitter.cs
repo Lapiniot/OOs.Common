@@ -121,7 +121,7 @@ namespace {{namespaceName}};
                 ReadAsBoolean:
                 if (span.StartsWith("="))
                 {
-                    if (bool.TryParse(span.Slice(1), out var value))
+                    if (TryParseBoolean(span.Slice(1), out var value))
                     {
                         options[name] = value ? "True" : "False";
                         continue;
@@ -190,7 +190,7 @@ namespace {{namespaceName}};
                     ReadAsBooleanShort:
                     if (++i < span.Length)
                     {
-                        if (bool.TryParse(span.Slice(i), out var value))
+                        if (TryParseBoolean(span.Slice(i), out var value))
                         {
                             options[name] = value ? "True" : "False";
                             break;
@@ -232,7 +232,7 @@ namespace {{namespaceName}};
             if (++index < tokens.Length)
             {
                 var value = tokens[index];
-                if (bool.TryParse(value, out var bvalue))
+                if (TryParseBoolean(value, out var bvalue))
                 {
                     options[name] = bvalue ? "True" : "False";
                     continue;
@@ -245,6 +245,28 @@ namespace {{namespaceName}};
         }
 
         return (options, builder.ToImmutable());
+    }
+
+    static bool TryParseBoolean(ReadOnlySpan<char> span, out bool value)
+    {
+        if(span.Length == 1)
+        {
+            if (span[0] == '1')
+            {
+                value = true;
+                return true;
+            }
+            else if(span[0] == '0')
+            {
+                value = false;
+                return true;
+            }
+            
+            value = false;
+            return false;
+        }
+
+        return bool.TryParse(span, out value);
     }
 
     [global::System.Diagnostics.CodeAnalysis.DoesNotReturn]
