@@ -50,10 +50,12 @@ namespace {{namespaceName}};
         var options = new global::System.Collections.Generic.Dictionary<string, string?>();
         var builder = global::System.Collections.Immutable.ImmutableArray.CreateBuilder<string>(args.Length);
 
-        var enumerator = args.AsSpan().GetEnumerator();
-        while (enumerator.MoveNext())
+        var tokens = args.AsSpan();
+
+        for (var index = 0; index < tokens.Length; index++)
         {
-            var span = enumerator.Current.AsSpan();
+            var token = tokens[index];
+            var span = token.AsSpan();
             string name;
             if (span.StartsWith("--"))
             {
@@ -63,11 +65,7 @@ namespace {{namespaceName}};
                 {
                     // Special "--" (end of option arguments) marker detected - 
                     // read the rest of args as regular positional arguments
-                    while (enumerator.MoveNext())
-                    {
-                        builder.Add(enumerator.Current);
-                    }
-
+                    builder.AddRange(tokens.Slice(index + 1));
                     break;
                 }
 
@@ -83,21 +81,17 @@ namespace {{namespaceName}};
                 {
 
 """);
-                if (type is SpecialType.System_Boolean)
-                {
-                    sb.Append($$"""
-                    options["{{name}}"] = "True";
-                    continue;
-
-""");
-                }
-                else
-                {
-                    sb.Append($$"""
+                sb.Append($$"""
                     name = "{{name}}";
                     span = span.Slice({{len}});
 
 """);
+                if (type is SpecialType.System_Boolean)
+                {
+                    sb.Append($$"""
+                                    goto ReadAsBoolean;
+
+                """);
                 }
 
                 sb.Append("""
@@ -110,17 +104,36 @@ namespace {{namespaceName}};
         sb.Append("""
                 else
                 {
-                    builder.Add(enumerator.Current);
+                    builder.Add(token);
                     continue;
                 }
 
                 if (span.StartsWith("="))
                 {
                     options[name] = new string(span.Slice(1));
+                    continue;
                 }
                 else
                 {
                     goto TryReadNext;
+                }
+
+                ReadAsBoolean:
+                if (span.StartsWith("="))
+                {
+                    if (bool.TryParse(span.Slice(1), out var value))
+                    {
+                        options[name] = value ? "True" : "False";
+                        continue;
+                    }
+                    else
+                    {
+                        ThrowInvalidOptionValue(name);
+                    }
+                }
+                else
+                {
+                    goto TryReadNextAsBoolean;
                 }
             }
             else if (span.StartsWith("-"))
@@ -139,18 +152,20 @@ namespace {{namespaceName}};
                         case '{{alias}}':
 
 """);
+                sb.Append($$"""
+                            name = "{{name}}";
+
+""");
                 if (type is SpecialType.System_Boolean)
                 {
                     sb.Append($$"""
-                            options["{{name}}"] = "True";
-                            continue;
+                            goto ReadAsBooleanShort;
 
 """);
                 }
                 else
                 {
                     sb.Append($$"""
-                            name = "{{name}}";
                             break;
 
 """);
@@ -162,28 +177,48 @@ namespace {{namespaceName}};
                         default: continue;
                     }
 
-                    if (i < span.Length - 1)
+                    if (++i < span.Length)
                     {
-                        options[name] = new string(span.Slice(i + 1));
+                        options[name] = new string(span.Slice(i));
                         break;
                     }
                     else
                     {
                         goto TryReadNext;
                     }
+
+                    ReadAsBooleanShort:
+                    if (++i < span.Length)
+                    {
+                        if (bool.TryParse(span.Slice(i), out var value))
+                        {
+                            options[name] = value ? "True" : "False";
+                            break;
+                        }
+                        else
+                        {
+                            options[name] = "True";
+                            i--;
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        goto TryReadNextAsBoolean;
+                    }
                 }
             }
             else
             {
-                builder.Add(enumerator.Current);
+                builder.Add(token);
             }
 
             continue;
 
             TryReadNext:
-            if (enumerator.MoveNext())
+            if (++index < tokens.Length)
             {
-                var value = enumerator.Current;
+                var value = tokens[index];
                 if (!value.StartsWith('-'))
                 {
                     options[name] = value;
@@ -192,6 +227,21 @@ namespace {{namespaceName}};
             }
 
             ThrowMissingOptionValue(name);
+
+            TryReadNextAsBoolean:
+            if (++index < tokens.Length)
+            {
+                var value = tokens[index];
+                if (bool.TryParse(value, out var bvalue))
+                {
+                    options[name] = bvalue ? "True" : "False";
+                    continue;
+                }
+                
+                index--;
+            }
+
+            options[name] = "True";
         }
 
         return (options, builder.ToImmutable());
@@ -201,6 +251,12 @@ namespace {{namespaceName}};
     static void ThrowMissingOptionValue(string optionName)
     {
         throw new InvalidOperationException($"Missing value for '{optionName}' option.");
+    }
+
+    [global::System.Diagnostics.CodeAnalysis.DoesNotReturn]
+    static void ThrowInvalidOptionValue(string optionName)
+    {
+        throw new InvalidOperationException($"Invalid value for '{optionName}' option.");
     }
 """);
         if (generateSynopsis)
