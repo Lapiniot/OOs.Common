@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
 namespace OOs.Common.CommandLine.Generators;
@@ -13,37 +14,31 @@ public class ArgumentParserGenerator : IIncrementalGenerator
     private const string ClassNameOptionName = "ArgumentParserGeneratorClassName";
     private const string NamespaceOptionName = "ArgumentParserGeneratorNamespace";
     private const string RootNamespaceName = "RootNamespace";
+    private const string DefaultClassName = "Arguments";
+    private const string DefaultNamespaceName = "OOs.CommandLine.Generated";
+    private static readonly SymbolDisplayFormat? format = SymbolDisplayFormat.FullyQualifiedFormat.
+        WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted);
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var optionProvider = context.AnalyzerConfigOptionsProvider.Select(static (options, _) =>
-        {
-            var globalOptions = options.GlobalOptions;
-            return new GeneratorOptions(
-                IsEnabled: !globalOptions.TryGetValue($"{Prefix}{EnableOptionName}", out var value) ||
-                    bool.TryParse(value, out var enabled) && enabled,
-                ClassName: globalOptions.TryGetValue($"{Prefix}{ClassNameOptionName}", out value) && !string.IsNullOrEmpty(value)
-                    ? value
-                    : "Arguments",
-                NamespaceName: globalOptions.TryGetValue($"{Prefix}{NamespaceOptionName}", out value) && !string.IsNullOrEmpty(value)
-                    ? value
-                    : globalOptions.TryGetValue($"{Prefix}{RootNamespaceName}", out value) && !string.IsNullOrEmpty(value)
-                        ? value
-                        : "OOs.CommandLine.Generated");
-        });
+        var optionProvider = context.AnalyzerConfigOptionsProvider.Select(GetGeneratorOptions);
+
+        var knownTypesProvider = context.CompilationProvider.Select(
+            static (compilation, _) => KnownTypes.FromCompilation(compilation));
 
         var sourceDataProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
                 fullyQualifiedMetadataName: "OOs.CommandLine.OptionAttribute`1",
                 predicate: static (_, _) => true,
-                transform: ToSourceData)
+                transform: GetSourceData)
             .WithComparer(EqualityComparer<SourceData>.Default)
             .WithTrackingName($"{nameof(ArgumentParserGenerator)}SourceData");
 
-        var combined = optionProvider.Combine(sourceDataProvider.Collect());
+        var combined = optionProvider.Combine(knownTypesProvider).Combine(sourceDataProvider.Collect());
 
         context.RegisterSourceOutput(combined, static (ctx, source) =>
         {
-            var (defaults, sources) = source;
+            var ((defaults, knownTypes), sources) = source;
+
             if (!defaults.IsEnabled)
             {
                 return;
@@ -51,20 +46,32 @@ public class ArgumentParserGenerator : IIncrementalGenerator
 
             foreach (var (name, ns, kind, accessibility, options, genSynopsis) in sources)
             {
-                if (options.Length is 0)
-                {
-                    continue;
-                }
-
                 var namespaceName = ns ?? defaults.NamespaceName;
                 var typeName = name ?? defaults.ClassName;
-                var code = ArgumentParserCodeEmitter.Emit(namespaceName, typeName, kind, accessibility, options, genSynopsis);
+                var code = ArgumentParserCodeEmitter.Emit(namespaceName, typeName, kind,
+                    accessibility, options, genSynopsis, knownTypes);
                 ctx.AddSource($"{namespaceName}.{typeName}.g.cs", SourceText.From(code, Encoding.UTF8));
             }
         });
     }
 
-    private static SourceData ToSourceData(GeneratorAttributeSyntaxContext ctx, CancellationToken cancellationToken)
+    private static GeneratorOptions GetGeneratorOptions(AnalyzerConfigOptionsProvider options, CancellationToken _)
+    {
+        var globalOptions = options.GlobalOptions;
+        return new GeneratorOptions(
+            IsEnabled: !globalOptions.TryGetValue($"{Prefix}{EnableOptionName}", out var value) ||
+                bool.TryParse(value, out var enabled) && enabled,
+            ClassName: globalOptions.TryGetValue($"{Prefix}{ClassNameOptionName}", out value) && !string.IsNullOrEmpty(value)
+                ? value
+                : DefaultClassName,
+            NamespaceName: globalOptions.TryGetValue($"{Prefix}{NamespaceOptionName}", out value) && !string.IsNullOrEmpty(value)
+                ? value
+                : globalOptions.TryGetValue($"{Prefix}{RootNamespaceName}", out value) && !string.IsNullOrEmpty(value)
+                    ? value
+                    : DefaultNamespaceName);
+    }
+
+    private static SourceData GetSourceData(GeneratorAttributeSyntaxContext ctx, CancellationToken cancellationToken)
     {
         var builder = ImmutableArray.CreateBuilder<OptionData>();
         foreach (var attr in ctx.Attributes)
@@ -81,7 +88,7 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                     AttributeClass:
                     {
                         IsGenericType: true,
-                        TypeArguments: [{ SpecialType: { } type }]
+                        TypeArguments: [{ MetadataToken: var typeToken }]
                     }
                 })
             {
@@ -102,7 +109,7 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                     }
                 }
 
-                builder.Add(new(name, longAlias, shortAlias, type, description, hint));
+                builder.Add(new(name, longAlias, shortAlias, typeToken, description, hint));
             }
         }
 
@@ -143,9 +150,8 @@ public class ArgumentParserGenerator : IIncrementalGenerator
             DeclaredAccessibility: var accessibility,
             TypeKind: var kind,
         }
-            ? new(typeName, cns.ToDisplayString(), kind, accessibility, arguments, generateSynopsis)
-            : new(null, null,
-                Kind: TypeKind.Class, Accessibility: Accessibility.Public, arguments, generateSynopsis);
+            ? new(typeName, cns.ToDisplayString(format), kind, accessibility, arguments, generateSynopsis)
+            : new(null, null, TypeKind.Class, Accessibility.Public, arguments, generateSynopsis);
     }
 }
 

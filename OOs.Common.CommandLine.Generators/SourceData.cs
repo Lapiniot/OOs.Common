@@ -31,4 +31,4 @@ public record struct SourceData(string? Name, string? Namespace, TypeKind Kind,
     }
 }
 
-public record struct OptionData(string Name, string Alias, char ShortAlias, SpecialType Type, string? Description, string? Hint);
+public record struct OptionData(string Name, string Alias, char ShortAlias, int Type, string? Description, string? Hint);

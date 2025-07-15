@@ -9,7 +9,7 @@ namespace OOs.Common.CommandLine.Generators;
 public static class ArgumentParserCodeEmitter
 {
     internal static string Emit(string namespaceName, string typeName, TypeKind kind, Accessibility accessibility,
-        ImmutableArray<OptionData> options, bool generateSynopsis)
+        ImmutableArray<OptionData> options, bool generateSynopsis, KnownTypes knownTypes)
     {
         var typeAccessibility = accessibility is Accessibility.Public ? "public" : "internal";
         var typeKind = kind is TypeKind.Struct ? "struct" : "class";
@@ -32,6 +32,7 @@ public static class ArgumentParserCodeEmitter
 )
 // Changes to this file may cause incorrect behavior and will be lost
 // if the code is regenerated.
+// {{DateTime.UtcNow}}
 // </auto-generated>
 //-------------------------------------------------------------------------------
 
@@ -86,10 +87,17 @@ namespace {{namespaceName}};
                     span = span.Slice({{len}});
 
 """);
-                if (type is SpecialType.System_Boolean)
+                if (type == knownTypes.SystemBoolean)
                 {
                     sb.Append($$"""
                                     goto ReadAsBoolean;
+
+                """);
+                }
+                else if (type == knownTypes.SystemTimeSpan)
+                {
+                    sb.Append($$"""
+                                    goto ReadAsTimeSpan;
 
                 """);
                 }
@@ -135,10 +143,33 @@ namespace {{namespaceName}};
                 {
                     goto TryReadNextAsBoolean;
                 }
+
+                ReadAsTimeSpan:
+                if (span.StartsWith("="))
+                {
+                    if (int.TryParse(span.Slice(1), out var ms))
+                    {
+                        options[name] = global::System.TimeSpan.FromMilliseconds(ms).ToString();
+                        continue;
+                    }
+                    else if (global::System.TimeSpan.TryParse(span.Slice(1), out var value))
+                    {
+                        options[name] = value.ToString();
+                        continue;
+                    }
+                    else
+                    {
+                        ThrowInvalidOptionValue(name);
+                    }
+                }
+                else
+                {
+                    goto TryReadNextAsTimeSpan;
+                }
             }
             else if (span.StartsWith("-"))
             {
-                for(var i = 1; i < span.Length; i++)
+                for (var i = 1; i < span.Length; i++)
                 {
                     switch (span[i]) 
                     {
@@ -153,13 +184,21 @@ namespace {{namespaceName}};
 
 """);
                 sb.Append($$"""
+                            // {{type}}
                             name = "{{name}}";
 
 """);
-                if (type is SpecialType.System_Boolean)
+                if (type == knownTypes.SystemBoolean)
                 {
                     sb.Append($$"""
                             goto ReadAsBooleanShort;
+
+""");
+                }
+                else if (type == knownTypes.SystemTimeSpan)
+                {
+                    sb.Append($$"""
+                            goto ReadAsTimeSpanShort;
 
 """);
                 }
@@ -206,6 +245,29 @@ namespace {{namespaceName}};
                     {
                         goto TryReadNextAsBoolean;
                     }
+
+                    ReadAsTimeSpanShort:
+                    if (++i < span.Length)
+                    {
+                        if (int.TryParse(span.Slice(i), out var ms))
+                        {
+                            options[name] = global::System.TimeSpan.FromMilliseconds(ms).ToString();
+                            break;
+                        }
+                        else if (global::System.TimeSpan.TryParse(span.Slice(i), out var value))
+                        {
+                            options[name] = value.ToString();
+                            break;
+                        }
+                        else
+                        {
+                            ThrowInvalidOptionValue(name);
+                        }
+                    }
+                    else
+                    {
+                        goto TryReadNextAsTimeSpan;
+                    }
                 }
             }
             else
@@ -242,6 +304,31 @@ namespace {{namespaceName}};
             }
 
             options[name] = "True";
+            continue;
+
+            TryReadNextAsTimeSpan:
+            if (++index < tokens.Length)
+            {
+                var value = tokens[index];
+                if (int.TryParse(value, out var ms))
+                {
+                    options[name] = global::System.TimeSpan.FromMilliseconds(ms).ToString();
+                    continue;
+                }
+                else if (global::System.TimeSpan.TryParse(value, out var tvalue))
+                {
+                    options[name] = tvalue.ToString();
+                    continue;
+                }
+                else
+                {
+                    ThrowInvalidOptionValue(name);
+                }
+                
+                index--;
+            }
+
+            ThrowMissingOptionValue(name);
         }
 
         return (options, builder.ToImmutable());
@@ -249,7 +336,7 @@ namespace {{namespaceName}};
 
     static bool TryParseBoolean(ReadOnlySpan<char> span, out bool value)
     {
-        if(span.Length == 1)
+        if (span.Length == 1)
         {
             if (span[0] == '1')
             {
@@ -298,7 +385,7 @@ namespace {{namespaceName}};
             {
                 var (name, longAlias, shortAlias, type, description, hint) = options[index];
                 var shortAliasPart = shortAlias is not '\0' ? "-" + shortAlias + ", " : null;
-                var hintPart = type is not SpecialType.System_Boolean ? $" <{hint ?? name.ToLowerInvariant()}>" : null;
+                var hintPart = type != knownTypes.SystemBoolean ? $" <{hint ?? name.ToLowerInvariant()}>" : null;
                 var alias = @$"{shortAliasPart}--{longAlias}{hintPart}";
                 lines[index] = (alias, description);
                 if (alias.Length > maxLen)
