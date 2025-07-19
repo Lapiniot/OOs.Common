@@ -1,32 +1,22 @@
 using Microsoft.Extensions.Configuration;
-using OOs.CommandLine;
 
 namespace OOs.Extensions.Configuration;
 
-public sealed class CommandArgumentsConfigurationProvider<TParser> : ConfigurationProvider where TParser : IArgumentsParser
+public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvider
 {
-    private readonly string[] args;
-    private readonly string argsSectionKey;
-
-    public CommandArgumentsConfigurationProvider(string[] args, string argsSectionKey) : base()
+    public CommandArgumentsConfigurationProvider(IReadOnlyDictionary<string, string> options,
+        IReadOnlyList<string> arguments, string argsSectionKey = "args")
     {
-        ArgumentNullException.ThrowIfNull(args);
-        ArgumentException.ThrowIfNullOrEmpty(argsSectionKey);
-
-        this.args = args;
-        this.argsSectionKey = argsSectionKey;
-    }
-
-    public override void Load()
-    {
-        var (options, arguments) = TParser.Parse(args);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(arguments);
+        ArgumentNullException.ThrowIfNull(argsSectionKey);
 
         foreach (var option in options)
         {
             Data.Add(option);
         }
 
-        for (var i = 0; i < arguments.Length; i++)
+        for (var i = 0; i < arguments.Count; i++)
         {
             Data.Add($"{argsSectionKey}:{i}", arguments[i]);
         }

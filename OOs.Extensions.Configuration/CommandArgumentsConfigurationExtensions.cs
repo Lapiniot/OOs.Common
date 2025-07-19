@@ -14,7 +14,20 @@ public static class CommandArgumentsConfigurationExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(args);
+        ArgumentException.ThrowIfNullOrEmpty(argsSectionKey);
 
         return builder.Add(new CommandArgumentsConfigurationSource<TParser>(args, argsSectionKey));
+    }
+
+    public static IConfigurationBuilder AddCommandArguments(this IConfigurationBuilder builder,
+        IReadOnlyDictionary<string, string> options, IReadOnlyList<string> arguments,
+        string argsSectionKey = "args")
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(arguments);
+        ArgumentException.ThrowIfNullOrEmpty(argsSectionKey);
+
+        return builder.Add(new CommandArgumentsConfigurationSource(options, arguments, argsSectionKey));
     }
 }
