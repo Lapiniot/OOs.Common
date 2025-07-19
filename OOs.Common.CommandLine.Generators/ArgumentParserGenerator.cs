@@ -29,8 +29,8 @@ public class ArgumentParserGenerator : IIncrementalGenerator
         var sourceDataProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
                 fullyQualifiedMetadataName: "OOs.CommandLine.OptionAttribute`1",
                 predicate: static (_, _) => true,
-                transform: GetSourceData)
-            .WithComparer(EqualityComparer<SourceData>.Default)
+                transform: GetSourceGenerationContext)
+            .WithComparer(EqualityComparer<SourceGenerationContext>.Default)
             .WithTrackingName($"{nameof(ArgumentParserGenerator)}SourceData");
 
         var combined = optionProvider.Combine(knownTypesProvider).Combine(sourceDataProvider.Collect());
@@ -44,12 +44,12 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                 return;
             }
 
-            foreach (var (name, ns, kind, accessibility, options, genSynopsis) in sources)
+            foreach (var ((name, ns, kind, accessibility, genSynopsis, addStandardOptions), options) in sources)
             {
                 var namespaceName = ns ?? defaults.NamespaceName;
                 var typeName = name ?? defaults.ClassName;
                 var code = ArgumentParserCodeEmitter.Emit(namespaceName, typeName, kind,
-                    accessibility, options, genSynopsis, knownTypes);
+                    accessibility, options, genSynopsis, addStandardOptions, knownTypes);
                 ctx.AddSource($"{namespaceName}.{typeName}.g.cs", SourceText.From(code, Encoding.UTF8));
             }
         });
@@ -71,9 +71,9 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                     : DefaultNamespaceName);
     }
 
-    private static SourceData GetSourceData(GeneratorAttributeSyntaxContext ctx, CancellationToken cancellationToken)
+    private static SourceGenerationContext GetSourceGenerationContext(GeneratorAttributeSyntaxContext ctx, CancellationToken cancellationToken)
     {
-        var builder = ImmutableArray.CreateBuilder<OptionData>();
+        var builder = ImmutableArray.CreateBuilder<OptionGenerationContext>();
         foreach (var attr in ctx.Attributes)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -113,9 +113,11 @@ public class ArgumentParserGenerator : IIncrementalGenerator
             }
         }
 
-        var arguments = builder.ToImmutable();
+        var options = builder.ToImmutable();
 
         var generateSynopsis = false;
+        var addStandardOptions = false;
+
         foreach (var item in ctx.TargetSymbol.GetAttributes())
         {
             if (item is
@@ -136,10 +138,22 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                     NamedArguments: var args
                 })
             {
-                generateSynopsis = args.FirstOrDefault(static x =>
-                    x.Key == "GenerateSynopsis" &&
-                    x.Value.Type?.SpecialType == SpecialType.System_Boolean).Value.Value is true;
-                break;
+                for (var i = 0; i < args.Length; i++)
+                {
+                    var arg = args[i];
+                    if (arg is { Value: { Type.SpecialType: SpecialType.System_Boolean, Value: bool value }, Key: var key })
+                    {
+                        switch (key)
+                        {
+                            case "GenerateSynopsis":
+                                generateSynopsis = value;
+                                break;
+                            case "AddStandardOptions":
+                                addStandardOptions = value;
+                                break;
+                        }
+                    }
+                }
             }
         }
 
@@ -150,8 +164,8 @@ public class ArgumentParserGenerator : IIncrementalGenerator
             DeclaredAccessibility: var accessibility,
             TypeKind: var kind,
         }
-            ? new(typeName, cns.ToDisplayString(format), kind, accessibility, arguments, generateSynopsis)
-            : new(null, null, TypeKind.Class, Accessibility.Public, arguments, generateSynopsis);
+            ? new(new(typeName, cns.ToDisplayString(format), kind, accessibility, generateSynopsis, addStandardOptions), options)
+            : new(new(null, null, TypeKind.Class, Accessibility.Public, generateSynopsis, addStandardOptions), options);
     }
 }
 

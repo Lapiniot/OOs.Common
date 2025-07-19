@@ -32,4 +32,5 @@ public sealed class OptionAttribute<T>(string name, string longAlias) : OptionAt
 public sealed class ArgumentParserGenerationOptionsAttribute() : Attribute
 {
     public bool GenerateSynopsis { get; set; }
+    public bool AddStandardOptions { get; set; }
 }
