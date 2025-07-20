@@ -33,8 +33,4 @@
     <Content Include="$(MSBuildProjectName).props" PackagePath="build/$(PackageId)%(Extension)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="..\ProductInfo.cs" Link="ProductInfo.cs" />
-  </ItemGroup>
-
 </Project>

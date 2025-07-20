@@ -82,7 +82,7 @@ namespace Microsoft.CodeAnalysis
 // </auto-generated>
 //-------------------------------------------------------------------------------
 
-global using OOs.CommandLine.Generators;
+global using global::OOs.CommandLine.Generators;
 
 namespace OOs.CommandLine.Generators
 {

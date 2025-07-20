@@ -1,5 +1,7 @@
 using System.Reflection;
 
+namespace OOs.CommandLine.Generators;
+
 internal static class ProductInfo
 {
     static ProductInfo()
