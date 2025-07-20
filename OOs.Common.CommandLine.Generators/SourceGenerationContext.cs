@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 
-namespace OOs.Common.CommandLine.Generators;
+namespace OOs.CommandLine.Generators;
 
 public readonly record struct SourceGenerationContext(TypeGenerationContext Context,
     ImmutableArray<OptionGenerationContext> Options) :

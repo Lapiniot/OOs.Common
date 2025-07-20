@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 
 #pragma warning disable CA1308 // Normalize strings to uppercase
 
-namespace OOs.Common.CommandLine.Generators;
+namespace OOs.CommandLine.Generators;
 
 public static class ArgumentParserCodeEmitter
 {

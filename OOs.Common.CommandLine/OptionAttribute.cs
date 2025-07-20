@@ -27,10 +27,3 @@ public sealed class OptionAttribute<T>(string name, string longAlias) : OptionAt
     public OptionAttribute(string name, string longAlias, char shortAlias) :
         this(name, longAlias) => ShortAlias = shortAlias;
 }
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Assembly, AllowMultiple = false)]
-public sealed class ArgumentParserGenerationOptionsAttribute() : Attribute
-{
-    public bool GenerateSynopsis { get; set; }
-    public bool AddStandardOptions { get; set; }
-}

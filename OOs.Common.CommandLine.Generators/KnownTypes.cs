@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace OOs.Common.CommandLine.Generators;
+namespace OOs.CommandLine.Generators;
 
 internal record struct KnownTypes(int SystemBoolean, int SystemTimeSpan)
 {

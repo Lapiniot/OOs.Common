@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace OOs.Common.CommandLine.Generators;
+namespace OOs.CommandLine.Generators;
 
 internal sealed class ImmutableArrayStructuralComparer<T> : IEqualityComparer<ImmutableArray<T>>
 {
