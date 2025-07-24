@@ -31,18 +31,14 @@ namespace {{namespaceName}};
 
 {{typeAccessibility}} partial {{typeKind}} {{typeName}}: global::OOs.CommandLine.IArgumentsParser
 {
-    public static (global::System.Collections.Generic.IReadOnlyDictionary<string, string?> Options, global::System.Collections.Immutable.ImmutableArray<string> Arguments) Parse(string[] args)
+    public static (global::System.Collections.Generic.IReadOnlyDictionary<string, string?> Options, global::System.Collections.Immutable.ImmutableArray<string> Arguments) Parse(global::System.ReadOnlySpan<string> args)
     {
-        global::System.ArgumentNullException.ThrowIfNull(args);
-
         var options = new global::System.Collections.Generic.Dictionary<string, string?>();
         var builder = global::System.Collections.Immutable.ImmutableArray.CreateBuilder<string>(args.Length);
 
-        var tokens = args.AsSpan();
-
-        for (var index = 0; index < tokens.Length; index++)
+        for (var index = 0; index < args.Length; index++)
         {
-            var token = tokens[index];
+            var token = args[index];
             var span = token.AsSpan();
             string name;
             if (span.StartsWith("--"))
@@ -53,7 +49,7 @@ namespace {{namespaceName}};
                 {
                     // Special "--" (end of option arguments) marker detected - 
                     // read the rest of args as regular positional arguments
-                    builder.AddRange(tokens.Slice(index + 1));
+                    builder.AddRange(args.Slice(index + 1));
                     break;
                 }
 
@@ -297,9 +293,9 @@ namespace {{namespaceName}};
             continue;
 
             TryReadNext:
-            if (++index < tokens.Length)
+            if (++index < args.Length)
             {
-                var value = tokens[index];
+                var value = args[index];
                 if (!value.StartsWith('-'))
                 {
                     options[name] = value;
@@ -310,9 +306,9 @@ namespace {{namespaceName}};
             ThrowMissingOptionValue(name);
 
             TryReadNextAsBoolean:
-            if (++index < tokens.Length)
+            if (++index < args.Length)
             {
-                var value = tokens[index];
+                var value = args[index];
                 if (TryParseBoolean(value, out var bvalue))
                 {
                     options[name] = bvalue ? "True" : "False";
@@ -326,9 +322,9 @@ namespace {{namespaceName}};
             continue;
 
             TryReadNextAsTimeSpan:
-            if (++index < tokens.Length)
+            if (++index < args.Length)
             {
-                var value = tokens[index];
+                var value = args[index];
                 if (int.TryParse(value, out var ms))
                 {
                     options[name] = global::System.TimeSpan.FromMilliseconds(ms).ToString();

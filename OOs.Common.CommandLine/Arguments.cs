@@ -30,15 +30,19 @@ public readonly record struct Arguments : IArgumentsParser
         return new(command?.Name, options, values);
     }
 
-    public static (IReadOnlyDictionary<string, string> Options, ImmutableArray<string> Arguments) Parse(string[] args)
+    public static (IReadOnlyDictionary<string, string> Options, ImmutableArray<string> Arguments) Parse(ReadOnlySpan<string> args)
     {
         Parse(args, false, out var options, out var values);
         return (options.ToDictionary(kvp => kvp.Key, kvp => kvp.Value is { } value ? value.ToString() : null), values);
     }
 
-    private static void Parse(string[] args, bool strict, out IReadOnlyDictionary<string, object> options, out ImmutableArray<string> arguments)
+    private static void Parse(ReadOnlySpan<string> args, bool strict, out IReadOnlyDictionary<string, object> options, out ImmutableArray<string> arguments)
     {
-        var queue = new Queue<string>(args);
+        var queue = new Queue<string>(args.Length);
+        foreach (var item in args)
+        {
+            queue.Enqueue(item);
+        }
 
         var schema = Assembly.GetEntryAssembly()?
             .GetCustomAttributes<OptionAttribute>()
