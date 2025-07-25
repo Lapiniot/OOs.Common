@@ -50,7 +50,10 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                 var typeName = name ?? defaults.ClassName;
                 var code = ArgumentParserCodeEmitter.Emit(namespaceName, typeName, kind,
                     accessibility, options, genSynopsis, addStandardOptions, knownTypes);
-                ctx.AddSource($"{namespaceName}.{typeName}.g.cs", SourceText.From(code, Encoding.UTF8));
+                var hintName = $"{(!string.IsNullOrWhiteSpace(namespaceName)
+                    ? $"{namespaceName}.{typeName}"
+                    : typeName)}.g.cs";
+                ctx.AddSource(hintName, SourceText.From(code, Encoding.UTF8));
             }
         });
 

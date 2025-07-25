@@ -18,14 +18,21 @@ public static class ArgumentParserCodeEmitter
         var sb = new StringBuilder();
         CodeEmitHelper.AppendFileHeader(sb);
         sb.AppendLine();
-        sb.Append($$"""
+        sb.Append("""
 #pragma warning disable CS1591
 #nullable enable
 
+
+""");
+        if (!string.IsNullOrWhiteSpace(namespaceName))
+        {
+            sb.Append($$"""
 namespace {{namespaceName}};
 
 
 """);
+        }
+
         CodeEmitHelper.AppendGeneratedCodeAttribute(sb);
         sb.Append($$"""
 
