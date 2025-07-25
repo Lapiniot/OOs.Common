@@ -14,6 +14,7 @@ public static class ArgumentParserCodeEmitter
     {
         var typeAccessibility = accessibility is Accessibility.Public ? "public" : "internal";
         var typeKind = kind is TypeKind.Struct ? "struct" : "class";
+        var emitBooleanSupport = false; var emitTimeSpanSupport = false;
 
         var sb = new StringBuilder();
         CodeEmitHelper.AppendFileHeader(sb);
@@ -80,6 +81,7 @@ namespace {{namespaceName}};
 """);
                 if (type == knownTypes.SystemBoolean)
                 {
+                    emitBooleanSupport = true;
                     sb.Append($$"""
                                     goto ReadAsBoolean;
 
@@ -87,6 +89,7 @@ namespace {{namespaceName}};
                 }
                 else if (type == knownTypes.SystemTimeSpan)
                 {
+                    emitTimeSpanSupport = true;
                     sb.Append($$"""
                                     goto ReadAsTimeSpan;
 
@@ -136,6 +139,12 @@ namespace {{namespaceName}};
                     goto TryReadNext;
                 }
 
+""");
+
+        if (emitBooleanSupport)
+        {
+            sb.Append("""
+
                 ReadAsBoolean:
                 if (span.StartsWith("="))
                 {
@@ -153,6 +162,13 @@ namespace {{namespaceName}};
                 {
                     goto TryReadNextAsBoolean;
                 }
+
+""");
+        }
+
+        if (emitTimeSpanSupport)
+        {
+            sb.Append("""
 
                 ReadAsTimeSpan:
                 if (span.StartsWith("="))
@@ -176,10 +192,15 @@ namespace {{namespaceName}};
                 {
                     goto TryReadNextAsTimeSpan;
                 }
+
+""");
+        }
+
+        sb.Append("""
             }
             else if (span.StartsWith("-"))
             {
-                for (var i = 1; i < span.Length; i++)
+                for (var i = 1; i<span.Length; i++)
                 {
                     switch (span[i]) 
                     {
@@ -187,7 +208,12 @@ namespace {{namespaceName}};
 """);
         foreach (var option in options)
         {
-            if (option is { Name: { } name, ShortAlias: not '\0' and var alias, Type: { } type })
+            if (option is
+                {
+                    Name: { } name,
+                    ShortAlias: not '\0' and var alias,
+                    Type: { } type
+                })
             {
                 sb.Append($$"""
                         case '{{alias}}':
@@ -199,6 +225,7 @@ namespace {{namespaceName}};
 """);
                 if (type == knownTypes.SystemBoolean)
                 {
+                    emitBooleanSupport = true;
                     sb.Append($$"""
                             goto ReadAsBooleanShort;
 
@@ -206,6 +233,7 @@ namespace {{namespaceName}};
                 }
                 else if (type == knownTypes.SystemTimeSpan)
                 {
+                    emitTimeSpanSupport = true;
                     sb.Append($$"""
                             goto ReadAsTimeSpanShort;
 
@@ -248,6 +276,12 @@ namespace {{namespaceName}};
                         goto TryReadNext;
                     }
 
+""");
+
+        if (emitBooleanSupport)
+        {
+            sb.Append("""
+
                     ReadAsBooleanShort:
                     if (++i < span.Length)
                     {
@@ -267,6 +301,13 @@ namespace {{namespaceName}};
                     {
                         goto TryReadNextAsBoolean;
                     }
+
+""");
+        }
+
+        if (emitTimeSpanSupport)
+        {
+            sb.Append("""
 
                     ReadAsTimeSpanShort:
                     if (++i < span.Length)
@@ -290,6 +331,11 @@ namespace {{namespaceName}};
                     {
                         goto TryReadNextAsTimeSpan;
                     }
+
+""");
+        }
+
+        sb.Append("""
                 }
             }
             else
@@ -312,6 +358,12 @@ namespace {{namespaceName}};
 
             ThrowMissingOptionValue(name);
 
+""");
+
+        if (emitBooleanSupport)
+        {
+            sb.Append("""
+
             TryReadNextAsBoolean:
             if (++index < args.Length)
             {
@@ -327,6 +379,13 @@ namespace {{namespaceName}};
 
             options[name] = "True";
             continue;
+
+""");
+        }
+
+        if (emitTimeSpanSupport)
+        {
+            sb.Append("""
 
             TryReadNextAsTimeSpan:
             if (++index < args.Length)
@@ -351,49 +410,73 @@ namespace {{namespaceName}};
             }
 
             ThrowMissingOptionValue(name);
+
+""");
+        }
+
+        sb.Append("""
         }
 
         return (options, builder.ToImmutable());
     }
 
-    static bool TryParseBoolean(ReadOnlySpan<char> span, out bool value)
-    {
-        if (span.Length == 1)
+""");
+
+        if (emitBooleanSupport)
         {
-            if (span[0] == '1')
+            sb.Append("""
+    
+        private static bool TryParseBoolean(ReadOnlySpan<char> span, out bool value)
+        {
+            if (span.Length == 1)
             {
-                value = true;
-                return true;
-            }
-            else if(span[0] == '0')
-            {
+                if (span[0] == '1')
+                {
+                    value = true;
+                    return true;
+                }
+                else if(span[0] == '0')
+                {
+                    value = false;
+                    return true;
+                }
+                
                 value = false;
-                return true;
+                return false;
             }
-            
-            value = false;
-            return false;
+    
+            return bool.TryParse(span, out value);
+        }
+    
+    """);
         }
 
-        return bool.TryParse(span, out value);
-    }
+        sb.Append("""
 
     [global::System.Diagnostics.CodeAnalysis.DoesNotReturn]
-    static void ThrowMissingOptionValue(string optionName)
+    private static void ThrowMissingOptionValue(string optionName)
     {
         throw new InvalidOperationException($"Missing value for '{optionName}' option.");
     }
 
+""");
+
+        if (emitBooleanSupport || emitTimeSpanSupport)
+        {
+            sb.Append("""
+
     [global::System.Diagnostics.CodeAnalysis.DoesNotReturn]
-    static void ThrowInvalidOptionValue(string optionName)
+    private static void ThrowInvalidOptionValue(string optionName)
     {
         throw new InvalidOperationException($"Invalid value for '{optionName}' option.");
     }
+
 """);
+        }
+
         if (generateSynopsis)
         {
             sb.Append(""""
-
 
     public static string GetSynopsis()
     {
@@ -437,13 +520,11 @@ namespace {{namespaceName}};
             sb.Append(""""
 """;
     }
+
 """");
         }
 
-        sb.Append("""
-
-}
-""");
+        sb.Append('}');
 
         return sb.ToString();
     }
