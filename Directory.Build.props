@@ -1,13 +1,13 @@
 <Project>
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <IsTrimmable>true</IsTrimmable>
     <LangVersion>preview</LangVersion>
     <Authors>aossss@gmail.com</Authors>
     <Company>aossss@gmail.com</Company>
     <Copyright>© $(Authors), $([System.DateTime]::UtcNow.Year)</Copyright>
-    <Version>1.11.0</Version>
+    <Version>1.12.0</Version>
     <AnalysisLevel>latest-All</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>true</ImplicitUsings>
