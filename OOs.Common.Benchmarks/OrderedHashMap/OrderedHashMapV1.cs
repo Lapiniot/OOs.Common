@@ -36,8 +36,8 @@ public sealed class OrderedHashMapV1<TKey, TValue> : IEnumerable<TValue> where T
     {
         if (map.Remove(key, out var node))
         {
-            if (node.Next != null) node.Next.Prev = node.Prev;
-            if (node.Prev != null) node.Prev.Next = node.Next;
+            node.Next?.Prev = node.Prev;
+            node.Prev?.Next = node.Next;
             if (head == node) head = node.Next;
             if (tail == node) tail = node.Prev;
             value = node.Value;
@@ -54,7 +54,7 @@ public sealed class OrderedHashMapV1<TKey, TValue> : IEnumerable<TValue> where T
     {
         var node = new Node { Value = value, Prev = tail };
         head ??= node;
-        if (tail != null) tail.Next = node;
+        tail?.Next = node;
         tail = node;
         map.Add(key, node);
     }

@@ -1,8 +1,8 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.NetworkInformation;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using static OOs.Security.Cryptography.CertificateHelpers;
 
 namespace OOs.Extensions.Hosting;
@@ -44,6 +44,9 @@ public class CertificateGenerateInitializer(IHostEnvironment environment, IConfi
         }
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' " +
+        "require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "<Pending>")]
     private static IEnumerable<IPAddress> GetIPAddresses(IConfiguration configuration)
     {
         if (configuration.GetValue<string>("SSL_CERTIFICATE_IP_ADDRESSES") is { Length: > 0 } addresses)
@@ -76,6 +79,9 @@ public class CertificateGenerateInitializer(IHostEnvironment environment, IConfi
         yield return IPAddress.IPv6Loopback;
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' " +
+        "require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "<Pending>")]
     private static IEnumerable<string> GetDnsNames(IConfiguration configuration)
     {
         if (configuration.GetValue<string>("SSL_CERTIFICATE_HOSTS") is { Length: > 0 } dnsNames)
