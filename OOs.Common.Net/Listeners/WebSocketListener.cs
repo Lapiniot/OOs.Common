@@ -5,9 +5,7 @@ namespace OOs.Net.Listeners;
 
 public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>, IAsyncDisposable
 {
-#if NET9_0_OR_GREATER
     private static readonly System.Buffers.SearchValues<char> Separators = System.Buffers.SearchValues.Create(' ', ',');
-#endif
     private const int ReceiveBufferSize = 16384;
     private const int KeepAliveSeconds = 120;
     private readonly TimeSpan keepAliveInterval;
@@ -113,7 +111,6 @@ public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>, I
             response.Close();
         }
 
-#if NET9_0_OR_GREATER
         string MatchSubProtocol(string clientSubProtocols)
         {
             var span = clientSubProtocols.AsSpan();
@@ -131,11 +128,6 @@ public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>, I
 
             return null;
         }
-#else
-        string MatchSubProtocol(string clientSubProtocols) => subProtocols
-            .Intersect(clientSubProtocols.Split([' ', ','], StringSplitOptions.RemoveEmptyEntries))
-            .FirstOrDefault();
-#endif
     }
 
     public ValueTask DisposeAsync()

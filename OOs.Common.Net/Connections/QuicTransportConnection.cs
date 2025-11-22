@@ -10,9 +10,6 @@ namespace OOs.Net.Connections;
 
 #pragma warning disable CA1416 // Validate platform compatibility
 
-#if !NET9_0_OR_GREATER
-[RequiresPreviewFeatures]
-#endif
 [SupportedOSPlatform("windows")]
 [SupportedOSPlatform("linux")]
 [SupportedOSPlatform("osx")]

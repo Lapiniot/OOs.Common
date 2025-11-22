@@ -9,16 +9,6 @@ public abstract partial class TransportConnectionPipeAdapter(
     PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions) :
     TransportConnection
 {
-#if !NET9_0_OR_GREATER
-    private static class State
-    {
-        public const int Stopped = 0;
-        public const int Starting = 1;
-        public const int Started = 2;
-        public const int Stopping = 3;
-        public const int Disposed = 4;
-    }
-#endif
     private static readonly PipeOptions DefaultInputPipeOptions = new(
         readerScheduler: PipeScheduler.ThreadPool,
         writerScheduler: PipeScheduler.Inline,
@@ -31,11 +21,7 @@ public abstract partial class TransportConnectionPipeAdapter(
 
     private readonly Pipe inputPipe = new(inputPipeOptions ?? DefaultInputPipeOptions);
     private readonly Pipe outputPipe = new(outputPipeOptions ?? DefaultOutputPipeOptions);
-#if NET9_0_OR_GREATER
     private State state;
-#else
-    private int state;
-#endif
     private Task completion = Task.CompletedTask;
 
     public sealed override PipeReader Input => inputPipe.Reader;

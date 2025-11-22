@@ -8,9 +8,7 @@ using System.Runtime.Versioning;
 #nullable enable
 
 namespace OOs.Net.Connections;
-#if !NET9_0_OR_GREATER
-[RequiresPreviewFeatures]
-#endif
+
 [SupportedOSPlatform("windows")]
 [SupportedOSPlatform("linux")]
 [SupportedOSPlatform("osx")]

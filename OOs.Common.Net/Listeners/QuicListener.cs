@@ -9,9 +9,6 @@ using OOs.Net.Connections;
 
 namespace OOs.Net.Listeners;
 
-#if !NET9_0_OR_GREATER
-[RequiresPreviewFeatures]
-#endif
 public sealed class QuicListener : IAsyncEnumerable<TransportConnection>, IDisposable
 {
     private readonly IPEndPoint endPoint;
