@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<linker>
-  <assembly fullname="OOs.Common">
-    <type fullname="OOs.RuntimeOptions" feature="OOs.Threading.Instrumentation.IsSupported" featurevalue="false">
-      <method signature="System.Boolean get_ThreadingInstrumentationSupported()" body="stub" value="false" />
-    </type>
-  </assembly>
-</linker>
