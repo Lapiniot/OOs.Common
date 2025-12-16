@@ -2,42 +2,67 @@
   <Import Project="GetGlobalProperties.targets" />
   <Import Project="PublishAll.targets" />
 
-  <PropertyGroup>
-    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
-    <RuntimeIdentifiers>linux-x64;linux-arm64</RuntimeIdentifiers>
-  </PropertyGroup>
-
-  <Target Name="ConfigurePublishContainer">
+  <Target Name="_ConfigurePublishContainer">
+    <!-- These publish properties can be overridden from command-line. -->
+    <!-- Otherwise provided defaults will be used -->
     <ItemGroup>
       <PublishProperty Include="Configuration" Default="Release" />
-      <PublishProperty Include="PublishProfile" Default="DefaultContainer" />
-      <PublishProperty Include="SelfContained" Default="true" />
-      <PublishProperty Include="PublishTrimmed" Default="true" />
-      <PublishProperty Include="SuppressTrimAnalysisWarnings" Default="true" />
+      <PublishProperty Include="SelfContained" Default="True" />
+      <PublishProperty Include="PublishTrimmed" Default="True" />
+      <PublishProperty Include="SuppressTrimAnalysisWarnings" Default="True" />
     </ItemGroup>
+
+    <!-- Query all global properties coming from command-line e.g. -->
     <GetGlobalProperties>
-      <Output TaskParameter="GlobalProperties" ItemName="GlobalProperty" />
+      <Output TaskParameter="GlobalProperties" ItemName="GlobalProperties" />
     </GetGlobalProperties>
-    <!-- Exclude all properties that are global, so values passed from command-line will override task specific defaults-->
+
+    <!-- Exclude all properties that are global, so values passed from -->
+    <!-- command-line will override task specific defaults -->
     <ItemGroup>
-      <PublishProperty Remove="@(GlobalProperty)" />
+      <PublishProperty Remove="@(GlobalProperties)" />
     </ItemGroup>
+
+    <!-- Skip publishing of individual architecture specific images and force container image format to OCI -->
+    <!-- when either publishing to tarball archive or using local Docker registry -->
+    <ItemGroup
+      Condition="$(ContainerArchiveOutputPath) != '' or ($(ContainerRegistry) == '' 
+        and ($(LocalRegistry) == '' or $(LocalRegistry) == 'Docker')) ">
+      <PublishProperty Include="_SkipContainerPublishing" Default="True" />
+      <PublishProperty Include="ContainerImageFormat" Default="OCI" />
+    </ItemGroup>
+
+    <!-- Configure PublishAllRIDs task: -->
+    <!-- PublishAllRIDsTargets - contains targets to be executed for each RID -->
+    <!-- PublishAllRIDsProperties - contains properties to be passed to each per RID build -->
+    <!-- PublishAllRIDsTargetOutputItemName - name of the item to collect outputs from PublishAllRIDs task -->
     <PropertyGroup>
-      <PublishProperties>@(PublishProperty->'%(Identity)=%(Default)')</PublishProperties>
+      <PublishAllRIDsTargets>$(PublishContainerDependsOn);Publish;_PublishSingleContainer</PublishAllRIDsTargets>
+      <PublishAllRIDsProperties>@(PublishProperty->'%(Identity)=%(Default)')</PublishAllRIDsProperties>
+      <PublishAllRIDsTargetOutputItemName>GeneratedContainer</PublishAllRIDsTargetOutputItemName>
     </PropertyGroup>
   </Target>
 
-  <Target Name="_PublishMultiArchImage" Condition=" '$(ContainerRepository)' != '' ">
-    <PropertyGroup>
-      <ContainerManifest>$(ContainerRepository):latest</ContainerManifest>
-    </PropertyGroup>
-    <Exec Command="docker manifest rm $(ContainerManifest)" ConsoleToMsBuild="true" IgnoreExitCode="true" />
-    <Exec Command="docker manifest create $(ContainerManifest) @(RuntimeIdentifiersToPublish->'--amend $(ContainerRepository):%(Identity)', ' ')" />
-    <Exec Command="docker manifest push $(ContainerManifest)" />
+  <Target Name="_PublishMultiArchImageIndex" DependsOnTargets="$(PublishContainerDependsOn)"
+    Condition="!($(ContainerArchiveOutputPath) == '' and $(ContainerRegistry) == '' and $(LocalRegistry) == 'Podman')">
+    <CreateImageIndex
+      GeneratedContainers="@(GeneratedContainer)"
+      LocalRegistry="$(LocalRegistry)"
+      OutputRegistry="$(ContainerRegistry)"
+      ArchiveOutputPath="$(ContainerArchiveOutputPath)"
+      Repository="$(ContainerRepository)"
+      ImageTags="@(ContainerImageTags)"
+      BaseRegistry="$(ContainerBaseRegistry)"
+      BaseImageName="$(ContainerBaseName)"
+      BaseImageTag="$(ContainerBaseTag)"
+      BaseImageDigest="$(ContainerBaseDigest)">
+      <Output TaskParameter="GeneratedImageIndex" PropertyName="GeneratedImageIndex" />
+      <Output TaskParameter="GeneratedArchiveOutputPath" PropertyName="GeneratedArchiveOutputPath" />
+    </CreateImageIndex>
   </Target>
 
-  <Target Name="PublishAllImages" DependsOnTargets="ConfigurePublishContainer;PublishAll">
-    <CallTarget Targets="_PublishMultiArchImage" />
+  <Target Name="PublishAllImages" DependsOnTargets="_ConfigurePublishContainer;PublishAllRIDs">
+    <CallTarget Targets="_PublishMultiArchImageIndex" />
   </Target>
 
 </Project>
