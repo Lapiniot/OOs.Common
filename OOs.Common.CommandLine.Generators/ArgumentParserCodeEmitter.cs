@@ -14,7 +14,8 @@ public static class ArgumentParserCodeEmitter
     {
         var typeAccessibility = accessibility is Accessibility.Public ? "public" : "internal";
         var typeKind = kind is TypeKind.Struct ? "struct" : "class";
-        var emitBooleanSupport = false; var emitTimeSpanSupport = false;
+        var emitBooleanSupport = addStandardOptions;
+        var emitTimeSpanSupport = false;
 
         var sb = new StringBuilder();
         CodeEmitHelper.AppendFileHeader(sb);
@@ -200,12 +201,13 @@ namespace {{namespaceName}};
             }
             else if (span.StartsWith("-"))
             {
-                for (var i = 1; i<span.Length; i++)
+                for (var i = 1; i < span.Length; i++)
                 {
                     switch (span[i]) 
                     {
 
 """);
+        var emitTryReadNextRawValue = false;
         foreach (var option in options)
         {
             if (option is
@@ -241,6 +243,7 @@ namespace {{namespaceName}};
                 }
                 else
                 {
+                    emitTryReadNextRawValue = true;
                     sb.Append($$"""
                             break;
 
@@ -266,6 +269,11 @@ namespace {{namespaceName}};
                         default: continue;
                     }
 
+""");
+        if (emitTryReadNextRawValue)
+        {
+            sb.Append($$"""
+
                     if (++i < span.Length)
                     {
                         options[name] = new string(span.Slice(i));
@@ -277,6 +285,7 @@ namespace {{namespaceName}};
                     }
 
 """);
+        }
 
         if (emitBooleanSupport)
         {
