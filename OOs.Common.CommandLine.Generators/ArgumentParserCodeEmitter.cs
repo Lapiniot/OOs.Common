@@ -258,9 +258,6 @@ namespace {{namespaceName}};
                         case 'h' or '?':
                             name = "PrintHelp";
                             goto ReadAsBooleanShort;
-                        case 'v':
-                            name = "PrintVersion";
-                            goto ReadAsBooleanShort;
 
 """);
         }
