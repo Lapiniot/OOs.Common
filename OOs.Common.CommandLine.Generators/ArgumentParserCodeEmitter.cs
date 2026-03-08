@@ -258,6 +258,9 @@ namespace {{namespaceName}};
                         case 'h' or '?':
                             name = "PrintHelp";
                             goto ReadAsBooleanShort;
+                        case 'V':
+                            name = "PrintVersion";
+                            goto ReadAsBooleanShort;
 
 """);
         }
@@ -498,7 +501,7 @@ namespace {{namespaceName}};
             if (addStandardOptions)
             {
                 span[0] = ("-h, -?, --help", "Print this help");
-                span[1] = ("--version", "Print application's version information");
+                span[1] = ("-V, --version", "Print application's version information");
                 span = span.Slice(2);
             }
 
