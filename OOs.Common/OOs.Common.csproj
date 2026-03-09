@@ -4,8 +4,4 @@
     <RootNamespace>OOs</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.IO.Pipelines" />
-  </ItemGroup>
-
 </Project>
