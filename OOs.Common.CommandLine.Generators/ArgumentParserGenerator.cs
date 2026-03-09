@@ -44,12 +44,12 @@ public class ArgumentParserGenerator : IIncrementalGenerator
                 return;
             }
 
-            foreach (var ((name, ns, kind, accessibility, genSynopsis, addStandardOptions), options) in sources)
+            foreach (var ((name, ns, kind, accessibility, genOptions), options) in sources)
             {
                 var namespaceName = ns ?? defaults.NamespaceName;
                 var typeName = name ?? defaults.ClassName;
                 var code = ArgumentParserCodeEmitter.Emit(namespaceName, typeName, kind,
-                    accessibility, options, genSynopsis, addStandardOptions, knownTypes);
+                    accessibility, options, genOptions, knownTypes);
                 var hintName = $"{(!string.IsNullOrWhiteSpace(namespaceName)
                     ? $"{namespaceName}.{typeName}"
                     : typeName)}.g.cs";
@@ -81,12 +81,55 @@ global using global::OOs.CommandLine.Generators;
 
 namespace OOs.CommandLine.Generators
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Assembly, AllowMultiple = false)]
+    /// <summary>
+    /// Specifies how unknown command-line options should be handled during argument parsing.
+    /// </summary>
+    /// <remarks>
+    /// This enumeration defines the behavior when the argument parser encounters an unrecognized option.
+    /// </remarks>
+    
+""");
+            CodeEmitHelper.AppendGeneratedCodeAttribute(sb);
+            sb.Append("""
+
+    internal enum UnknownOptionBehavior
+    {
+        /// <summary>Allow unknown options to be parsed without error as if they were previously defined (string typed).</summary>
+        Allow,
+        /// <summary>Ignore unknown options, skipping them without error.</summary>
+        Ignore,
+        /// <summary>Skip parsing as option, but preserve and treat as regular argument value.</summary>
+        Preserve,
+        /// <summary>Prohibit unknown options completely, causing an error.</summary>
+        Prohibit
+    }
+
+
+    /// <summary>
+    /// Specifies options for code generation of command-line argument parsers.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Use this attribute on the target class or struct that represents your command-line arguments, 
+    /// or on the assembly to set project-wide defaults.
+    /// </para>
+    /// </remarks>
+    
+""");
+            CodeEmitHelper.AppendGeneratedCodeAttribute(sb);
+            sb.Append("""
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false)]
     [Microsoft.CodeAnalysis.EmbeddedAttribute]
     internal sealed class ArgumentParserGenerationOptionsAttribute() : global::System.Attribute
     {
+        /// <summary>Gets or sets a value indicating whether to generate a command-line synopsis.</summary>
         public bool GenerateSynopsis { get; set; }
+
+        /// <summary>Gets or sets a value indicating whether to automatically add standard help and version options.</summary>
         public bool AddStandardOptions { get; set; }
+
+        /// <summary>Gets or sets the behavior for handling unknown command-line options.</summary>
+        public UnknownOptionBehavior UnknownOptionBehavior { get; set; }
     }
 }
 """);
@@ -139,12 +182,9 @@ namespace OOs.CommandLine.Generators
                 {
                     switch (item)
                     {
-                        case { Key: "ShortAlias", Value.Value: char s }:
-                            shortAlias = s; break;
-                        case { Key: "Description", Value.Value: string d }:
-                            description = d; break;
-                        case { Key: "Hint", Value.Value: string h }:
-                            hint = h; break;
+                        case { Key: "ShortAlias", Value.Value: char value }: shortAlias = value; break;
+                        case { Key: "Description", Value.Value: string value }: description = value; break;
+                        case { Key: "Hint", Value.Value: string value }: hint = value; break;
                     }
                 }
 
@@ -156,6 +196,7 @@ namespace OOs.CommandLine.Generators
 
         var generateSynopsis = false;
         var addStandardOptions = false;
+        var unknownOptionBehavior = UnknownOptionBehavior.Allow;
 
         foreach (var item in ctx.TargetSymbol.GetAttributes())
         {
@@ -183,22 +224,23 @@ namespace OOs.CommandLine.Generators
             {
                 for (var i = 0; i < args.Length; i++)
                 {
-                    var arg = args[i];
-                    if (arg is { Value: { Type.SpecialType: SpecialType.System_Boolean, Value: bool value }, Key: var key })
+                    switch (args[i])
                     {
-                        switch (key)
-                        {
-                            case "GenerateSynopsis":
-                                generateSynopsis = value;
-                                break;
-                            case "AddStandardOptions":
-                                addStandardOptions = value;
-                                break;
-                        }
+                        case { Key: "GenerateSynopsis", Value.Value: bool value }:
+                            generateSynopsis = value;
+                            break;
+                        case { Key: "AddStandardOptions", Value.Value: bool value }:
+                            addStandardOptions = value;
+                            break;
+                        case { Key: "UnknownOptionBehavior", Value.Value: int value }:
+                            unknownOptionBehavior = (UnknownOptionBehavior)value;
+                            break;
                     }
                 }
             }
         }
+
+        var typeGenerationOptions = new TypeGenerationOptions(generateSynopsis, addStandardOptions, unknownOptionBehavior);
 
         return ctx.TargetSymbol is ITypeSymbol
         {
@@ -207,8 +249,8 @@ namespace OOs.CommandLine.Generators
             DeclaredAccessibility: var accessibility,
             TypeKind: var kind,
         }
-            ? new(new(typeName, cns.ToDisplayString(format), kind, accessibility, generateSynopsis, addStandardOptions), options)
-            : new(new(null, null, TypeKind.Class, Accessibility.Public, generateSynopsis, addStandardOptions), options);
+            ? new(new(typeName, cns.ToDisplayString(format), kind, accessibility, typeGenerationOptions), options)
+            : new(new(null, null, TypeKind.Class, Accessibility.Public, typeGenerationOptions), options);
     }
 }
 

@@ -21,8 +21,19 @@ public readonly record struct SourceGenerationContext(TypeGenerationContext Cont
     }
 }
 
+public enum UnknownOptionBehavior
+{
+    Allow,
+    Ignore,
+    Preserve,
+    Prohibit
+}
+
 public readonly record struct TypeGenerationContext(string? Name, string? Namespace, TypeKind Kind,
-    Accessibility Accessibility, bool GenerateSynopsis, bool AddStandardOptions);
+    Accessibility Accessibility, TypeGenerationOptions Options);
+
+public readonly record struct TypeGenerationOptions(bool GenerateSynopsis,
+    bool AddStandardOptions, UnknownOptionBehavior UnknownOptionBehavior);
 
 public readonly record struct OptionGenerationContext(string Name, string Alias, char ShortAlias,
     int Type, string? Description, string? Hint);

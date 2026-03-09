@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using static OOs.CommandLine.Generators.UnknownOptionBehavior;
 
 #pragma warning disable CA1308 // Normalize strings to uppercase
 
@@ -9,11 +10,12 @@ namespace OOs.CommandLine.Generators;
 public static class ArgumentParserCodeEmitter
 {
     internal static string Emit(string namespaceName, string typeName, TypeKind kind, Accessibility accessibility,
-        ImmutableArray<OptionGenerationContext> options, bool generateSynopsis, bool addStandardOptions,
+        ImmutableArray<OptionGenerationContext> options, TypeGenerationOptions generationOptions,
         KnownTypes knownTypes)
     {
         var typeAccessibility = accessibility is Accessibility.Public ? "public" : "internal";
         var typeKind = kind is TypeKind.Struct ? "struct" : "class";
+        var (addStandardOptions, generateSynopsis, unknownOptionBehavior) = generationOptions;
         var emitBooleanSupport = addStandardOptions;
         var emitTimeSpanSupport = false;
 
@@ -123,16 +125,64 @@ namespace {{namespaceName}};
 """);
         }
 
-        sb.Append("""
+        if (unknownOptionBehavior is Allow)
+        {
+            sb.Append("""
+                else
+                {
+                    if (span.IndexOf('=') is >= 0 and var i)
+                    {
+                        name = new(span.Slice(0, i));
+                        options[name] = new(span.Slice(i + 1));
+                        continue;
+                    }
+                    else
+                    {
+                        name = new(span);
+                        goto TryReadNext;
+                    }
+                }
+
+""");
+        }
+        else if (unknownOptionBehavior is Preserve)
+        {
+            sb.Append("""
                 else
                 {
                     builder.Add(token);
                     continue;
                 }
 
+""");
+        }
+        else if (unknownOptionBehavior is Prohibit)
+        {
+            sb.Append("""
+                else
+                {
+                    ThrowInvalidOption(span.IndexOf('=') is >= 0 and var i ? new(token.AsSpan().Slice(0, i + 2)) : token);
+                    continue;
+                }
+
+""");
+        }
+        else
+        {
+            sb.Append("""
+                else
+                {
+                    continue;
+                }
+
+""");
+        }
+
+        sb.Append("""
+
                 if (span.StartsWith("="))
                 {
-                    options[name] = new string(span.Slice(1));
+                    options[name] = new(span.Slice(1));
                     continue;
                 }
                 else
@@ -146,7 +196,7 @@ namespace {{namespaceName}};
         {
             sb.Append("""
 
-                ReadAsBoolean:
+            ReadAsBoolean:
                 if (span.StartsWith("="))
                 {
                     if (TryParseBoolean(span.Slice(1), out var value))
@@ -171,7 +221,7 @@ namespace {{namespaceName}};
         {
             sb.Append("""
 
-                ReadAsTimeSpan:
+            ReadAsTimeSpan:
                 if (span.StartsWith("="))
                 {
                     if (int.TryParse(span.Slice(1), out var ms))
@@ -265,18 +315,57 @@ namespace {{namespaceName}};
 """);
         }
 
-        sb.Append($$"""
-                        default: continue;
+        if (unknownOptionBehavior is Allow)
+        {
+            sb.Append($$"""
+                        default:
+                            name = new(span[i], 1);
+                            break;
                     }
 
 """);
+        }
+        else if (unknownOptionBehavior is Preserve)
+        {
+            sb.Append($$"""
+                        default:
+                            if (i == 1)
+                            {
+                                builder.Add(token);
+                            }
+
+                            goto Next;
+                    }
+
+""");
+        }
+        else if (unknownOptionBehavior is Prohibit)
+        {
+            sb.Append($$"""
+                        default:
+                            ThrowInvalidOption(new(['-', span[i]]));
+                            continue;
+                    }
+
+""");
+        }
+        else
+        {
+            sb.Append($$"""
+                        default: 
+                            goto Next;
+                    }
+
+""");
+        }
+
         if (emitTryReadNextRawValue)
         {
             sb.Append($$"""
 
                     if (++i < span.Length)
                     {
-                        options[name] = new string(span.Slice(i));
+                        options[name] = new(span.Slice(i));
                         break;
                     }
                     else
@@ -291,7 +380,7 @@ namespace {{namespaceName}};
         {
             sb.Append("""
 
-                    ReadAsBooleanShort:
+                ReadAsBooleanShort:
                     if (++i < span.Length)
                     {
                         if (TryParseBoolean(span.Slice(i), out var value))
@@ -318,7 +407,7 @@ namespace {{namespaceName}};
         {
             sb.Append("""
 
-                    ReadAsTimeSpanShort:
+                ReadAsTimeSpanShort:
                     if (++i < span.Length)
                     {
                         if (int.TryParse(span.Slice(i), out var ms))
@@ -352,9 +441,20 @@ namespace {{namespaceName}};
                 builder.Add(token);
             }
 
+
+""");
+        if (unknownOptionBehavior is Preserve or Ignore)
+        {
+            sb.Append("""
+        Next:
+
+""");
+        }
+
+        sb.Append("""
             continue;
 
-            TryReadNext:
+        TryReadNext:
             if (++index < args.Length)
             {
                 var value = args[index];
@@ -373,7 +473,7 @@ namespace {{namespaceName}};
         {
             sb.Append("""
 
-            TryReadNextAsBoolean:
+        TryReadNextAsBoolean:
             if (++index < args.Length)
             {
                 var value = args[index];
@@ -396,7 +496,7 @@ namespace {{namespaceName}};
         {
             sb.Append("""
 
-            TryReadNextAsTimeSpan:
+        TryReadNextAsTimeSpan:
             if (++index < args.Length)
             {
                 var value = args[index];
@@ -458,6 +558,19 @@ namespace {{namespaceName}};
         }
     
     """);
+        }
+
+        if (unknownOptionBehavior is Prohibit)
+        {
+            sb.Append("""
+
+    [global::System.Diagnostics.CodeAnalysis.DoesNotReturn]
+    private static void ThrowInvalidOption(string optionName)
+    {
+        throw new InvalidOperationException($"Unknown option '{optionName}'.");
+    }
+
+""");
         }
 
         sb.Append("""
