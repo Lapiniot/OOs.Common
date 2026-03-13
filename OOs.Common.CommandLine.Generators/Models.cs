@@ -21,14 +21,6 @@ public readonly record struct SourceGenerationContext(TypeGenerationContext Cont
     }
 }
 
-public enum UnknownOptionBehavior
-{
-    Allow,
-    Ignore,
-    Preserve,
-    Prohibit
-}
-
 public readonly record struct TypeGenerationContext(string? Name, string? Namespace, TypeKind Kind,
     Accessibility Accessibility, TypeGenerationOptions Options);
 
@@ -36,4 +28,32 @@ public readonly record struct TypeGenerationOptions(bool GenerateSynopsis,
     bool AddStandardOptions, UnknownOptionBehavior UnknownOptionBehavior);
 
 public readonly record struct OptionGenerationContext(string Name, string Alias, char ShortAlias,
-    int Type, string? Description, string? Hint);
+    OptionTypeContext TypeContext, string? Description, string? Hint);
+
+public readonly record struct OptionTypeContext(WellKnownType KnownType, ImmutableArray<string> AllowedValues) :
+    IEquatable<OptionTypeContext>
+{
+    public bool Equals(OptionTypeContext other) =>
+        EqualityComparer<WellKnownType>.Default.Equals(KnownType, other.KnownType) &&
+        ImmutableArrayStructuralComparer<string>.Default.Equals(AllowedValues, other.AllowedValues);
+
+    public override int GetHashCode() => HashCode.Combine(
+        KnownType.GetHashCode(),
+        ImmutableArrayStructuralComparer<string>.Default.GetHashCode(AllowedValues));
+}
+
+public enum WellKnownType
+{
+    None,
+    Boolean,
+    TimeSpan,
+    Enum
+}
+
+public enum UnknownOptionBehavior
+{
+    Allow,
+    Ignore,
+    Preserve,
+    Prohibit
+}

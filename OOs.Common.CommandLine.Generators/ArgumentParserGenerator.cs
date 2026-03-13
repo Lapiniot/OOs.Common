@@ -23,9 +23,6 @@ public class ArgumentParserGenerator : IIncrementalGenerator
     {
         var optionProvider = context.AnalyzerConfigOptionsProvider.Select(GetGeneratorOptions);
 
-        var knownTypesProvider = context.CompilationProvider.Select(
-            static (compilation, _) => KnownTypes.FromCompilation(compilation));
-
         var sourceDataProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
                 fullyQualifiedMetadataName: "OOs.CommandLine.OptionAttribute`1",
                 predicate: static (_, _) => true,
@@ -33,11 +30,11 @@ public class ArgumentParserGenerator : IIncrementalGenerator
             .WithComparer(EqualityComparer<SourceGenerationContext>.Default)
             .WithTrackingName($"{nameof(ArgumentParserGenerator)}SourceData");
 
-        var combined = optionProvider.Combine(knownTypesProvider).Combine(sourceDataProvider.Collect());
+        var combined = optionProvider.Combine(sourceDataProvider.Collect());
 
         context.RegisterSourceOutput(combined, static (ctx, source) =>
         {
-            var ((defaults, knownTypes), sources) = source;
+            var (defaults, sources) = source;
 
             if (!defaults.IsEnabled)
             {
@@ -48,8 +45,7 @@ public class ArgumentParserGenerator : IIncrementalGenerator
             {
                 var namespaceName = ns ?? defaults.NamespaceName;
                 var typeName = name ?? defaults.ClassName;
-                var code = ArgumentParserCodeEmitter.Emit(namespaceName, typeName, kind,
-                    accessibility, options, genOptions, knownTypes);
+                var code = ArgumentParserCodeEmitter.Emit(namespaceName, typeName, kind, accessibility, options, genOptions);
                 var hintName = $"{(!string.IsNullOrWhiteSpace(namespaceName)
                     ? $"{namespaceName}.{typeName}"
                     : typeName)}.g.cs";
@@ -153,7 +149,9 @@ namespace OOs.CommandLine.Generators
                     : DefaultNamespaceName);
     }
 
-    private static SourceGenerationContext GetSourceGenerationContext(GeneratorAttributeSyntaxContext ctx, CancellationToken cancellationToken)
+    private static SourceGenerationContext GetSourceGenerationContext(
+        GeneratorAttributeSyntaxContext ctx,
+        CancellationToken cancellationToken)
     {
         var builder = ImmutableArray.CreateBuilder<OptionGenerationContext>();
         foreach (var attr in ctx.Attributes)
@@ -170,14 +168,13 @@ namespace OOs.CommandLine.Generators
                     AttributeClass:
                     {
                         IsGenericType: true,
-                        TypeArguments: [{ MetadataToken: var typeToken }]
+                        TypeArguments: [var typeSymbol]
                     }
                 })
             {
                 var shortAlias = cargs is [{ Value: char sa }] ? sa : '\0';
                 string? description = null;
                 string? hint = null;
-
                 foreach (var item in nargs)
                 {
                     switch (item)
@@ -188,7 +185,16 @@ namespace OOs.CommandLine.Generators
                     }
                 }
 
-                builder.Add(new(name, longAlias, shortAlias, typeToken, description, hint));
+                var specialType = typeSymbol switch
+                {
+                    { SpecialType: SpecialType.System_Boolean } => WellKnownType.Boolean,
+                    { TypeKind: TypeKind.Struct, MetadataName: "System.TimeSpan" } => WellKnownType.TimeSpan,
+                    { TypeKind: TypeKind.Enum } => WellKnownType.Enum,
+                    _ => WellKnownType.None
+                };
+
+                var typeCtx = new OptionTypeContext(specialType, typeSymbol.TypeKind is TypeKind.Enum ? GetEnumValues(typeSymbol) : []);
+                builder.Add(new(name, longAlias, shortAlias, typeCtx, description, hint));
             }
         }
 
@@ -251,6 +257,21 @@ namespace OOs.CommandLine.Generators
         }
             ? new(new(typeName, cns.ToDisplayString(format), kind, accessibility, typeGenerationOptions), options)
             : new(new(null, null, TypeKind.Class, Accessibility.Public, typeGenerationOptions), options);
+
+        static ImmutableArray<string> GetEnumValues(ITypeSymbol typeSymbol)
+        {
+            var members = typeSymbol.GetMembers();
+            var builder = ImmutableArray.CreateBuilder<string>(members.Length);
+            foreach (var member in members)
+            {
+                if (member is IFieldSymbol field)
+                {
+                    builder.Add(field.Name);
+                }
+            }
+
+            return builder.ToImmutable();
+        }
     }
 }
 

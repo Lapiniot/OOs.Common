@@ -1,0 +1,13 @@
+<Project Sdk="MSTest.Sdk/3.8.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>OOs.CommandLine.Generators.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj" />
+  </ItemGroup>
+
+</Project>

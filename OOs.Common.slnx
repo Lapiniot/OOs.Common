@@ -4,6 +4,7 @@
     <File Path="targets/PublishContainers.targets" />
   </Folder>
   <Project Path="OOs.Common.Benchmarks/OOs.Common.Benchmarks.csproj" />
+  <Project Path="OOs.Common.CommandLine.Generators.Tests/OOs.Common.CommandLine.Generators.Tests.csproj" />
   <Project Path="OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj" />
   <Project Path="OOs.Common.CommandLine/OOs.Common.CommandLine.csproj" />
   <Project Path="OOs.Common.Net.Http.Tests/OOs.Common.Net.Http.Tests.csproj" />
