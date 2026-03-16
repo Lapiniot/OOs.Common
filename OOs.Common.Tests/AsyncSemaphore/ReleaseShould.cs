@@ -11,7 +11,7 @@ public class ReleaseShould
         semaphore.WaitAsync();
 
         // Act/Assert
-        Assert.ThrowsException<SemaphoreFullException>(() => semaphore.Release(3));
+        Assert.ThrowsExactly<SemaphoreFullException>(() => semaphore.Release(3));
 
         // Proper cleanup
         semaphore.Release();

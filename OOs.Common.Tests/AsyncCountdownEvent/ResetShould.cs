@@ -5,7 +5,7 @@ public class ResetShould
 {
     [TestMethod]
     public void ThrowArgumentOutOfRangeException_GivenNegativeValue() =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Threading.AsyncCountdownEvent(1).Reset(-1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new Threading.AsyncCountdownEvent(1).Reset(-1));
 
     [TestMethod]
     public void SetEventImmediately_GivenZeroValue()

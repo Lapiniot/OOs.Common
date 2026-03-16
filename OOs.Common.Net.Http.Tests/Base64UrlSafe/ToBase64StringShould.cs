@@ -6,7 +6,7 @@ public class ToBase64StringShould
     [TestMethod]
     public void ReturnEmptyString_GivenNullArray()
     {
-        Assert.ThrowsException<ArgumentNullException>(() => _ = OOs.Net.Http.Base64UrlSafe.ToBase64String(null));
+        Assert.ThrowsExactly<ArgumentNullException>(() => _ = OOs.Net.Http.Base64UrlSafe.ToBase64String(null));
     }
 
     [TestMethod]

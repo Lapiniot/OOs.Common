@@ -10,7 +10,7 @@ public class ConstructorShould
     [DataRow(-1)]
     [DataRow(-10)]
     public void ThrowArgumentOutOfRangeExceptionGivenZeroOrNegativeCapacity(int capacity) =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new ObjectPool<object>(capacity));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new ObjectPool<object>(capacity));
 
     [TestMethod]
     [DataRow(1)]

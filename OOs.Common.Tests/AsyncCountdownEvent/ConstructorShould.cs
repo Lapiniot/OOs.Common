@@ -32,5 +32,5 @@ public class ConstructorShould
 
     [TestMethod]
     public void ThrowArgumentException_GivenNegativeValue() =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Threading.AsyncCountdownEvent(-1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new Threading.AsyncCountdownEvent(-1));
 }

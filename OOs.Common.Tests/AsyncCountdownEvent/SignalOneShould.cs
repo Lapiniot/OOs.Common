@@ -5,7 +5,7 @@ public class SignalOneShould
 {
     [TestMethod]
     public void ThrowInvalidOperationException_WhenEventAlreadySet() =>
-        Assert.ThrowsException<InvalidOperationException>(() => new Threading.AsyncCountdownEvent(0).Signal());
+        Assert.ThrowsExactly<InvalidOperationException>(() => new Threading.AsyncCountdownEvent(0).Signal());
 
     [TestMethod]
     public void DecrementCountButDoNotSetEvent_WhenCurrentCountIsGreaterThanOne()

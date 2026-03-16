@@ -9,7 +9,7 @@ public class ReturnShould
     public void ThrowArgumentExceptionGivenNullValue()
     {
         var pool = new ObjectPool<object>(2);
-        Assert.ThrowsException<ArgumentNullException>(() => pool.Return(null));
+        Assert.ThrowsExactly<ArgumentNullException>(() => pool.Return(null));
     }
 
     [TestMethod]

@@ -9,7 +9,7 @@ public class ReleaseShould
     public void ThrowSemaphoreFullException_WhenCurrentCountEqualsToMaxCount()
     {
         var semaphore = new ASL(1, 1);
-        Assert.ThrowsException<SemaphoreFullException>(() => semaphore.Release());
+        Assert.ThrowsExactly<SemaphoreFullException>(() => semaphore.Release());
     }
 
     [TestMethod]

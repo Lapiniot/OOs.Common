@@ -55,7 +55,7 @@ public class WaitAsyncShould
 
         cts.Cancel();
 
-        Assert.ThrowsExceptionAsync<OperationCanceledException>(() => mre.WaitAsync(cts.Token));
+        Assert.ThrowsExactlyAsync<OperationCanceledException>(() => mre.WaitAsync(cts.Token));
     }
 
     [TestMethod]

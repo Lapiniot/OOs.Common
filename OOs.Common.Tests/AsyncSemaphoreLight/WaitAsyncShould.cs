@@ -31,7 +31,7 @@ public class WaitAsyncShould
         // Arrange
         var semaphore = new ASL(0, 1);
         semaphore.WaitAsync(default).AsTask();
-        Assert.ThrowsException<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
                 // Act
                 semaphore.WaitAsync(default).AsTask());
     }

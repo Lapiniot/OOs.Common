@@ -21,14 +21,14 @@ public class TryReleaseShould
     public void ThrowArgumentOutOfRangeException_GivenNegativeReleaseCount()
     {
         var semaphore = new Threading.AsyncSemaphore(1);
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => semaphore.TryRelease(-1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => semaphore.TryRelease(-1));
     }
 
     [TestMethod]
     public void ThrowArgumentOutOfRangeException_GivenZeroReleaseCount()
     {
         var semaphore = new Threading.AsyncSemaphore(1);
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => semaphore.TryRelease(0));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => semaphore.TryRelease(0));
     }
 
     [TestMethod]

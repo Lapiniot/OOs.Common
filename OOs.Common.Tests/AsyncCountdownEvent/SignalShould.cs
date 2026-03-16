@@ -5,19 +5,19 @@ public class SignalShould
 {
     [TestMethod]
     public void ThrowArgumentOutOfRangeException_GivenNegativeValue() =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Threading.AsyncCountdownEvent(1).Signal(-1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new Threading.AsyncCountdownEvent(1).Signal(-1));
 
     [TestMethod]
     public void ThrowArgumentOutOfRangeException_GivenZeroValue() =>
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() => new Threading.AsyncCountdownEvent(1).Signal(0));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new Threading.AsyncCountdownEvent(1).Signal(0));
 
     [TestMethod]
     public void ThrowInvalidOperationException_GivenValueGreaterThanCurrentCount() =>
-        Assert.ThrowsException<InvalidOperationException>(() => new Threading.AsyncCountdownEvent(1).Signal(2));
+        Assert.ThrowsExactly<InvalidOperationException>(() => new Threading.AsyncCountdownEvent(1).Signal(2));
 
     [TestMethod]
     public void ThrowInvalidOperationException_WhenEventAlreadySet() =>
-        Assert.ThrowsException<InvalidOperationException>(() => new Threading.AsyncCountdownEvent(0).Signal(1));
+        Assert.ThrowsExactly<InvalidOperationException>(() => new Threading.AsyncCountdownEvent(0).Signal(1));
 
     [TestMethod]
     public void DecrementCountButDoNotSetEvent_GivenSignalsLessThenCurrentCount()
