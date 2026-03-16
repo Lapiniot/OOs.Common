@@ -5,10 +5,13 @@ name: Build and run tests
 
 on:
   push:
-    branches: [ "master" ]
+    branches: 
+      - master
   pull_request:
-    branches: [ "master" ]
+    branches: 
+      - master
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:
@@ -16,14 +19,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+    - name: Checkout a Git repository
+      uses: actions/checkout@v6
       with:
-        dotnet-version: 10.0.x
+        submodules: recursive
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ vars.NET10_SDK_VERSION || '10.0.x' }}
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore --configuration Release
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --configuration Release
