@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk"
-  TreatAsLocalProperty="PublishTrimmed;TargetFrameworks;TargetFramework">
+  TreatAsLocalProperty="PublishTrimmed;IsTrimmable;IsAotCompatible;TargetFrameworks;TargetFramework">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <RootNamespace>OOs.CommandLine.Generators</RootNamespace>
     <IsRoslynComponent>true</IsRoslynComponent>
     <AnalyzerLanguage>cs</AnalyzerLanguage>
@@ -18,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.3.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.0.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" VersionOverride="5.3.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -32,5 +33,7 @@
       Pack="True" PackagePath="analyzers/dotnet/$(AnalyzerLanguage)" Visible="False" />
     <Content Include="$(MSBuildProjectName).props" PackagePath="build/$(PackageId)%(Extension)" />
   </ItemGroup>
+
+  <Import Project="../targets/Packaging.targets" />
 
 </Project>
