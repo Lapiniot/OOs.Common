@@ -8,9 +8,9 @@ description: |
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: 
+    workflows:
       - "Build and run tests on semantic version tag push"
-    types: 
+    types:
       - completed
 
 env:
@@ -21,49 +21,53 @@ jobs:
     name: Build and publish Nuget packages
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     if: github.event_name == 'workflow_dispatch' && contains(github.ref, '/tags/v') || startsWith(github.event.workflow_run.head_branch, 'v') && github.event.workflow_run.conclusion == 'success'
 
     env:
       HEAD_BRANCH: ${{github.event.workflow_run.head_branch || github.ref_name}}
 
     steps:
-    - name: Validate semantic version tag format
-      run: |
-        if ! [[ ${HEAD_BRANCH} =~ ^v[0-9]+.[0-9]+.[0-9]+(-[[:alnum:].-]+)?(\+[[:alnum:].-]+)?$ ]]; then
-          echo "::error::Revision ref doesn't match semantic version format for tags: v{MAJOR}.{MINOR}.{PATCH} or v{MAJOR}.{MINOR}.{PATCH}-{TAG}+{BUILD}."
-          exit 1
-        fi
+      - name: Validate semantic version tag format
+        run: |
+          if ! [[ ${HEAD_BRANCH} =~ ^v[0-9]+.[0-9]+.[0-9]+(-[[:alnum:].-]+)?(\+[[:alnum:].-]+)?$ ]]; then
+            echo "::error::Revision ref doesn't match semantic version format for tags: v{MAJOR}.{MINOR}.{PATCH} or v{MAJOR}.{MINOR}.{PATCH}-{TAG}+{BUILD}."
+            exit 1
+          fi
 
-    - name: Extract semantic version from tag
-      run: |
-        echo "VERSION=${HEAD_BRANCH#v}" >> ${GITHUB_ENV}
+      - name: Extract semantic version from tag
+        run: |
+          echo "VERSION=${HEAD_BRANCH#v}" >> ${GITHUB_ENV}
 
-    - name: Checkout project files
-      uses: actions/checkout@v6
-      with:
-        ref: ${{env.HEAD_BRANCH}}
-        submodules: recursive
+      - name: Checkout project files
+        uses: actions/checkout@v6
+        with:
+          ref: ${{env.HEAD_BRANCH}}
+          submodules: recursive
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: ${{vars.NET10_SDK_VERSION || '10.0.x'}}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{vars.NET10_SDK_VERSION || '10.0.x'}}
 
-    - name: .NET Pack Libraries
-      run: | 
-        dotnet pack -c Release /p:PackageVersion="${VERSION}"
+      - name: .NET Pack Libraries
+        run: |
+          dotnet pack -c Release /p:PackageVersion="${VERSION}"
 
-    - name: Upload build artifacts
-      uses: Lapiniot/upload-artifact@v1
-      with:
-        path: ./artifacts/package/release/*.nupkg
-        archive: false
-        if-no-files-found: error
+      - name: Upload build artifacts
+        uses: Lapiniot/upload-artifact@v1
+        with:
+          path: ./artifacts/package/release/*.nupkg
+          archive: false
+          if-no-files-found: error
 
-    - name: Push packages to GitHub Nuget feed
-      run: |
-        dotnet nuget push "./artifacts/package/release/*.nupkg" \
-          --source "https://nuget.pkg.github.com/${{github.repository_owner}}/index.json" \
-          --api-key ${GITHUB_TOKEN} --skip-duplicate
-      env:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Push packages to GitHub Nuget feed
+        run: |
+          dotnet nuget push "./artifacts/package/release/*.nupkg" \
+            --source "https://nuget.pkg.github.com/${{github.repository_owner}}/index.json" \
+            --api-key ${GITHUB_TOKEN} --skip-duplicate
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
