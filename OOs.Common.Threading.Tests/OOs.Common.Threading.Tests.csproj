@@ -1,0 +1,12 @@
+<Project Sdk="MSTest.Sdk/4.1.0">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../OOs.Common.Threading/OOs.Common.Threading.csproj" />
+  </ItemGroup>
+
+</Project>

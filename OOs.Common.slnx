@@ -11,6 +11,8 @@
   <Project Path="OOs.Common.Net.Http/OOs.Common.Net.Http.csproj" />
   <Project Path="OOs.Common.Net/OOs.Common.Net.csproj" />
   <Project Path="OOs.Common.Tests/OOs.Common.Tests.csproj" />
+  <Project Path="OOs.Common.Threading.Tests/OOs.Common.Threading.Tests.csproj" />
+  <Project Path="OOs.Common.Threading/OOs.Common.Threading.csproj" />
   <Project Path="OOs.Common/OOs.Common.csproj" />
   <Project Path="OOs.Extensions.Configuration/OOs.Extensions.Configuration.csproj" />
   <Project Path="OOs.Extensions.Diagnostics/OOs.Extensions.Diagnostics.csproj" />
