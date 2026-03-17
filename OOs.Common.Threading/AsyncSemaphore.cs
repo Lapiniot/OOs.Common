@@ -104,7 +104,7 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
         lock (syncRoot)
         {
             var current = currentCount;
-            if (current + releaseCount > maxCount)
+            if (current > maxCount - releaseCount)
             {
                 return false;
             }

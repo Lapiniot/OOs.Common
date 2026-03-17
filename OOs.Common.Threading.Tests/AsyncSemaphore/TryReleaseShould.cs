@@ -64,6 +64,25 @@ public class TryReleaseShould
     }
 
     [TestMethod]
+    [Description("""
+    Verifies that currentCount + releaseCount sum is checked against maxCount limit in a proper way, 
+    that prevents detection failure due to the integer math overflow issues e.g.
+    """)]
+    public void ReturnFalse_CheckReleaseCountValidationWillNotFailDueToPotentialIntegerOverflow()
+    {
+        // Arrange: Set up values that cause current + releaseCount to overflow
+        // int.MaxValue - 10 + 20 = int.MaxValue + 10, which overflows to negative
+        var semaphore = new OOs.Threading.AsyncSemaphore(int.MaxValue - 10, int.MaxValue);
+
+        // Act
+        var actual = semaphore.TryRelease(20);
+
+        // Assert: Should return false because the sum would exceed maxCount
+        Assert.IsFalse(actual);
+        Assert.AreEqual(int.MaxValue - 10, semaphore.CurrentCount);
+    }
+
+    [TestMethod]
     [DataRow(0, 3, 10, 3, 0, 7, DisplayName = "CompleteAllWaitersThenIncrementCurrentCount_GivenMoreReleasesThanWaits_ZeroInitialCount")]
     [DataRow(2, 5, 10, 5, 0, 7, DisplayName = "CompleteAllWaitersThenIncrementCurrentCount_GivenMoreReleasesThanWaits_NonZeroInitialCount")]
     [DataRow(0, 10, 5, 5, 5, 0, DisplayName = "CompleteExactlyReleaseCountWaiters_GivenLessReleasesThanWaits_ZeroInitialCount")]
