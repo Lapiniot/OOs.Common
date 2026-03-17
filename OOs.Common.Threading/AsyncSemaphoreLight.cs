@@ -1,6 +1,5 @@
 using System.Diagnostics.Metrics;
 using System.Threading.Tasks.Sources;
-using OOs.Diagnostics;
 
 namespace OOs.Threading;
 
@@ -12,7 +11,7 @@ namespace OOs.Threading;
 /// <remarks>
 /// Do not use this implementation for other scenarious where concurrent calls to <see cref="WaitAsync(CancellationToken)"/> are potentially possible.
 /// </remarks>
-public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentationMetrics
+public sealed class AsyncSemaphoreLight : IValueTaskSource
 {
     private static long waitingCount;
     private readonly int maxCount;
@@ -105,7 +104,7 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
         {
             if (waiting)
             {
-                ThrowHelper.ThrowInvalidOperation();
+                ThrowHelper.ThrowInvalidState("waiting");
             }
 
             return cancellationToken.IsCancellationRequested

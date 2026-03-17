@@ -1,11 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Metrics;
-using OOs.Diagnostics;
 using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace OOs.Threading;
 
-public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
+public sealed class AsyncSemaphore
 {
     private static long waitingCount;
     private readonly bool runContinuationsAsynchronously;
