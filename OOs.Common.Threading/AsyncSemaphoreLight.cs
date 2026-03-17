@@ -54,7 +54,7 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
         {
             var current = currentCount;
 
-            if (current + 1 > maxCount)
+            if (current >= maxCount)
             {
                 return false;
             }

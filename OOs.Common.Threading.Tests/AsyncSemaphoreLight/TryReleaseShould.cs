@@ -83,4 +83,24 @@ public class AsyncSemaphoreLightTryReleaseShould
 
         Assert.IsFalse(vt.IsCompleted);
     }
+
+    [TestMethod]
+    [Description("""
+    Verifies that currentCount + 1 is checked against maxCount limit in a proper way, 
+    that prevents detection failure due to the integer math overflow issues,
+    when currentCount == int.MaxValue for example.
+    """)]
+    public void ReturnFalse_CheckCurrentCountIncrementValidationWillNotFailDueToIntegerOverflow()
+    {
+        // Arrange instance in a way it is full, so CurrentCount == int.MaxValue
+        var semaphore = new ASL(int.MaxValue - 1, int.MaxValue);
+        semaphore.TryRelease();
+
+        // Act: try to increment CurrentCount by 1 when it is already int.MaxValue
+        var actual = semaphore.TryRelease();
+
+        // Assert
+        Assert.IsFalse(actual);
+        Assert.AreEqual(int.MaxValue, semaphore.CurrentCount);
+    }
 }
