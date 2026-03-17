@@ -21,7 +21,9 @@ public sealed class ObjectPool<T> where T : class, new()
     public T Rent()
     {
         if (!bag.TryDequeue(out var value))
+        {
             return new();
+        }
 
         Interlocked.Increment(ref capacity);
         return value;
@@ -31,8 +33,10 @@ public sealed class ObjectPool<T> where T : class, new()
     {
         ArgumentNullException.ThrowIfNull(instance);
 
-        if (InterlockedExtensions.CompareDecrement(ref capacity, 0) is not 0)
+        if (Interlocked.CompareDecrement(ref capacity, 0) is not 0)
+        {
             bag.Enqueue(instance);
+        }
     }
 
     private static class InstanceHolder

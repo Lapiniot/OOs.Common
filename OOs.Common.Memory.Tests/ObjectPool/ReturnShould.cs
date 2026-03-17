@@ -1,6 +1,6 @@
 ﻿using OOs.Memory;
 
-namespace OOs.Common.Tests.ObjectPool;
+namespace OOs.Common.Memory.Tests.ObjectPool;
 
 [TestClass]
 public class ReturnShould

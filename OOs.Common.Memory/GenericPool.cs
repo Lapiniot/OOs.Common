@@ -18,7 +18,9 @@ public sealed class GenericPool<T>
     public T Rent()
     {
         if (!bag.TryTake(out var value))
+        {
             return factory();
+        }
 
         Interlocked.Increment(ref capacity);
         return value;
@@ -28,7 +30,9 @@ public sealed class GenericPool<T>
     {
         ArgumentNullException.ThrowIfNull(instance);
 
-        if (InterlockedExtensions.CompareDecrement(ref capacity, 0) is not 0)
+        if (Interlocked.CompareDecrement(ref capacity, 0) is not 0)
+        {
             bag.Add(instance);
+        }
     }
 }
