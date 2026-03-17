@@ -49,14 +49,18 @@ public abstract class PipeProcessor : PipeConsumerCore
                 var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
 
                 if (received == 0)
+                {
                     break;
+                }
 
                 writer.Advance(received);
 
                 var result = await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
 
                 if (result.IsCompleted || result.IsCanceled)
+                {
                     break;
+                }
             }
         }
         catch (OperationCanceledException)

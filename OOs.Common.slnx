@@ -7,6 +7,7 @@
   <Project Path="OOs.Common.CommandLine.Generators.Tests/OOs.Common.CommandLine.Generators.Tests.csproj" />
   <Project Path="OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj" />
   <Project Path="OOs.Common.CommandLine/OOs.Common.CommandLine.csproj" />
+  <Project Path="OOs.Common.IO.Pipelines/OOs.Common.IO.Pipelines.csproj" />
   <Project Path="OOs.Common.Net.Http.Tests/OOs.Common.Net.Http.Tests.csproj" />
   <Project Path="OOs.Common.Net.Http/OOs.Common.Net.Http.csproj" />
   <Project Path="OOs.Common.Net/OOs.Common.Net.csproj" />
