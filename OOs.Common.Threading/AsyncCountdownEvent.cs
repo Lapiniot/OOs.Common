@@ -10,7 +10,7 @@ public sealed class AsyncCountdownEvent
 {
     private TaskCompletionSource completionSource;
     private int initialCount;
-    private int currentCount;
+    private volatile int currentCount;
 
     /// <summary>
     /// Initializes new instance of <see cref="AsyncCountdownEvent"/>.
@@ -36,7 +36,7 @@ public sealed class AsyncCountdownEvent
     {
         get
         {
-            var current = Volatile.Read(ref currentCount);
+            var current = currentCount;
             return current > 0 ? current : 0;
         }
     }
@@ -65,7 +65,7 @@ public sealed class AsyncCountdownEvent
     /// <remarks>Method is thread-safe.</remarks>
     public void AddCount(int signalCount)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(signalCount, 0);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(signalCount);
 
         var sw = new SpinWait();
 
@@ -100,7 +100,7 @@ public sealed class AsyncCountdownEvent
     /// <remarks>Method is thread-safe.</remarks>
     public bool Signal()
     {
-        if (currentCount < 1)
+        if (currentCount <= 0)
         {
             ThrowDecrementBelowZero();
         }
@@ -131,13 +131,14 @@ public sealed class AsyncCountdownEvent
     /// <remarks>Method is thread-safe.</remarks>
     public bool Signal(int signalCount)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(signalCount, 0);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(signalCount);
 
         var sw = new SpinWait();
 
+        int current;
         while (true)
         {
-            var current = currentCount;
+            current = currentCount;
 
             if (signalCount > current)
             {
@@ -146,17 +147,19 @@ public sealed class AsyncCountdownEvent
 
             if (Interlocked.CompareExchange(ref currentCount, current - signalCount, current) == current)
             {
-                if (current != signalCount)
-                {
-                    return false;
-                }
-
-                completionSource.TrySetResult();
-                return true;
+                break;
             }
 
-            sw.SpinOnce(-1);
+            sw.SpinOnce(sleep1Threshold: -1);
         }
+
+        if (current != signalCount)
+        {
+            return false;
+        }
+
+        completionSource.TrySetResult();
+        return true;
     }
 
     /// <summary>
