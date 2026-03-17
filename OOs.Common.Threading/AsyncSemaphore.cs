@@ -18,8 +18,8 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 
     public AsyncSemaphore(int initialCount, int maxCount = int.MaxValue, bool runContinuationsAsynchronously = true)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxCount, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThan(initialCount, 0);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCount);
+        ArgumentOutOfRangeException.ThrowIfNegative(initialCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCount, maxCount);
 
         currentCount = initialCount;
@@ -34,7 +34,7 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
     {
         get
         {
-            var current = currentCount;
+            var current = Volatile.Read(ref currentCount);
             return current >= 0 ? current : 0;
         }
     }
@@ -99,7 +99,7 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
 
     public bool TryRelease(int releaseCount)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(releaseCount, 1);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(releaseCount);
 
         lock (syncRoot)
         {
@@ -219,8 +219,8 @@ public sealed class AsyncSemaphore : IProvideInstrumentationMetrics
     /// </returns>
     public bool TryReset(int initialCount, int maxCount = int.MaxValue)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxCount, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThan(initialCount, 0);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCount);
+        ArgumentOutOfRangeException.ThrowIfNegative(initialCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCount, maxCount);
 
         lock (syncRoot)
