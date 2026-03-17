@@ -23,7 +23,9 @@ public sealed class AsyncCountdownEvent
         currentCount = initialCount = signalCount;
         completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
         if (currentCount is 0)
+        {
             completionSource.SetResult();
+        }
     }
 
     /// <summary>
@@ -72,15 +74,21 @@ public sealed class AsyncCountdownEvent
             var current = currentCount;
 
             if (current <= 0)
+            {
                 ThrowEventAlreadySet();
+            }
 
             if (current > int.MaxValue - signalCount)
+            {
                 ThrowIncrementAlreadyMax();
+            }
 
             if (Interlocked.CompareExchange(ref currentCount, current + signalCount, current) == current)
+            {
                 break;
+            }
 
-            sw.SpinOnce(-1);
+            sw.SpinOnce(sleep1Threshold: -1);
         }
     }
 
@@ -92,7 +100,10 @@ public sealed class AsyncCountdownEvent
     /// <remarks>Method is thread-safe.</remarks>
     public bool Signal()
     {
-        if (currentCount < 1) ThrowDecrementBelowZero();
+        if (currentCount < 1)
+        {
+            ThrowDecrementBelowZero();
+        }
 
         switch (Interlocked.Decrement(ref currentCount))
         {
@@ -129,11 +140,17 @@ public sealed class AsyncCountdownEvent
             var current = currentCount;
 
             if (signalCount > current)
+            {
                 ThrowDecrementBelowZero();
+            }
 
             if (Interlocked.CompareExchange(ref currentCount, current - signalCount, current) == current)
             {
-                if (current != signalCount) return false;
+                if (current != signalCount)
+                {
+                    return false;
+                }
+
                 completionSource.TrySetResult();
                 return true;
             }
@@ -171,10 +188,14 @@ public sealed class AsyncCountdownEvent
         currentCount = initialCount = signalCount;
 
         if (completionSource.Task.IsCompleted)
+        {
             completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
 
         if (signalCount == 0)
+        {
             completionSource.SetResult();
+        }
     }
 
     [DoesNotReturn]

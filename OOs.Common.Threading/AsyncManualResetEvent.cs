@@ -1,7 +1,7 @@
 namespace OOs.Threading;
 
 /// <summary>
-/// Represent lightweight synchronization event that must be reset manually.
+/// Represents lightweight synchronization event that must be reset manually.
 /// Unlike <see cref="ManualResetEventSlim" /> this implementation supports only
 /// asynchronous scenarios via calls to <see cref="WaitAsync(CancellationToken)" />
 /// that returns awaitable task.
@@ -15,7 +15,9 @@ public sealed class AsyncManualResetEvent
     {
         tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
         if (initialState)
+        {
             tcs.SetResult();
+        }
     }
 
     public void Set() => tcs.TrySetResult();
@@ -27,7 +29,9 @@ public sealed class AsyncManualResetEvent
         while (true)
         {
             if (!tcs.Task.IsCompleted)
+            {
                 return;
+            }
 
             // We must limit concurrent writes to the tcs field 
             // in order to avoid orphaned tasks!!!
@@ -36,7 +40,9 @@ public sealed class AsyncManualResetEvent
                 // We acquired exclusive access to the tcs field.
                 // Update it if still needed, release guard lock and exit asap
                 if (tcs.Task.IsCompleted)
+                {
                     tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                }
 
                 Volatile.Write(ref resetGuard, 0);
                 return;

@@ -42,7 +42,8 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
 
     void IValueTaskSource.GetResult(short token) => mrvtsc.GetResult(token);
     ValueTaskSourceStatus IValueTaskSource.GetStatus(short token) => mrvtsc.GetStatus(token);
-    void IValueTaskSource.OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags) =>
+    void IValueTaskSource.OnCompleted(Action<object?> continuation,
+        object? state, short token, ValueTaskSourceOnCompletedFlags flags) =>
         mrvtsc.OnCompleted(continuation, state, token, flags);
 
     #endregion
@@ -54,12 +55,16 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
             var current = currentCount;
 
             if (current + 1 > maxCount)
+            {
                 return false;
+            }
 
             currentCount++;
 
             if (current >= 0)
+            {
                 return true;
+            }
 
             ctr.Unregister();
             mrvtsc.SetResult(0);
@@ -71,7 +76,11 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
 
     public void Release()
     {
-        if (TryRelease()) return;
+        if (TryRelease())
+        {
+            return;
+        }
+
         ThrowHelper.ThrowSemaphoreFull();
     }
 
@@ -79,7 +88,10 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
     {
         lock (syncRoot)
         {
-            if (!waiting) return;
+            if (!waiting)
+            {
+                return;
+            }
 
             currentCount++;
             mrvtsc.SetException(new OperationCanceledException(cancellationToken));
@@ -91,21 +103,31 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
     {
         lock (syncRoot)
         {
-            if (waiting) ThrowHelper.ThrowInvalidOperation();
+            if (waiting)
+            {
+                ThrowHelper.ThrowInvalidOperation();
+            }
+
             return cancellationToken.IsCancellationRequested
                 ? ValueTask.FromCanceled(cancellationToken)
-                : --currentCount >= 0 ? ValueTask.CompletedTask : WaitCoreAsync(cancellationToken);
+                : --currentCount >= 0
+                    ? ValueTask.CompletedTask
+                    : WaitCoreAsync(cancellationToken);
         }
 
         ValueTask WaitCoreAsync(CancellationToken cancellationToken)
         {
             if (RuntimeOptions.ThreadingInstrumentationSupported)
+            {
                 Interlocked.Increment(ref waitingCount);
+            }
 
             waiting = true;
             mrvtsc.Reset();
             if (cancellationToken.CanBeCanceled)
+            {
                 ctr = cancellationToken.UnsafeRegister(CancelCallback, this);
+            }
 
             return new ValueTask(this, mrvtsc.Version);
 

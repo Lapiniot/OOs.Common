@@ -30,7 +30,8 @@ public sealed class CancelableOperationScope : IAsyncCancelable
         }
     }
 
-    public static CancelableOperationScope Start(Func<CancellationToken, Task> operation, CancellationToken stoppingToken = default) =>
+    public static CancelableOperationScope Start(Func<CancellationToken, Task> operation,
+        CancellationToken stoppingToken = default) =>
         new(operation, stoppingToken);
 
     #region Implementation of IAsyncCancelable
@@ -45,7 +46,10 @@ public sealed class CancelableOperationScope : IAsyncCancelable
 
     public async ValueTask DisposeAsync()
     {
-        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
+        if (Interlocked.Exchange(ref disposed, 1) != 0)
+        {
+            return;
+        }
 
         using (localCts)
         using (jointCts)
