@@ -1,6 +1,4 @@
-﻿using static System.Threading.Tasks.Task;
-
-namespace OOs.Policies;
+﻿namespace OOs.Resilience;
 
 public abstract class RepeatPolicy : IRepeatPolicy
 {
@@ -30,7 +28,9 @@ public abstract class RepeatPolicy : IRepeatPolicy
                         .ConfigureAwait(false);
 
                     if (!ShouldRepeat(null, attempt, DateTime.UtcNow - startedAt, ref delay))
+                    {
                         break;
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -39,10 +39,12 @@ public abstract class RepeatPolicy : IRepeatPolicy
                 catch (Exception e)
                 {
                     if (!ShouldRepeat(e, attempt, DateTime.UtcNow - startedAt, ref delay))
+                    {
                         throw;
+                    }
                 }
 
-                await Delay(delay, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
 
                 attempt++;
             }

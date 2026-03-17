@@ -1,6 +1,4 @@
-using static System.Threading.Tasks.Task;
-
-namespace OOs.Policies;
+namespace OOs.Resilience;
 
 public abstract class RetryPolicy : IRetryPolicy
 {
@@ -20,7 +18,8 @@ public abstract class RetryPolicy : IRetryPolicy
         {
             try
             {
-                return await operation(cancellationToken) // This is a protection step for the operations that do not handle cancellation properly by themselves.
+                return await operation(cancellationToken)
+                // This is a protection step for the operations that do not handle cancellation properly by themselves.
                     .WaitAsync(cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -31,10 +30,12 @@ public abstract class RetryPolicy : IRetryPolicy
             catch (Exception exception)
             {
                 if (!ShouldRetry(exception, attempt, DateTime.UtcNow - startedAt, ref delay))
+                {
                     throw;
+                }
             }
 
-            await Delay(delay, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
 
             attempt++;
         }

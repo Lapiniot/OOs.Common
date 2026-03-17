@@ -1,4 +1,4 @@
-namespace OOs.Policies;
+namespace OOs.Resilience;
 
 public interface IRepeatPolicy
 {

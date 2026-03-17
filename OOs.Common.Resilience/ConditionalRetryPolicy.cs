@@ -1,4 +1,4 @@
-namespace OOs.Policies;
+namespace OOs.Resilience;
 
 public sealed class ConditionalRetryPolicy(IEnumerable<RepeatCondition> conditions) : RetryPolicy
 {
@@ -8,7 +8,10 @@ public sealed class ConditionalRetryPolicy(IEnumerable<RepeatCondition> conditio
     {
         foreach (var condition in conditions)
         {
-            if (!condition(exception, attempt, totalTime, ref delay)) return false;
+            if (!condition(exception, attempt, totalTime, ref delay))
+            {
+                return false;
+            }
         }
 
         return true;

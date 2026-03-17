@@ -1,4 +1,4 @@
-﻿namespace OOs.Policies;
+﻿namespace OOs.Resilience;
 
 public delegate bool RepeatCondition(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
 
@@ -10,7 +10,10 @@ public sealed class ConditionalRepeatPolicy(IEnumerable<RepeatCondition> conditi
     {
         foreach (var condition in conditions)
         {
-            if (!condition(exception, attempt, totalTime, ref delay)) return false;
+            if (!condition(exception, attempt, totalTime, ref delay))
+            {
+                return false;
+            }
         }
 
         return true;

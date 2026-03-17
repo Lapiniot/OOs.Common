@@ -1,8 +1,7 @@
 using System.Collections.Immutable;
 
-namespace OOs.Policies;
+namespace OOs.Resilience;
 
-#pragma warning disable IDE0350 // Use implicitly typed lambda
 public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition> Conditions)
 {
     /// <summary>
@@ -25,8 +24,7 @@ public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition>
     /// <param name="maxRetries">Max repeat attempts count</param>
     /// <returns>New instance of the builder</returns>
     public RepeatPolicyBuilder WithThreshold(int maxRetries) =>
-        WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan _)
-            => attempt <= maxRetries);
+        WithCondition((_, attempt, _, ref _) => attempt <= maxRetries);
 
     /// <summary>
     /// Appends handler which sets repeat delay to a fixed amount of time
@@ -34,7 +32,7 @@ public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition>
     /// <param name="interval">repeat delay</param>
     /// <returns>New instance of the builder</returns>
     public RepeatPolicyBuilder WithInterval(TimeSpan interval) =>
-        WithCondition((Exception _, int _, TimeSpan _, ref TimeSpan delay) =>
+        WithCondition((_, _, _, ref delay) =>
         {
             delay = interval;
             return true;
@@ -49,7 +47,7 @@ public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition>
     public RepeatPolicyBuilder WithExponentialInterval(double baseSeconds, double limitSeconds)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(baseSeconds, 1.0);
-        return WithCondition((Exception _, int attempt, TimeSpan _, ref TimeSpan delay) =>
+        return WithCondition((_, attempt, _, ref delay) =>
         {
             delay = TimeSpan.FromSeconds(Math.Min(Math.Pow(baseSeconds, attempt), limitSeconds));
             return true;
@@ -63,7 +61,7 @@ public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition>
     /// <param name="maxMilliseconds">Maximum amount of milliseconds to add</param>
     /// <returns>New instance of the builder</returns>
     public RepeatPolicyBuilder WithJitter(int minMilliseconds = 500, int maxMilliseconds = 10000) =>
-        WithCondition((Exception _, int _, TimeSpan _, ref TimeSpan delay) =>
+        WithCondition((_, _, _, ref delay) =>
         {
 #pragma warning disable CA5394 // Do not use insecure randomness
             delay = delay.Add(TimeSpan.FromMilliseconds(Random.Shared.Next(minMilliseconds, maxMilliseconds)));
@@ -77,5 +75,5 @@ public readonly record struct RepeatPolicyBuilder(ImmutableList<RepeatCondition>
     /// <typeparam name="T">Exception type</typeparam>
     /// <returns>New instance of the builder</returns>
     public RepeatPolicyBuilder WithBreakingException<T>() where T : Exception =>
-        WithCondition((Exception exception, int _, TimeSpan _, ref TimeSpan _) => exception is not T);
+        WithCondition((exception, _, _, ref _) => exception is not T);
 }
