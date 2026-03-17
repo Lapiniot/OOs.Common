@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../OOs.Common/OOs.Common.csproj" />
+    <ProjectReference Include="../OOs.Common.Security/OOs.Common.Security.csproj" />
     <ProjectReference Include="../OOs.Common.Net/OOs.Common.Net.csproj" />
   </ItemGroup>
 

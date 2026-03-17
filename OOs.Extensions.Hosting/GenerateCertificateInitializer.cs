@@ -22,7 +22,7 @@ public class CertificateGenerateInitializer(IHostEnvironment environment, IConfi
 
         if (configuration.GetValue<string>("GENERATE_SSL_CERTIFICATE") is { Length: > 0 } value)
         {
-            var certPath = value.ToUpperInvariant() is "1" or "TRUE" ? Path.Combine(environment.GetAppConfigPath()!, $"{appName}.pfx") : value;
+            var certPath = value.ToUpperInvariant() is "1" or "TRUE" ? Path.Combine(environment.GetAppConfigPath(), $"{appName}.pfx") : value;
 
             if (Path.Exists(certPath))
             {

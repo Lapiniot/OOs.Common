@@ -14,6 +14,7 @@
   <Project Path="OOs.Common.Net.Http/OOs.Common.Net.Http.csproj" />
   <Project Path="OOs.Common.Net/OOs.Common.Net.csproj" />
   <Project Path="OOs.Common.Resilience/OOs.Common.Resilience.csproj" />
+  <Project Path="OOs.Common.Security/OOs.Common.Security.csproj" />
   <Project Path="OOs.Common.Threading.Tests/OOs.Common.Threading.Tests.csproj" />
   <Project Path="OOs.Common.Threading/OOs.Common.Threading.csproj" />
   <Project Path="OOs.Common/OOs.Common.csproj" />

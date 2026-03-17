@@ -2,8 +2,6 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
-#nullable enable
-
 namespace OOs.Security.Cryptography;
 
 public static class CertificateHelpers
