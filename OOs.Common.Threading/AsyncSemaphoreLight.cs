@@ -1,4 +1,3 @@
-using System.Diagnostics.Metrics;
 using System.Threading.Tasks.Sources;
 
 namespace OOs.Threading;
@@ -13,7 +12,6 @@ namespace OOs.Threading;
 /// </remarks>
 public sealed class AsyncSemaphoreLight : IValueTaskSource
 {
-    private static long waitingCount;
     private readonly int maxCount;
     private readonly Lock syncRoot;
     private int currentCount;
@@ -116,11 +114,6 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource
 
         ValueTask WaitCoreAsync(CancellationToken cancellationToken)
         {
-            if (RuntimeOptions.ThreadingInstrumentationSupported)
-            {
-                Interlocked.Increment(ref waitingCount);
-            }
-
             waiting = true;
             mrvtsc.Reset();
             if (cancellationToken.CanBeCanceled)
@@ -132,17 +125,5 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource
 
             static void CancelCallback(object? state, CancellationToken token) => ((AsyncSemaphoreLight)state!).Cancel(token);
         }
-    }
-
-    public static IDisposable? EnableInstrumentation(string? meterName = null)
-    {
-        if (RuntimeOptions.ThreadingInstrumentationSupported)
-        {
-            var meter = new Meter(meterName ?? "OOs.Threading.AsyncSemaphoreLight");
-            meter.CreateObservableGauge("waiting-count", static () => waitingCount, description: "Number of asynchronous waits");
-            return meter;
-        }
-
-        return null;
     }
 }

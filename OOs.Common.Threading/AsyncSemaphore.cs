@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Metrics;
 using static System.Threading.Tasks.TaskCreationOptions;
 
 namespace OOs.Threading;
@@ -37,6 +36,11 @@ public sealed class AsyncSemaphore
             return current >= 0 ? current : 0;
         }
     }
+
+    /// <summary>
+    /// Gets the number of times there were asynchronous waits on <see cref="AsyncSemaphore"/>.
+    /// </summary>
+    public static long WaitingCount => waitingCount;
 
     public Task WaitAsync(CancellationToken cancellationToken = default)
     {
@@ -192,18 +196,6 @@ public sealed class AsyncSemaphore
         public WaiterNode? Next { get; set; }
         public WaiterNode? Prev { get; set; }
         public CancellationTokenRegistration CtReg { get; set; }
-    }
-
-    public static IDisposable? EnableInstrumentation(string? meterName = null)
-    {
-        if (RuntimeOptions.ThreadingInstrumentationSupported)
-        {
-            var meter = new Meter(meterName ?? "OOs.Threading.AsyncSemaphore");
-            meter.CreateObservableGauge("waiting-count", static () => waitingCount, description: "Number of asynchronous waits");
-            return meter;
-        }
-
-        return null;
     }
 
     /// <summary>
