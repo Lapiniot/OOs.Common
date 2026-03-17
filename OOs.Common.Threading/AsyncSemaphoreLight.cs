@@ -24,8 +24,8 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
 
     public AsyncSemaphoreLight(int initialCount, int maxCount = int.MaxValue, bool runContinuationsAsynchronously = true)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(maxCount, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThan(initialCount, 0);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCount);
+        ArgumentOutOfRangeException.ThrowIfNegative(initialCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCount, maxCount);
 
         this.maxCount = maxCount;
@@ -34,14 +34,16 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
         syncRoot = new();
     }
 
-    public int CurrentCount => currentCount is >= 0 and var current ? current : 0;
+    public int CurrentCount => Volatile.Read(ref currentCount) is >= 0 and var current ? current : 0;
 
     public int MaxCount => maxCount;
 
     #region IValueTaskSource implementation
 
     void IValueTaskSource.GetResult(short token) => mrvtsc.GetResult(token);
+
     ValueTaskSourceStatus IValueTaskSource.GetStatus(short token) => mrvtsc.GetStatus(token);
+
     void IValueTaskSource.OnCompleted(Action<object?> continuation,
         object? state, short token, ValueTaskSourceOnCompletedFlags flags) =>
         mrvtsc.OnCompleted(continuation, state, token, flags);
@@ -76,12 +78,10 @@ public sealed class AsyncSemaphoreLight : IValueTaskSource, IProvideInstrumentat
 
     public void Release()
     {
-        if (TryRelease())
+        if (!TryRelease())
         {
-            return;
+            ThrowHelper.ThrowSemaphoreFull();
         }
-
-        ThrowHelper.ThrowSemaphoreFull();
     }
 
     private void Cancel(CancellationToken cancellationToken)
