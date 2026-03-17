@@ -4,8 +4,4 @@
     <RootNamespace>OOs.Resilience</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="../OOs.Common/OOs.Common.csproj" />
-  </ItemGroup>
-
 </Project>
