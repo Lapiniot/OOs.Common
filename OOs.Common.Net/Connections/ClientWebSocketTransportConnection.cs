@@ -2,8 +2,6 @@ using System.IO.Pipelines;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 public sealed class ClientWebSocketTransportConnection : WebSocketTransportConnection

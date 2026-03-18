@@ -1,8 +1,6 @@
 using System.IO.Pipelines;
 using static System.Threading.Tasks.ConfigureAwaitOptions;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 public abstract partial class TransportConnectionPipeAdapter(

@@ -36,7 +36,7 @@ public static class Base64UrlSafe
     {
         var max = Base64.GetMaxEncodedToUtf8Length(bytes.Length);
 
-        byte[] pooled = null;
+        byte[]? pooled = null;
         var utf8 = max <= MaxAllocatedOnStack
             ? stackalloc byte[MaxAllocatedOnStack]
             : (pooled = ArrayPool<byte>.Shared.Rent(max));

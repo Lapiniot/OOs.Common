@@ -5,8 +5,6 @@ using static System.Net.WebSockets.WebSocketCloseStatus;
 using static System.Net.WebSockets.WebSocketError;
 using static System.Net.WebSockets.WebSocketState;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 public abstract class WebSocketTransportConnection : TransportConnectionPipeAdapter

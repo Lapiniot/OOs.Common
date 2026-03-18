@@ -3,8 +3,6 @@ using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 public sealed class ClientTcpSslSocketTransportConnection : SslSocketTransportConnection

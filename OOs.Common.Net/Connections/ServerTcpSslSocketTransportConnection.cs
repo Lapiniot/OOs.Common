@@ -2,8 +2,6 @@ using System.IO.Pipelines;
 using System.Net.Security;
 using System.Net.Sockets;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 public sealed class ServerTcpSslSocketTransportConnection : SslSocketTransportConnection

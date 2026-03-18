@@ -2,7 +2,7 @@
 
 public abstract class RepeatPolicy : IRepeatPolicy
 {
-    protected abstract bool ShouldRepeat(Exception exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
+    protected abstract bool ShouldRepeat(Exception? exception, int attempt, TimeSpan totalTime, ref TimeSpan delay);
 
     #region Implementation of IRetryPolicy
 

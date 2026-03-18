@@ -4,8 +4,6 @@ using System.Net.Quic;
 using System.Runtime.Versioning;
 using static System.Net.Quic.QuicError;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 #pragma warning disable CA1416 // Validate platform compatibility

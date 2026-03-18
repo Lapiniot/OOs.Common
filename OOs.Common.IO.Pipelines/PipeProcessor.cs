@@ -10,8 +10,8 @@ namespace OOs.IO.Pipelines;
 /// </summary>
 public abstract class PipeProcessor : PipeConsumerCore
 {
-    private CancellationTokenSource abortTokenSource;
-    private Task processor;
+    private CancellationTokenSource? abortTokenSource;
+    private Task? processor;
 
     protected override Task StartingAsync(CancellationToken cancellationToken)
     {
@@ -31,8 +31,8 @@ public abstract class PipeProcessor : PipeConsumerCore
     {
         using (abortTokenSource)
         {
-            await abortTokenSource.CancelAsync().ConfigureAwait(false);
-            await processor.ConfigureAwait(false);
+            await abortTokenSource!.CancelAsync().ConfigureAwait(false);
+            await processor!.ConfigureAwait(false);
         }
     }
 

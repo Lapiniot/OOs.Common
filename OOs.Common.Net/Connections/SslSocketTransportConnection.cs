@@ -3,8 +3,6 @@ using System.Net.Security;
 using System.Net.Sockets;
 using static System.Net.Sockets.SocketError;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 public abstract class SslSocketTransportConnection(Socket socket,

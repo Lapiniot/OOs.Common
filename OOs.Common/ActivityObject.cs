@@ -17,10 +17,12 @@ public abstract class ActivityObject : IAsyncDisposable
 
     protected abstract Task StoppingAsync();
 
-    protected void CheckState([CallerMemberName] string callerName = null)
+    protected void CheckState([CallerMemberName] string? callerName = null)
     {
         if (!IsRunning)
+        {
             ThrowHelper.ThrowInvalidState(callerName);
+        }
     }
 
     protected void CheckDisposed() => ObjectDisposedException.ThrowIf(disposed is 1, this);
@@ -38,7 +40,6 @@ public abstract class ActivityObject : IAsyncDisposable
                 if (!IsRunning)
                 {
                     await StartingAsync(cancellationToken).ConfigureAwait(false);
-
                     IsRunning = true;
                 }
             }
@@ -64,7 +65,9 @@ public abstract class ActivityObject : IAsyncDisposable
             try
             {
                 if (IsRunning)
+                {
                     await StoppingAsync().ConfigureAwait(false);
+                }
             }
             finally
             {
@@ -78,7 +81,10 @@ public abstract class ActivityObject : IAsyncDisposable
 
     public virtual async ValueTask DisposeAsync()
     {
-        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
+        if (Interlocked.Exchange(ref disposed, 1) != 0)
+        {
+            return;
+        }
 
         GC.SuppressFinalize(this);
 

@@ -1,8 +1,6 @@
 using System.IO.Pipelines;
 using System.Net.Sockets;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 public sealed class ServerTcpSocketTransportConnection(Socket acceptedSocket,

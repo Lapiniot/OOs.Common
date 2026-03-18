@@ -41,15 +41,15 @@ public static class NetworkInterfaceExtensions
                networkInterface.OperationalStatus == OperationalStatus.Up;
     }
 
-    public static NetworkInterface FindByAddress(string adapterAddress) =>
+    public static NetworkInterface? FindByAddress(string adapterAddress) =>
         IPAddress.TryParse(adapterAddress, out var address)
             ? GetAllNetworkInterfaces().FirstOrDefault(i => i.GetIPProperties().UnicastAddresses.Any(ua => ua.Address.Equals(address)))
             : null;
 
-    public static NetworkInterface FindByName(string adapterName) =>
+    public static NetworkInterface? FindByName(string adapterName) =>
         GetAllNetworkInterfaces().FirstOrDefault(i => i.Name == adapterName);
 
-    public static NetworkInterface FindById(string adapterId) =>
+    public static NetworkInterface? FindById(string adapterId) =>
         GetAllNetworkInterfaces().FirstOrDefault(i => i.Id == adapterId);
 
     public static IEnumerable<NetworkInterface> GetActiveExternalInterfaces(this IEnumerable<NetworkInterface> interfaces) =>
@@ -60,11 +60,11 @@ public static class NetworkInterfaceExtensions
             ni.NetworkInterfaceType != NetworkInterfaceType.Tunnel &&
             ni.GetIPProperties().GatewayAddresses.Count > 0);
 
-    public static IPAddress FindExternalIPv4Address(this IEnumerable<NetworkInterface> interfaces) =>
+    public static IPAddress? FindExternalIPv4Address(this IEnumerable<NetworkInterface> interfaces) =>
         interfaces.FirstOrDefault(static i => i.Supports(NetworkInterfaceComponent.IPv4))?.GetIPProperties()
             .UnicastAddresses.FirstOrDefault(static a => a.Address.AddressFamily == InterNetwork)?.Address;
 
-    public static IPAddress FindExternalIPv6Address(this IEnumerable<NetworkInterface> interfaces) =>
+    public static IPAddress? FindExternalIPv6Address(this IEnumerable<NetworkInterface> interfaces) =>
         interfaces.FirstOrDefault(static i => i.Supports(NetworkInterfaceComponent.IPv6))?.GetIPProperties()
             .UnicastAddresses.FirstOrDefault(static a => a.Address.AddressFamily == InterNetworkV6)?.Address;
 

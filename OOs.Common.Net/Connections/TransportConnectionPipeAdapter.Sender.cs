@@ -1,7 +1,5 @@
 using System.IO.Pipelines;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 public partial class TransportConnectionPipeAdapter

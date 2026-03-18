@@ -4,7 +4,7 @@ namespace OOs.Net.Http.WebPush;
 
 public static class ServerKeyGenerator
 {
-    public static (byte[] PublicKey, byte[] PrivateKey) Generate()
+    public static (byte[] PublicKey, byte[]? PrivateKey) Generate()
     {
         using var ecdh = ECDiffieHellman.Create();
         ecdh.GenerateKey(ECCurve.NamedCurves.nistP256);

@@ -10,14 +10,14 @@ namespace OOs.Net.Listeners;
 public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
 {
     private readonly SslServerAuthenticationOptions options;
-    private readonly X509Certificate serverCertificate;
+    private readonly X509Certificate? serverCertificate;
     private bool disposed;
 
     public TcpSslSocketListener(IPEndPoint endPoint, int backlog = 100,
-        Action<Socket> configureListening = null, Action<Socket> configureAccepted = null,
-        X509Certificate serverCertificate = null, SslProtocols enabledSslProtocols = SslProtocols.None,
-        RemoteCertificateValidationCallback remoteCertificateValidationCallback = null,
-        ServerCertificateSelectionCallback serverCertificateSelectionCallback = null,
+        Action<Socket>? configureListening = null, Action<Socket>? configureAccepted = null,
+        X509Certificate? serverCertificate = null, SslProtocols enabledSslProtocols = SslProtocols.None,
+        RemoteCertificateValidationCallback? remoteCertificateValidationCallback = null,
+        ServerCertificateSelectionCallback? serverCertificateSelectionCallback = null,
         bool clientCertificateRequired = false) :
         base(endPoint, backlog, configureListening, configureAccepted)
     {
@@ -41,7 +41,7 @@ public sealed class TcpSslSocketListener : TcpSocketListenerBase, IDisposable
     public void Dispose()
     {
         if (disposed) return;
-        serverCertificate.Dispose();
+        serverCertificate?.Dispose();
         disposed = true;
     }
 }

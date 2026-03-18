@@ -2,8 +2,6 @@ using System.Net;
 using System.Net.Sockets;
 using OOs.Net.Connections;
 
-#nullable enable
-
 namespace OOs.Net.Listeners;
 
 public abstract class SocketListener : IAsyncEnumerable<TransportConnection>

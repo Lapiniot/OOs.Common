@@ -73,9 +73,9 @@ namespace {{namespaceName}};
 
 {{typeAccessibility}} partial {{typeKind}} {{typeName}}: global::OOs.CommandLine.IArgumentsParser
 {
-    public static (global::System.Collections.Generic.IReadOnlyDictionary<string, string?> Options, global::System.Collections.Immutable.ImmutableArray<string> Arguments) Parse(global::System.ReadOnlySpan<string> args)
+    public static (global::System.Collections.Generic.IReadOnlyDictionary<string, string> Options, global::System.Collections.Immutable.ImmutableArray<string> Arguments) Parse(global::System.ReadOnlySpan<string> args)
     {
-        var options = new global::System.Collections.Generic.Dictionary<string, string?>();
+        var options = new global::System.Collections.Generic.Dictionary<string, string>();
         var builder = global::System.Collections.Immutable.ImmutableArray.CreateBuilder<string>(args.Length);
 
         for (var index = 0; index < args.Length; index++)

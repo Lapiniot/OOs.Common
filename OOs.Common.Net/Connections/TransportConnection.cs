@@ -1,8 +1,6 @@
 using System.IO.Pipelines;
 using System.Net;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 /// <summary>

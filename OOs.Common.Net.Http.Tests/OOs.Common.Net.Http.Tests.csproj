@@ -1,7 +1,6 @@
 <Project Sdk="MSTest.Sdk/4.1.0">
 
   <PropertyGroup>
-    <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <NoWarn>CA1707</NoWarn>
     <OutputType>Exe</OutputType>

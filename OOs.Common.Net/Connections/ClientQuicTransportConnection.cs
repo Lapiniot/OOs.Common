@@ -5,8 +5,6 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.Versioning;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 [SupportedOSPlatform("windows")]

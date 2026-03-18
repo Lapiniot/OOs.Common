@@ -5,8 +5,6 @@ using System.Runtime.Versioning;
 using System.Security.Cryptography.X509Certificates;
 using OOs.Net.Connections;
 
-#nullable enable
-
 namespace OOs.Net.Listeners;
 
 public sealed class QuicListener : IAsyncEnumerable<TransportConnection>, IDisposable

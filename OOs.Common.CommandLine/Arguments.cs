@@ -5,14 +5,14 @@ namespace OOs.CommandLine;
 
 public readonly record struct Arguments : IArgumentsParser
 {
-    private Arguments(string command, IReadOnlyDictionary<string, object> options, ImmutableArray<string> values)
+    private Arguments(string? command, IReadOnlyDictionary<string, object> options, ImmutableArray<string> values)
     {
         Command = command;
         Options = options;
         Values = values;
     }
 
-    public string Command { get; }
+    public string? Command { get; }
     public IReadOnlyDictionary<string, object> Options { get; }
     public ImmutableArray<string> Values { get; }
 
@@ -21,7 +21,7 @@ public readonly record struct Arguments : IArgumentsParser
         var commands = Assembly.GetEntryAssembly()?
             .GetCustomAttributes<CommandAttribute>()
             .Distinct(EqualityComparer<CommandAttribute>.Create(
-                equals: (a1, a2) => string.Equals(a1.Name, a2.Name, StringComparison.OrdinalIgnoreCase),
+                equals: (a1, a2) => string.Equals(a1?.Name, a2?.Name, StringComparison.OrdinalIgnoreCase),
                 getHashCode: a => a.Name.GetHashCode(StringComparison.OrdinalIgnoreCase)))
             .ToArray() ?? [];
 
@@ -33,7 +33,7 @@ public readonly record struct Arguments : IArgumentsParser
     public static (IReadOnlyDictionary<string, string> Options, ImmutableArray<string> Arguments) Parse(ReadOnlySpan<string> args)
     {
         Parse(args, false, out var options, out var values);
-        return (options.ToDictionary(kvp => kvp.Key, kvp => kvp.Value is { } value ? value.ToString() : null), values);
+        return (options.ToDictionary(kvp => kvp.Key, kvp => kvp.Value is { } value ? value.ToString()! : ""), values);
     }
 
     private static void Parse(ReadOnlySpan<string> args, bool strict, out IReadOnlyDictionary<string, object> options, out ImmutableArray<string> arguments)
@@ -47,7 +47,7 @@ public readonly record struct Arguments : IArgumentsParser
         var schema = Assembly.GetEntryAssembly()?
             .GetCustomAttributes<OptionAttribute>()
             .Distinct(EqualityComparer<OptionAttribute>.Create(
-                equals: (a1, a2) => string.Equals(a1.Name, a2.Name, StringComparison.OrdinalIgnoreCase),
+                equals: (a1, a2) => string.Equals(a1?.Name, a2?.Name, StringComparison.OrdinalIgnoreCase),
                 getHashCode: a => a.Name.GetHashCode(StringComparison.OrdinalIgnoreCase)))
             .ToArray() ?? [];
 

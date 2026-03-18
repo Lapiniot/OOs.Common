@@ -4,7 +4,7 @@ namespace OOs;
 
 public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 {
-    private ConcurrentDictionary<IObserver<T>, Subscription<T>> observers;
+    private ConcurrentDictionary<IObserver<T>, Subscription<T>>? observers;
 
     public ObserversContainer() => observers = new();
 
@@ -12,7 +12,7 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 
     public void Notify(in T value)
     {
-        foreach (var (observer, _) in observers)
+        foreach (var (observer, _) in observers!)
         {
             try
             {
@@ -26,7 +26,7 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 
     public void NotifyError(Exception error)
     {
-        foreach (var (observer, _) in observers)
+        foreach (var (observer, _) in observers!)
         {
             try
             {
@@ -40,7 +40,7 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
 
     public void NotifyCompleted()
     {
-        foreach (var (observer, _) in observers)
+        foreach (var (observer, _) in observers!)
         {
             try
             {
@@ -83,7 +83,7 @@ public sealed class ObserversContainer<T> : IObservable<T>, IDisposable
     public Subscription<T> Subscribe(IObserver<T> observer)
     {
         ObjectDisposedException.ThrowIf(observers is null, this);
-        return observers!.GetOrAdd(observer, static (observer, container) => new(observer, container), this);
+        return observers.GetOrAdd(observer, static (observer, container) => new(observer, container), this);
     }
 
     #endregion

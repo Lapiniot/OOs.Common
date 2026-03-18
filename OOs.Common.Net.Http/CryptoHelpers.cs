@@ -17,7 +17,7 @@ internal static class CryptoHelpers
         return ecdh.PublicKey;
     }
 
-    public static ECParameters ImportECParameters(byte[] publicKey, byte[] privateKey) =>
+    public static ECParameters ImportECParameters(byte[] publicKey, byte[]? privateKey) =>
         new()
         {
             Curve = ECCurve.NamedCurves.nistP256,

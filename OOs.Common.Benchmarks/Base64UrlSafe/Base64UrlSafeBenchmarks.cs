@@ -36,7 +36,7 @@ public class Base64UrlSafeBenchmarks
     [BenchmarkCategory("ToBase64String")]
     public void ToBase64StringNext()
     {
-        _ = Next.ToBase64String(bytes);
+        _ = Next.ToBase64String(bytes!);
     }
 
     [Benchmark(Baseline = true)]

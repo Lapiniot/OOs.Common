@@ -10,10 +10,10 @@ public static class ThrowHelper
         throw new ArgumentException("Must be value power of two.", argumentName);
 
     [DoesNotReturn]
-    public static void ThrowInvalidState([CallerMemberName] string callerName = null) =>
+    public static void ThrowInvalidState([CallerMemberName] string? callerName = null) =>
         throw new InvalidOperationException($"Cannot call '{callerName}' in the current state.");
 
     [DoesNotReturn]
-    public static void ThrowInvalidState(string state, [CallerMemberName] string callerName = null) =>
-    throw new InvalidOperationException($"Cannot call '{callerName}' in the current state: '{state}'.");
+    public static void ThrowInvalidState(string state, [CallerMemberName] string? callerName = null) =>
+        throw new InvalidOperationException($"Cannot call '{callerName}' in the current state: '{state}'.");
 }

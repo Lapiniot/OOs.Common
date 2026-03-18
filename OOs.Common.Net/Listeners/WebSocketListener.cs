@@ -71,7 +71,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>, I
                     }
                 }
 
-                ServerWebSocketTransportConnection connection = null;
+                ServerWebSocketTransportConnection? connection = null;
 
                 try
                 {
@@ -111,7 +111,7 @@ public sealed class WebSocketListener : IAsyncEnumerable<TransportConnection>, I
             response.Close();
         }
 
-        string MatchSubProtocol(string clientSubProtocols)
+        string? MatchSubProtocol(string clientSubProtocols)
         {
             var span = clientSubProtocols.AsSpan();
             foreach (var range in span.SplitAny(Separators))

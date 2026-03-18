@@ -90,7 +90,7 @@ public static class SocketBuilderExtensions
         return socket;
     }
 
-    public static Socket JoinMulticastGroup(this Socket socket, IPEndPoint groupToJoin, IPAddress mcintAddress = null)
+    public static Socket JoinMulticastGroup(this Socket socket, IPEndPoint groupToJoin, IPAddress? mcintAddress = null)
     {
         ArgumentNullException.ThrowIfNull(socket);
         ArgumentNullException.ThrowIfNull(groupToJoin);

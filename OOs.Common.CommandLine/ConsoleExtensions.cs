@@ -4,7 +4,7 @@ namespace OOs.CommandLine;
 
 public static class ConsoleExtensions
 {
-    public static string ReadPassword(bool echoInput = true)
+    public static string? ReadPassword(bool echoInput = true)
     {
         var sb = new StringBuilder();
         while (true)

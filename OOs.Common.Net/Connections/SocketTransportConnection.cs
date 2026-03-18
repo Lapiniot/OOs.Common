@@ -4,8 +4,6 @@ using System.Net.Sockets;
 using static System.Net.Sockets.SocketError;
 using static System.Net.Sockets.SocketFlags;
 
-#nullable enable
-
 namespace OOs.Net.Connections;
 
 public abstract class SocketTransportConnection : TransportConnectionPipeAdapter

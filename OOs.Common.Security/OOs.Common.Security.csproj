@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <RootNamespace>OOs.Security</RootNamespace>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
 </Project>

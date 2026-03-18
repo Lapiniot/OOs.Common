@@ -18,8 +18,8 @@ public abstract class OptionAttribute : Attribute, IArgumentMetadata
     public Type Type { get; }
     public string LongAlias { get; }
     public char ShortAlias { get; set; }
-    public string Description { get; set; }
-    public string Hint { get; set; }
+    public string? Description { get; init; }
+    public string? Hint { get; init; }
 }
 
 public sealed class OptionAttribute<T>(string name, string longAlias) : OptionAttribute(name, typeof(T), longAlias)

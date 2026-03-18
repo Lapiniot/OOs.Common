@@ -13,7 +13,10 @@ public sealed class CommandArgumentsConfigurationProvider : ConfigurationProvide
 
         foreach (var option in options)
         {
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
             Data.Add(option);
+#pragma warning restore CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
+
         }
 
         for (var i = 0; i < arguments.Count; i++)

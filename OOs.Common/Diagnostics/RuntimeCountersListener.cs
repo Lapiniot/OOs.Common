@@ -6,7 +6,7 @@ namespace OOs.Diagnostics;
 [CLSCompliant(false)]
 public class RuntimeCountersListener(int updateIntervalSec = 1) : EventListener
 {
-    private EventSource source;
+    private EventSource? source;
 
     public double CpuUsage { get; private set; }
     public double WorkingSet { get; private set; }
@@ -32,10 +32,12 @@ public class RuntimeCountersListener(int updateIntervalSec = 1) : EventListener
         ArgumentNullException.ThrowIfNull(source);
 
         const EventKeywords AllButAppContext = (EventKeywords)(-1 & ~1);
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
         EnableEvents(source, EventLevel.LogAlways, AllButAppContext, new Dictionary<string, string>
             {
                 { "EventCounterIntervalSec", updateIntervalSec.ToString(CultureInfo.InvariantCulture) }
             });
+#pragma warning restore CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
     }
 
     protected override void OnEventWritten(EventWrittenEventArgs eventData)

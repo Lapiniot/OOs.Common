@@ -1,18 +1,23 @@
 using System.Reflection;
 
+#pragma warning disable CA1034 // Nested types should not be visible
+
 namespace OOs.Reflection;
 
 public static class AssemblyInfoExtensions
 {
-    public static string BuildLogoString(this Assembly assembly) =>
+    extension(Assembly assembly)
+    {
+        public string BuildLogoString() =>
         $"{assembly.GetDescription()} v{assembly.GetInformationalVersion()} ({assembly.GetCopyright()})";
 
-    public static string GetInformationalVersion(this Assembly assembly) =>
-        assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        public string? GetInformationalVersion() =>
+            assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-    public static string GetDescription(this Assembly assembly) =>
-        assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description;
+        public string? GetDescription() =>
+            assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description;
 
-    public static string GetCopyright(this Assembly assembly) =>
-        assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright;
+        public string? GetCopyright() =>
+            assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright;
+    }
 }

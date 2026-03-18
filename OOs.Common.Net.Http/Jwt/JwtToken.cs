@@ -2,35 +2,37 @@ namespace OOs.Net.Http.Jwt;
 
 public sealed class JwtToken
 {
-    private readonly Dictionary<string, object> claims;
+    private readonly Dictionary<string, object?> claims;
 
     public JwtToken() => claims = [];
 
-    public JwtToken(IReadOnlyDictionary<string, object> claims) => this.claims = new(claims);
+    public JwtToken(IReadOnlyDictionary<string, object?> claims) => this.claims = new(claims);
 
-    public IReadOnlyDictionary<string, object> Claims => claims;
+    public IReadOnlyDictionary<string, object?> Claims => claims;
 
-    public string Issuer
+    public string? Issuer
     {
-        get => claims.TryGetValue("iss", out var value) ? (string)value : null;
+        get => claims.TryGetValue("iss", out var value) ? value as string : null;
         set => claims["iss"] = value;
     }
 
-    public string Audience
+    public string? Audience
     {
-        get => claims.TryGetValue("aud", out var value) ? (string)value : null;
+        get => claims.TryGetValue("aud", out var value) ? value as string : null;
         set => claims["aud"] = value;
     }
 
-    public string Subject
+    public string? Subject
     {
-        get => claims.TryGetValue("sub", out var value) ? (string)value : null;
+        get => claims.TryGetValue("sub", out var value) ? value as string : null;
         set => claims["sub"] = value;
     }
 
     public DateTimeOffset? Expires
     {
-        get => claims.TryGetValue("exp", out var value) ? DateTimeOffset.FromUnixTimeSeconds((long)value).ToUniversalTime() : null;
+        get => claims.TryGetValue("exp", out var value) && value is long v
+            ? DateTimeOffset.FromUnixTimeSeconds(v).ToUniversalTime()
+            : null;
         set => claims["exp"] = value?.ToUniversalTime().ToUnixTimeSeconds();
     }
 }
