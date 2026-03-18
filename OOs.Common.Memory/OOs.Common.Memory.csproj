@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <RootNamespace>OOs.Memory</RootNamespace>
+    <Title>OOs.Common.Memory</Title>
+    <Description>Memory pooling and segment utilities for high-performance .NET applications.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Common;Memory;Pooling</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 
 </Project>

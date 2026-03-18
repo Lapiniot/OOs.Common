@@ -1,5 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <RootNamespace>OOs.Extensions.Diagnostics</RootNamespace>
+    <Title>OOs.Extensions.Diagnostics</Title>
+    <Description>Extensions for Microsoft.Extensions.Diagnostics.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Extensions;Diagnostics;Metrics</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Diagnostics" />
   </ItemGroup>

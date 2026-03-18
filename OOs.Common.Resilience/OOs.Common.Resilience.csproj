@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <RootNamespace>OOs.Resilience</RootNamespace>
+    <Title>OOs.Common.Resilience</Title>
+    <Description>Resilience utilities such as retry and repeat policies.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Common;Resilience;Retry;CircuitBreaker</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 
 </Project>

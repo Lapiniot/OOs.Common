@@ -2,7 +2,16 @@
 
   <PropertyGroup>
     <RootNamespace>OOs.IO.Pipelines</RootNamespace>
+    <Title>OOs.Common.IO.Pipelines</Title>
+    <Description>Helpers and extensions for System.IO.Pipelines.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Common;IO;Pipelines</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../OOs.Common/OOs.Common.csproj" />

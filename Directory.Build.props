@@ -3,15 +3,20 @@
     <TargetFrameworks>net10.0;net9.0</TargetFrameworks>
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <Nullable>enable</Nullable>
-    <IsTrimmable>true</IsTrimmable>
-    <LangVersion>preview</LangVersion>
-    <Authors>aossss@gmail.com</Authors>
-    <Company>aossss@gmail.com</Company>
-    <Copyright>© $(Authors), $([System.DateTime]::UtcNow.Year)</Copyright>
-    <Version>1.12.0</Version>
-    <AnalysisLevel>latest-All</AnalysisLevel>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <ImplicitUsings>true</ImplicitUsings>
+    <IsTrimmable>true</IsTrimmable>
+    <IsPackable>true</IsPackable>
+    <LangVersion>preview</LangVersion>
+    <AnalysisLevel>preview-All</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Version>2.0.0</Version>
+    <Authors>Lapiniot</Authors>
+    <Company>Lapiniot</Company>
+    <Copyright>© $(Authors), $([System.DateTime]::UtcNow.Year)</Copyright>
+    <RepositoryUrl>https://github.com/Lapiniot/OOs.Common.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Common;Utilities;Extensions;Libraries;Toolkit</PackageTags>
     <EnablePreviewFeatures>true</EnablePreviewFeatures>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>

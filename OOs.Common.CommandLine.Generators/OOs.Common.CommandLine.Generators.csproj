@@ -12,10 +12,17 @@
     <PublishTrimmed>false</PublishTrimmed>
     <Title>OOs.Common.CommandLine Code Generators</Title>
     <Description>Provides boilerplate code auto-generation support for strongly-typed CLI argument parser</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Common;CodeGeneration;SourceGenerator;CLI;Roslyn</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <DevelopmentDependency>true</DevelopmentDependency>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.0.0" />

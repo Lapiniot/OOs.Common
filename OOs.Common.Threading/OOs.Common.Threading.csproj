@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <RootNamespace>OOs.Threading</RootNamespace>
+    <Title>OOs.Common.Threading</Title>
+    <Description>Threading and concurrency utilities and primitives.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Common;Threading;Concurrency</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 
 </Project>

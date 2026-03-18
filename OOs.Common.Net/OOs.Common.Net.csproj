@@ -2,7 +2,16 @@
 
   <PropertyGroup>
     <RootNamespace>OOs.Net</RootNamespace>
+    <Title>OOs.Common.Net</Title>
+    <Description>Networking helpers and extensions.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Common;Networking</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../OOs.Common/OOs.Common.csproj" />

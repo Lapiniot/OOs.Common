@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <RootNamespace>OOs</RootNamespace>
+    <Title>OOs.Common</Title>
+    <Description>Core shared utilities and types used across OOs libraries.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Common;Utilities</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 
 </Project>

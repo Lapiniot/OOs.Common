@@ -2,7 +2,16 @@
 
   <PropertyGroup>
     <RootNamespace>OOs.Net.Http</RootNamespace>
+    <Title>OOs.Common.Net.Http</Title>
+    <Description>HTTP utilities including JWT helpers and Web Push support.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>OOs;Common;HTTP;JWT;WebPush</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 
 </Project>
