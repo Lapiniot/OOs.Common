@@ -21,7 +21,7 @@ public abstract class ActivityObject : IAsyncDisposable
     {
         if (!IsRunning)
         {
-            ThrowHelper.ThrowInvalidState(callerName);
+            InvalidOperationException.ThrowInvalidState("running", callerName);
         }
     }
 

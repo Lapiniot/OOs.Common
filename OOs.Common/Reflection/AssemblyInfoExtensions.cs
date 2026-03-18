@@ -9,7 +9,7 @@ public static class AssemblyInfoExtensions
     extension(Assembly assembly)
     {
         public string BuildLogoString() =>
-        $"{assembly.GetDescription()} v{assembly.GetInformationalVersion()} ({assembly.GetCopyright()})";
+            $"{assembly.GetDescription()} v{assembly.GetInformationalVersion()} ({assembly.GetCopyright()})";
 
         public string? GetInformationalVersion() =>
             assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;

@@ -33,9 +33,9 @@ public abstract partial class TransportConnectionPipeAdapter(
         switch (Interlocked.CompareExchange(ref state, State.Starting, State.Stopped))
         {
             case State.Stopped: break;
-            case State.Starting: OOs.ThrowHelper.ThrowInvalidState(nameof(State.Starting)); return;
+            case State.Starting: InvalidOperationException.ThrowInvalidState(nameof(State.Starting)); return;
             case State.Started: return;
-            case State.Stopping: OOs.ThrowHelper.ThrowInvalidState(nameof(State.Stopping)); return;
+            case State.Stopping: InvalidOperationException.ThrowInvalidState(nameof(State.Stopping)); return;
             case State.Disposed: ObjectDisposedException.ThrowIf(true, this); return;
         }
 
