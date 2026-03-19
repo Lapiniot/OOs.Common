@@ -54,5 +54,15 @@ public static class ThrowHelper
         [DoesNotReturn]
         public static void ThrowInvalidState(string state, [CallerMemberName] string? callerName = null) =>
             throw new InvalidOperationException($"Cannot call '{callerName}' in the current state: '{state}'.");
+
+        /// <summary>
+        /// Unconditionally throws <see cref="InvalidOperationException"/> indicating the object 
+        /// is currently not in the valid state for this operation to be invoked.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        /// <exception cref="InvalidOperationException"></exception>
+        [DoesNotReturn]
+        public static void Throw(string? message = null) =>
+            throw new InvalidOperationException(message);
     }
 }
