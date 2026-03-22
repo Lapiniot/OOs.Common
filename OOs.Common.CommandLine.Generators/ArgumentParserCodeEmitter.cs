@@ -9,6 +9,8 @@ namespace OOs.CommandLine.Generators;
 
 public static class ArgumentParserCodeEmitter
 {
+    private const int MaxAllocatedOnStack = 16;
+
     internal static string Emit(string namespaceName, string typeName, TypeKind kind, Accessibility accessibility,
         ImmutableArray<OptionGenerationContext> options, TypeGenerationOptions generationOptions)
     {
@@ -25,6 +27,7 @@ public static class ArgumentParserCodeEmitter
         var emitEnumShortFormSupport = false;
         var emitReadRawShortSupport = unknownOptionBehavior is Allow;
 
+        var maxEnumValues = 0;
         foreach (var option in options)
         {
             switch (option)
@@ -37,9 +40,14 @@ public static class ArgumentParserCodeEmitter
                     emitTimeSpanSupport = true;
                     emitTimeSpanShortFormSupport |= alias is not '\0';
                     break;
-                case { TypeContext.KnownType: WellKnownType.Enum, ShortAlias: var alias }:
+                case { TypeContext: { KnownType: WellKnownType.Enum, AllowedValues.Length: var count }, ShortAlias: var alias }:
                     emitEnumSupport = true;
                     emitEnumShortFormSupport |= alias is not '\0';
+                    if (count > maxEnumValues)
+                    {
+                        maxEnumValues = count;
+                    }
+
                     break;
                 case { ShortAlias: var alias }:
                     emitReadRawSupport = true;
@@ -73,10 +81,55 @@ namespace {{namespaceName}};
 
 {{typeAccessibility}} partial {{typeKind}} {{typeName}}: global::OOs.CommandLine.IArgumentsParser
 {
+
+""");
+        if (maxEnumValues is > 0 and <= MaxAllocatedOnStack)
+        {
+            sb.Append($$"""
+    [global::System.Runtime.InteropServices.StructLayout(global::System.Runtime.InteropServices.LayoutKind.Auto)]
+    [global::System.Runtime.CompilerServices.InlineArray({{maxEnumValues}})]
+    private struct FixedArray{{maxEnumValues}}<T>
+    {
+        [global::System.Runtime.CompilerServices.CompilerGenerated]
+        private T element0;
+    }
+
+
+""");
+        }
+
+        sb.Append("""
     public static (global::System.Collections.Generic.IReadOnlyDictionary<string, string> Options, global::System.Collections.Immutable.ImmutableArray<string> Arguments) Parse(global::System.ReadOnlySpan<string> args)
     {
         var options = new global::System.Collections.Generic.Dictionary<string, string>();
         var builder = global::System.Collections.Immutable.ImmutableArray.CreateBuilder<string>(args.Length);
+
+""");
+        if (emitEnumSupport)
+        {
+            if (maxEnumValues <= MaxAllocatedOnStack)
+            {
+                sb.Append($$"""
+        FixedArray{{maxEnumValues}}<string> fixed{{maxEnumValues}} = default;
+        scoped global::System.Span<string> buffer{{maxEnumValues}} = fixed{{maxEnumValues}};
+
+""");
+            }
+            else
+            {
+                sb.Append($$"""
+        scoped global::System.Span<string> buffer{{maxEnumValues}} = new string[{{maxEnumValues}}];
+
+""");
+            }
+
+            sb.Append("""
+        scoped global::System.ReadOnlySpan<string> enumValues = default;
+
+""");
+        }
+
+        sb.Append("""
 
         for (var index = 0; index < args.Length; index++)
         {
@@ -85,13 +138,6 @@ namespace {{namespaceName}};
             string key, name;
 
 """);
-        if (emitEnumSupport)
-        {
-            sb.Append("""
-            scoped global::System.ReadOnlySpan<string> enumValues = default;
-
-""");
-        }
 
         sb.Append("""
 
@@ -140,23 +186,16 @@ namespace {{namespaceName}};
                 }
                 else if (type is WellKnownType.Enum)
                 {
-                    sb.Append("""
-                    enumValues = [
-""");
                     for (var j = 0; j < values.Length; j++)
                     {
-                        var value = values[j];
-                        sb.Append('"');
-                        sb.Append(value);
-                        sb.Append('"');
-                        if (j != values.Length - 1)
-                        {
-                            sb.Append(", ");
-                        }
+                        sb.Append($$"""
+                    buffer{{maxEnumValues}}[{{j}}] = "{{values[j]}}";
+
+""");
                     }
 
-                    sb.Append("""
-];
+                    sb.Append($$"""
+                    enumValues = buffer{{maxEnumValues}}.Slice(0, {{values.Length}});
                     goto ReadAsEnum;
 
 """);
@@ -387,23 +426,16 @@ namespace {{namespaceName}};
                 }
                 else if (type is WellKnownType.Enum)
                 {
-                    sb.Append("""
-                            enumValues = [
-""");
                     for (var j = 0; j < values.Length; j++)
                     {
-                        var value = values[j];
-                        sb.Append('"');
-                        sb.Append(value);
-                        sb.Append('"');
-                        if (j != values.Length - 1)
-                        {
-                            sb.Append(", ");
-                        }
+                        sb.Append($$"""
+                            buffer{{maxEnumValues}}[{{j}}] = "{{values[j]}}";
+
+""");
                     }
 
-                    sb.Append("""
-];
+                    sb.Append($$"""
+                            enumValues = buffer{{maxEnumValues}}.Slice(0, {{values.Length}});
                             goto ReadAsEnumShort;
 
 """);
