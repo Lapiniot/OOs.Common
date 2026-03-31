@@ -16,7 +16,7 @@ public static class ArgumentParserCodeEmitter
     {
         var typeAccessibility = accessibility is Accessibility.Public ? "public" : "internal";
         var typeKind = kind is TypeKind.Struct ? "struct" : "class";
-        var (addStandardOptions, generateSynopsis, unknownOptionBehavior) = generationOptions;
+        var (generateSynopsis, addStandardOptions, unknownOptionBehavior) = generationOptions;
 
         var emitBooleanSupport = addStandardOptions;
         var emitTimeSpanSupport = false;
