@@ -47,14 +47,14 @@ public static class Base32
         var q3 = Avx2.ShiftRightLogicalVariable(values, Vector256.LoadUnsafe(ref shiftsRef, 8)).AsInt32();
         var q4 = Avx2.ShiftRightLogicalVariable(values, Vector256.LoadUnsafe(ref shiftsRef, 12)).AsInt32();
 
-        var q12s = Avx2.And(Avx2.UnpackLow(Avx2.UnpackLow(q1, q2), Avx2.UnpackHigh(q1, q2)), mask5bits);
-        var q34s = Avx2.And(Avx2.UnpackLow(Avx2.UnpackLow(q3, q4), Avx2.UnpackHigh(q3, q4)), mask5bits);
+        var q12s = Avx2.UnpackLow(Avx2.UnpackLow(q1, q2), Avx2.UnpackHigh(q1, q2)) & mask5bits;
+        var q34s = Avx2.UnpackLow(Avx2.UnpackLow(q3, q4), Avx2.UnpackHigh(q3, q4)) & mask5bits;
         var indices = Avx2.PackSignedSaturate(q12s, q34s);
 
         // Generate mask for indexes from the range [26..31]
         var mask = Avx2.CompareGreaterThan(indices, Vector256.Create((short)25));
         var offsets = Avx2.BlendVariable(Vector256.Create((short)65), Vector256.Create((short)24), mask);
-        var chars = Avx2.Add(indices, offsets);
+        var chars = indices + offsets;
 
         ref var destination = ref Unsafe.As<char, short>(ref MemoryMarshal.GetReference(span));
         chars.GetLower().StoreUnsafe(ref destination);
