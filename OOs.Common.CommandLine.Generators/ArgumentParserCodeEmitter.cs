@@ -383,14 +383,29 @@ namespace {{namespaceName}};
 
         sb.Append("""
             }
-            else if (span.StartsWith("-"))
+            else if (span.Length > 1 && span[0] == '-')
             {
+
+""");
+        if (emitBooleanShortFormSupport)
+        {
+            sb.Append("""
                 for (var i = 1; i < span.Length; i++)
                 {
                     switch (span[i]) 
                     {
 
 """);
+        }
+        else
+        {
+            sb.Append("""
+                {
+                    switch (span[1]) 
+                    {
+
+""");
+        }
 
         foreach (var option in options)
         {
@@ -478,7 +493,9 @@ namespace {{namespaceName}};
         }
         else if (unknownOptionBehavior is Preserve)
         {
-            sb.Append($$"""
+            if (emitBooleanShortFormSupport)
+            {
+                sb.Append($$"""
                         default:
                             if (i == 1)
                             {
@@ -489,6 +506,17 @@ namespace {{namespaceName}};
                     }
 
 """);
+            }
+            else
+            {
+                sb.Append($$"""
+                        default:
+                            builder.Add(token);
+                            continue;
+                    }
+
+""");
+            }
         }
         else if (unknownOptionBehavior is Prohibit)
         {
@@ -502,22 +530,52 @@ namespace {{namespaceName}};
         }
         else
         {
-            sb.Append($$"""
+            if (emitBooleanShortFormSupport)
+            {
+                sb.Append($$"""
                         default: 
                             goto Next;
                     }
 
 """);
+            }
+            else
+            {
+                sb.Append($$"""
+                        default: 
+                            continue;
+                    }
+
+""");
+            }
         }
 
         if (emitReadRawShortSupport)
         {
-            sb.Append($$"""
+            if (emitBooleanShortFormSupport)
+            {
+                sb.Append($$"""
 
                     if (++i < span.Length)
                     {
                         options[key] = new(span.Slice(i));
                         break;
+
+""");
+            }
+            else
+            {
+                sb.Append($$"""
+
+                    if (span.Length > 2)
+                    {
+                        options[key] = new(span.Slice(2));
+                        continue;
+
+""");
+            }
+
+            sb.Append("""
                     }
                     else
                     {
@@ -556,7 +614,9 @@ namespace {{namespaceName}};
 
         if (emitTimeSpanShortFormSupport)
         {
-            sb.Append("""
+            if (emitBooleanShortFormSupport)
+            {
+                sb.Append("""
 
                 ReadAsTimeSpanShort:
                     if (++i < span.Length)
@@ -564,17 +624,46 @@ namespace {{namespaceName}};
                         if (int.TryParse(span.Slice(i), out var ms))
                         {
                             options[key] = global::System.TimeSpan.FromMilliseconds(ms).ToString();
-                            break;
                         }
                         else if (global::System.TimeSpan.TryParse(span.Slice(i), out var value))
                         {
                             options[key] = value.ToString();
-                            break;
                         }
                         else
                         {
                             ThrowInvalidOptionValue(name);
                         }
+
+                        break;
+
+""");
+            }
+            else
+            {
+                sb.Append("""
+
+                ReadAsTimeSpanShort:
+                    if (span.Length > 2)
+                    {
+                        if (int.TryParse(span.Slice(2), out var ms))
+                        {
+                            options[key] = global::System.TimeSpan.FromMilliseconds(ms).ToString();
+                        }
+                        else if (global::System.TimeSpan.TryParse(span.Slice(2), out var value))
+                        {
+                            options[key] = value.ToString();
+                        }
+                        else
+                        {
+                            ThrowInvalidOptionValue(name);
+                        }
+
+                        continue;
+
+""");
+            }
+
+            sb.Append("""
                     }
                     else
                     {
@@ -586,19 +675,42 @@ namespace {{namespaceName}};
 
         if (emitEnumShortFormSupport)
         {
-            sb.Append("""
+            if (emitBooleanShortFormSupport)
+            {
+                sb.Append("""
 
                 ReadAsEnumShort:
                     if (++i < span.Length)
                     {
-                        var value = new string(span.Slice(i));
-                        if (ResolveEnumValueName(enumValues, value) is { } exactValue)
+                        if (ResolveEnumValueName(enumValues, span.Slice(i)) is { } value)
                         {
-                            options[key] = exactValue;
+                            options[key] = value;
                             break;
                         }
 
-                        ThrowInvalidOptionValue(name);
+""");
+            }
+            else
+            {
+                sb.Append("""
+
+                ReadAsEnumShort:
+                    if (span.Length > 2)
+                    {
+                        if (ResolveEnumValueName(enumValues, span.Slice(2)) is { } value)
+                        {
+                            options[key] = value;
+                            continue;
+                        }
+
+""");
+            }
+
+            sb.Append("""
+                        else 
+                        {
+                            ThrowInvalidOptionValue(name);
+                        }
                     }
                     else
                     {
@@ -618,7 +730,7 @@ namespace {{namespaceName}};
 
 
 """);
-        if (unknownOptionBehavior is Preserve or Ignore)
+        if (unknownOptionBehavior is Preserve or Ignore && emitBooleanShortFormSupport)
         {
             sb.Append("""
         Next:
@@ -766,13 +878,13 @@ namespace {{namespaceName}};
         {
             sb.Append("""
 
-    private static string? ResolveEnumValueName(global::System.ReadOnlySpan<string> valueNames, string name)
+    private static string? ResolveEnumValueName(global::System.ReadOnlySpan<string> valueNames, global::System.ReadOnlySpan<char> value)
     {
-        foreach (string str in valueNames)
+        foreach (string valueName in valueNames)
         {
-            if (global::System.StringComparer.OrdinalIgnoreCase.Equals(str, name))
+            if (valueName.Equals(value, global::System.StringComparison.OrdinalIgnoreCase))
             {
-                return str;
+                return valueName;
             }
         }
 

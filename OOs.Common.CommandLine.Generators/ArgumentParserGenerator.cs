@@ -188,7 +188,7 @@ namespace OOs.CommandLine.Generators
                 var specialType = typeSymbol switch
                 {
                     { SpecialType: SpecialType.System_Boolean } => WellKnownType.Boolean,
-                    { TypeKind: TypeKind.Struct, MetadataName: "System.TimeSpan" } => WellKnownType.TimeSpan,
+                    { TypeKind: TypeKind.Struct, Name: "TimeSpan", ContainingNamespace.Name: "System" } => WellKnownType.TimeSpan,
                     { TypeKind: TypeKind.Enum } => WellKnownType.Enum,
                     _ => WellKnownType.None
                 };
