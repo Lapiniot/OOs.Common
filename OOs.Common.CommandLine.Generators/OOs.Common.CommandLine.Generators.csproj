@@ -10,7 +10,7 @@
     <IsTrimmable>false</IsTrimmable>
     <IsAotCompatible>false</IsAotCompatible>
     <PublishTrimmed>false</PublishTrimmed>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <Title>OOs.Common.CommandLine Code Generators</Title>
     <Description>Provides boilerplate code auto-generation support for strongly-typed CLI argument parser</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
