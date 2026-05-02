@@ -1,7 +1,6 @@
 using System.IO.Pipelines;
 using System.Net.Security;
 using System.Net.Sockets;
-using static System.Net.Sockets.SocketError;
 
 namespace OOs.Net.Connections;
 
@@ -39,32 +38,11 @@ public abstract class SslSocketTransportConnection(Socket socket,
         }
     }
 
-    protected sealed override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await stream!.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-        }
-        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted
-            or ConnectionReset or Shutdown)
-        {
-            ThrowHelper.ThrowConnectionClosed(se);
-            return 0;
-        }
-    }
+    protected sealed override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken) =>
+        stream!.ReadAsync(buffer, cancellationToken);
 
-    protected sealed override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await stream!.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
-        }
-        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted
-            or ConnectionReset or Shutdown)
-        {
-            ThrowHelper.ThrowConnectionClosed(se);
-        }
-    }
+    protected sealed override ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) =>
+        stream!.WriteAsync(buffer, cancellationToken);
 
     public override async ValueTask DisposeAsync()
     {

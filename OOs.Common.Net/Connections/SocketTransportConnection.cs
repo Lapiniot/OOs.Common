@@ -1,7 +1,6 @@
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
-using static System.Net.Sockets.SocketError;
 using static System.Net.Sockets.SocketFlags;
 
 namespace OOs.Net.Connections;
@@ -34,30 +33,11 @@ public abstract class SocketTransportConnection : TransportConnectionPipeAdapter
         }
     }
 
-    protected override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await socket.ReceiveAsync(buffer, None, cancellationToken).ConfigureAwait(false);
-        }
-        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
-        {
-            ThrowHelper.ThrowConnectionClosed(se);
-            return 0;
-        }
-    }
+    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken) =>
+        socket.ReceiveAsync(buffer, None, cancellationToken);
 
-    protected override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await socket.SendAsync(buffer, None, cancellationToken).ConfigureAwait(false);
-        }
-        catch (SocketException se) when (se.SocketErrorCode is ConnectionAborted or ConnectionReset or Shutdown)
-        {
-            ThrowHelper.ThrowConnectionClosed(se);
-        }
-    }
+    protected override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) =>
+        await socket.SendAsync(buffer, None, cancellationToken).ConfigureAwait(false);
 
     public override async ValueTask DisposeAsync()
     {

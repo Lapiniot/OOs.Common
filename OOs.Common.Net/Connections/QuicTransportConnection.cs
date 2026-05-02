@@ -2,7 +2,6 @@ using System.IO.Pipelines;
 using System.Net;
 using System.Net.Quic;
 using System.Runtime.Versioning;
-using static System.Net.Quic.QuicError;
 
 namespace OOs.Net.Connections;
 
@@ -62,30 +61,11 @@ public abstract class QuicTransportConnection : TransportConnectionPipeAdapter
         }
     }
 
-    protected override async ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await stream!.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-        }
-        catch (QuicException qe) when (qe.QuicError is ConnectionTimeout or ConnectionAborted)
-        {
-            ThrowHelper.ThrowConnectionClosed(qe);
-            return 0;
-        }
-    }
+    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken) =>
+        stream!.ReadAsync(buffer, cancellationToken);
 
-    protected override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await stream!.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
-        }
-        catch (QuicException qe) when (qe.QuicError is ConnectionTimeout or ConnectionAborted)
-        {
-            ThrowHelper.ThrowConnectionClosed(qe);
-        }
-    }
+    protected override ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) =>
+        stream!.WriteAsync(buffer, cancellationToken);
 
     public override async ValueTask DisposeAsync()
     {
