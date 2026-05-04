@@ -4,7 +4,7 @@ namespace OOs.Net.Connections;
 
 public partial class TransportConnectionPipeAdapter
 {
-    private async Task StartReceiverAsync(PipeWriter writer, CancellationToken cancellationToken)
+    private async Task RunReceiverAsync(PipeWriter writer)
     {
         Exception? exception = null;
         try
@@ -13,7 +13,7 @@ public partial class TransportConnectionPipeAdapter
             {
                 var buffer = writer.GetMemory();
 
-                var received = await ReceiveAsync(buffer, cancellationToken).ConfigureAwait(false);
+                var received = await ReceiveAsync(buffer).ConfigureAwait(false);
 
                 if (received == 0)
                 {
@@ -22,17 +22,13 @@ public partial class TransportConnectionPipeAdapter
 
                 writer.Advance(received);
 
-                var result = await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+                var result = await writer.FlushAsync().ConfigureAwait(false);
 
                 if (result.IsCompleted || result.IsCanceled)
                 {
                     break;
                 }
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected
         }
         catch (Exception ex)
         {

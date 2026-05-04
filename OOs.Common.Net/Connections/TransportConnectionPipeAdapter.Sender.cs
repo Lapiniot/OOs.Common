@@ -4,14 +4,14 @@ namespace OOs.Net.Connections;
 
 public partial class TransportConnectionPipeAdapter
 {
-    private async Task StartSenderAsync(PipeReader reader, CancellationToken cancellationToken)
+    private async Task RunSenderAsync(PipeReader reader)
     {
         Exception? exception = null;
         try
         {
             while (true)
             {
-                var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                var result = await reader.ReadAsync().ConfigureAwait(false);
 
                 if (result.IsCanceled)
                 {
@@ -22,14 +22,14 @@ public partial class TransportConnectionPipeAdapter
 
                 if (buffer.IsSingleSegment)
                 {
-                    await SendAsync(buffer.First, cancellationToken).ConfigureAwait(false);
+                    await SendAsync(buffer.First).ConfigureAwait(false);
                 }
                 else
                 {
                     var position = buffer.Start;
                     while (buffer.TryGet(ref position, out var segment))
                     {
-                        await SendAsync(segment, cancellationToken).ConfigureAwait(false);
+                        await SendAsync(segment).ConfigureAwait(false);
                     }
                 }
 
@@ -40,10 +40,6 @@ public partial class TransportConnectionPipeAdapter
                     break;
                 }
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected
         }
         catch (Exception ex)
         {

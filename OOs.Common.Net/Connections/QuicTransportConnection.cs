@@ -61,11 +61,9 @@ public abstract class QuicTransportConnection : TransportConnectionPipeAdapter
         }
     }
 
-    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken) =>
-        stream!.ReadAsync(buffer, cancellationToken);
+    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer) => stream!.ReadAsync(buffer);
 
-    protected override ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) =>
-        stream!.WriteAsync(buffer, cancellationToken);
+    protected override ValueTask SendAsync(ReadOnlyMemory<byte> buffer) => stream!.WriteAsync(buffer);
 
     public override async ValueTask DisposeAsync()
     {

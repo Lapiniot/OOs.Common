@@ -25,19 +25,12 @@ public abstract class SocketTransportConnection : TransportConnectionPipeAdapter
 
     protected Socket Socket => socket;
 
-    public override void Abort()
-    {
-        if (socket.Connected)
-        {
-            socket.Shutdown(SocketShutdown.Both);
-        }
-    }
+    public override void Abort() => Shutdown();
 
-    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken) =>
-        socket.ReceiveAsync(buffer, None, cancellationToken);
+    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer) => socket.ReceiveAsync(buffer, None);
 
-    protected override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken) =>
-        await socket.SendAsync(buffer, None, cancellationToken).ConfigureAwait(false);
+    protected override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer) =>
+        await socket.SendAsync(buffer, None).ConfigureAwait(false);
 
     public override async ValueTask DisposeAsync()
     {
@@ -46,6 +39,22 @@ public abstract class SocketTransportConnection : TransportConnectionPipeAdapter
         using (socket)
         {
             await base.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    protected void Shutdown()
+    {
+        try
+        {
+            if (socket.Connected)
+            {
+                socket.Shutdown(SocketShutdown.Both);
+            }
+        }
+        catch (SocketException)
+        {
+            // Highly anticipated on Windows when socket is not connected 
+            // or remote peer closes connection at the moment of Shutdown() is called, etc.
         }
     }
 }

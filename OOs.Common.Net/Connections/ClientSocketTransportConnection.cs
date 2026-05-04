@@ -34,7 +34,7 @@ public abstract class ClientSocketTransportConnection : SocketTransportConnectio
 
     protected override ValueTask OnStoppingAsync()
     {
-        Socket.Shutdown(SocketShutdown.Both);
+        Shutdown();
         return Socket.DisconnectAsync(reuseSocket: true);
     }
 }

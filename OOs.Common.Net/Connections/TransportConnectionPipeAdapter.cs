@@ -1,5 +1,4 @@
 using System.IO.Pipelines;
-using static System.Threading.Tasks.ConfigureAwaitOptions;
 
 namespace OOs.Net.Connections;
 
@@ -55,49 +54,56 @@ public abstract partial class TransportConnectionPipeAdapter(
     {
         Reset();
 
-        using var cts = new CancellationTokenSource();
-        var cancellationToken = cts.Token;
+        var inputWriter = inputPipe.Writer;
+        var outputReader = outputPipe.Reader;
 
         try
         {
-            var receiver = StartReceiverAsync(inputPipe.Writer, cancellationToken);
-            var sender = StartSenderAsync(outputPipe.Reader, cancellationToken);
+            var receiver = RunReceiverAsync(inputWriter);
+            var sender = RunSenderAsync(outputReader);
+
             Interlocked.CompareExchange(ref state, State.Started, State.Starting);
 
             var completed = await Task.WhenAny(receiver, sender).ConfigureAwait(false);
+
             Interlocked.CompareExchange(ref state, State.Stopping, State.Started);
-            await cts.CancelAsync().ConfigureAwait(SuppressThrowing);
 
             if (completed == sender)
             {
-                // This is highly expected branch. We normally get here 
-                // when trasnport should be terminated due to one of:
+                // This is highly expected branch. 
+                // We normally get here when trasnport should be terminated due to one of:
                 // - caller signal OUTPUT part activity should be gracefully stopped via call to Output.Complete()
-                // - undrlaying connection is terminated by the client side
-                // - any other underlaying connection erroneous state
-                // In this case also terminate INPUT activity by cancelling 
-                // reading partner task respectively via cancellationToken
-                // Wait until inputWorker task also transits to the completed state, 
+                // - undrlaying connection is terminated by our side
+                // - any other underlaying connection erroneous state first detected on our side
+                // In this case also try to terminate receiver side gracefully cancelling potential pending flushes 
+                // and then abort network connection itself. 
+                // Wait until receiver task also transits to the completed state, 
                 // so we can be sure that all IO activity is over on the underlaying connection.
-                // Notice: we purposely swallow potential exception here because we better observe outputWorker task 
-                // for potential exception upon completion as it holds real root cause of the transport termination
-                await receiver.ConfigureAwait(SuppressThrowing);
+                // We don't care about possible exceptions from receiver task, because sender task 
+                // will have the real termination root cause.
+
+                inputWriter.CancelPendingFlush();
+                Abort();
+
+                await receiver.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
                 await sender.ConfigureAwait(false);
             }
             else
             {
-                // Just do the same, but in opposite order.
                 // We normally get here due to one of:
-                // - client side gracefully shuts down underlaying connection
-                // - our side aborts connection via call to the Abort() method
+                // - other side shuts down underlaying connection
                 // - some connection related error happens
-                await sender.ConfigureAwait(SuppressThrowing);
+
+                outputReader.CancelPendingRead();
+                Abort();
+
+                await sender.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
                 await receiver.ConfigureAwait(false);
             }
         }
         finally
         {
-            await OnStoppingAsync().AsTask().ConfigureAwait(SuppressThrowing);
+            await OnStoppingAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
             Interlocked.CompareExchange(ref state, State.Stopped, State.Stopping);
         }
     }
@@ -115,8 +121,8 @@ public abstract partial class TransportConnectionPipeAdapter(
 
     protected abstract ValueTask OnStartingAsync(CancellationToken cancellationToken);
     protected abstract ValueTask OnStoppingAsync();
-    protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer, CancellationToken cancellationToken);
-    protected abstract ValueTask SendAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken);
+    protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer);
+    protected abstract ValueTask SendAsync(ReadOnlyMemory<byte> buffer);
 
     #region Implementation of IAsyncDisposable
 

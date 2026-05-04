@@ -58,10 +58,15 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
     /// Disposes resources for underlaying connection.
     /// </summary>
     /// <returns><see cref="ValueTask"/> that completes when resources are disposed.</returns>
-    public virtual ValueTask DisposeAsync()
+    public virtual async ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
+
         Abort();
-        return ValueTask.CompletedTask;
+
+        if (Completion is { } completion)
+        {
+            await completion.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        }
     }
 }

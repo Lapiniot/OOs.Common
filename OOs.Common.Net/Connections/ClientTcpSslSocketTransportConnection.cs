@@ -50,7 +50,7 @@ public sealed class ClientTcpSslSocketTransportConnection : SslSocketTransportCo
         }
         finally
         {
-            Socket.Shutdown(SocketShutdown.Both);
+            Shutdown();
             await Socket.DisconnectAsync(reuseSocket: true).ConfigureAwait(false);
         }
     }

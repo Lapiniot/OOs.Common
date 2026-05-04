@@ -11,7 +11,7 @@ public abstract class ServerSocketTransportConnection(Socket acceptedSocket,
 
     protected override ValueTask OnStoppingAsync()
     {
-        Socket.Shutdown(SocketShutdown.Both);
+        Shutdown();
         return Socket.DisconnectAsync(reuseSocket: false);
     }
 }
