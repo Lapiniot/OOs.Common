@@ -62,11 +62,10 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
     {
         GC.SuppressFinalize(this);
 
-        Abort();
+        Output.Complete();
+        Input.Complete();
 
-        if (Completion is { } completion)
-        {
-            await completion.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
-        }
+        Abort();
+        await Completion.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
     }
 }
