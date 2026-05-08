@@ -19,13 +19,13 @@ public abstract partial class TransportConnectionPipeAdapter(
     private readonly Pipe inputPipe = new(inputPipeOptions ?? DefaultInputPipeOptions);
     private readonly Pipe outputPipe = new(outputPipeOptions ?? DefaultOutputPipeOptions);
     private State state;
-    private Task completion = Task.CompletedTask;
+    private Task completed = Task.CompletedTask;
 
     public sealed override PipeReader Input => inputPipe.Reader;
 
     public sealed override PipeWriter Output => outputPipe.Writer;
 
-    public override Task Completion => completion;
+    public override Task Completed => completed;
 
     public sealed override async ValueTask StartAsync(CancellationToken cancellationToken)
     {
@@ -41,7 +41,7 @@ public abstract partial class TransportConnectionPipeAdapter(
         try
         {
             await OnStartingAsync(cancellationToken).ConfigureAwait(false);
-            completion = RunAsync();
+            completed = RunAsync();
         }
         catch
         {
