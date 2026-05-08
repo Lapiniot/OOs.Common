@@ -36,10 +36,10 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
 
     /// <summary>
     /// Get <see cref="Task"/> that can be awaited to detect all transfers are completed on this connection.
-    /// When this task transits to completed state, all IO is done and connection is in the disconnected state, 
+    /// When this task transits to completed state, all IO is done and connection is closed, 
     /// so read/write operations cannot be performed anymore.
     /// </summary>
-    public abstract Task Completed { get; }
+    public abstract Task ConnectionClosed { get; }
 
     /// <summary>
     /// Initializes underlaying connection and starts IO operations. After this call completes 
@@ -50,7 +50,7 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
     public abstract ValueTask StartAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// Aborts the underlaying connection and initiates <see cref="Completed"/> transition to the completed state.
+    /// Aborts the underlaying connection and initiates <see cref="ConnectionClosed"/> transition to the completed state.
     /// </summary>
     public abstract void Abort();
 
@@ -65,7 +65,9 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
         Output.Complete();
         Input.Complete();
 
-        Abort();
-        await Completed.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        if (ConnectionClosed is { } connectionClosed)
+        {
+            await connectionClosed.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        }
     }
 }
