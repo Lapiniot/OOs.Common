@@ -62,8 +62,13 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
     {
         GC.SuppressFinalize(this);
 
+        // Say consumers that we are done with IO transfer and do not allow writing to the pipe anymore
         Output.Complete();
+        // Also notify producer side that we done with reading and have no intention to consume data anymore
         Input.Complete();
+
+        // Abort underlaying network connection to unblock any pending network operations
+        Abort();
 
         if (ConnectionClosed is { } connectionClosed)
         {

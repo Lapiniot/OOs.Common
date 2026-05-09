@@ -86,7 +86,6 @@ public abstract partial class TransportConnectionPipeAdapter(
                 Abort();
 
                 await receiver.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
-                await sender.ConfigureAwait(false);
             }
             else
             {
@@ -98,8 +97,9 @@ public abstract partial class TransportConnectionPipeAdapter(
                 Abort();
 
                 await sender.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
-                await receiver.ConfigureAwait(false);
             }
+
+            await completed.ConfigureAwait(false);
         }
         finally
         {
