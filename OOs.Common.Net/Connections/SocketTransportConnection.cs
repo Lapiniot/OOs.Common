@@ -1,60 +1,134 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Pipelines;
-using System.Net;
 using System.Net.Sockets;
-using static System.Net.Sockets.SocketFlags;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks.Sources;
 
 namespace OOs.Net.Connections;
 
-public abstract class SocketTransportConnection : TransportConnectionPipeAdapter
+public abstract class SocketTransportConnection(Socket socket, PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
+    SocketTransportConnectionBase(socket, inputPipeOptions, outputPipeOptions)
 {
-    private readonly Socket socket;
+    private readonly AwaitableSocketAsyncEventArgs receiveArgs = new((inputPipeOptions ?? DefaultInputPipeOptions).WriterScheduler);
+    private readonly AwaitableSocketAsyncEventArgs sendArgs = new((outputPipeOptions ?? DefaultOutputPipeOptions).ReaderScheduler);
 
-    protected SocketTransportConnection(Socket socket,
-        PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
-        base(inputPipeOptions, outputPipeOptions)
+    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer)
     {
-        ArgumentNullException.ThrowIfNull(socket);
-        this.socket = socket;
+        return receiveArgs.ReceiveAsync(Socket, buffer);
     }
 
-    public sealed override string Id { get; } = Base32.ToBase32String(CorrelationIdGenerator.GetNext());
-
-    public sealed override EndPoint? LocalEndPoint => socket.LocalEndPoint;
-
-    public sealed override EndPoint? RemoteEndPoint => socket.RemoteEndPoint;
-
-    protected Socket Socket => socket;
-
-    public override void Abort() => Shutdown();
-
-    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer) => socket.ReceiveAsync(buffer, None);
-
-    protected override async ValueTask SendAsync(ReadOnlyMemory<byte> buffer) =>
-        await socket.SendAsync(buffer, None).ConfigureAwait(false);
+    protected override ValueTask SendAsync(ReadOnlyMemory<byte> buffer)
+    {
+        return sendArgs.SendAsync(Socket, buffer);
+    }
 
     public override async ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
 
-        using (socket)
+        using (receiveArgs)
+        using (sendArgs)
         {
             await base.DisposeAsync().ConfigureAwait(false);
         }
     }
 
-    protected void Shutdown()
+    private sealed class AwaitableSocketAsyncEventArgs(PipeScheduler scheduler) : SocketAsyncEventArgs,
+        IValueTaskSource, IValueTaskSource<int>
     {
-        try
+        private static readonly Action<object?> completed = _ => { };
+        private volatile Action<object?>? continuation;
+        private readonly PipeScheduler scheduler = scheduler;
+
+        public ValueTask SendAsync(Socket socket, ReadOnlyMemory<byte> buffer)
         {
-            if (socket.Connected)
+            SetBuffer(MemoryMarshal.AsMemory(buffer));
+
+            if (socket.SendAsync(this))
             {
-                socket.Shutdown(SocketShutdown.Both);
+                return new ValueTask(this, 0);
+            }
+
+            // Completed synchronously
+            return SocketError is SocketError.Success
+                ? ValueTask.CompletedTask
+                : ValueTask.FromException(new SocketException((int)SocketError));
+        }
+
+        public ValueTask<int> ReceiveAsync(Socket socket, Memory<byte> buffer)
+        {
+            SetBuffer(buffer);
+
+            if (socket.ReceiveAsync(this))
+            {
+                return new ValueTask<int>(this, 0);
+            }
+
+            // Completed synchronously
+            return SocketError is SocketError.Success
+                ? ValueTask.FromResult(BytesTransferred)
+                : ValueTask.FromException<int>(new SocketException((int)SocketError));
+        }
+
+        public void GetResult(short token)
+        {
+            continuation = null;
+
+            if (SocketError is not SocketError.Success and var socketError)
+            {
+                ThrowSocketException(socketError);
             }
         }
-        catch (SocketException)
+
+        int IValueTaskSource<int>.GetResult(short token)
         {
-            // Highly anticipated on Windows when socket is not connected 
-            // or remote peer closes connection at the moment of Shutdown() is called, etc.
+            continuation = null;
+
+            if (SocketError is not SocketError.Success and var socketError)
+            {
+                ThrowSocketException(socketError);
+            }
+
+            return BytesTransferred;
         }
+
+        public ValueTaskSourceStatus GetStatus(short token)
+        {
+            return !ReferenceEquals(continuation, completed)
+                ? ValueTaskSourceStatus.Pending
+                : SocketError is SocketError.Success
+                    ? ValueTaskSourceStatus.Succeeded
+                    : ValueTaskSourceStatus.Faulted;
+        }
+
+        public void OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
+        {
+            UserToken = state;
+            var current = Interlocked.CompareExchange(ref this.continuation, continuation, null);
+            if (ReferenceEquals(current, completed))
+            {
+                UserToken = null;
+                scheduler.Schedule(continuation, state);
+            }
+        }
+
+        protected override void OnCompleted(SocketAsyncEventArgs e)
+        {
+            var current = continuation;
+            if (current != null || (current = Interlocked.CompareExchange(ref continuation, completed, null)) != null)
+            {
+                // Mark as already completed, so GetStatus() correctly returns one of the completed statuses.
+                continuation = completed;
+
+                var state = UserToken;
+                UserToken = null;
+
+                scheduler.Schedule(current, state);
+            }
+        }
+
+        [DoesNotReturn]
+        private static void ThrowSocketException(SocketError socketError) =>
+            throw new SocketException((int)socketError);
     }
 }

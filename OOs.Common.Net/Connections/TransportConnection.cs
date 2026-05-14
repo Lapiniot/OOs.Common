@@ -5,7 +5,7 @@ namespace OOs.Net.Connections;
 
 /// <summary>
 /// Represents abstraction for generic bidirectional "stream-like" connection whose data 
-/// can be read or written via corresponding <see cref="PipeReader"/> pipe
+/// can be read or written via corresponding <see cref="PipeReader"/> and <see cref="PipeWriter"/>.
 /// </summary>
 public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
 {
@@ -63,9 +63,9 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
         GC.SuppressFinalize(this);
 
         // Say consumers that we are done with IO transfer and do not allow writing to the pipe anymore
-        Output.Complete();
-        // Also notify producer side that we done with reading and have no intention to consume data anymore
-        Input.Complete();
+        await Output.CompleteAsync().ConfigureAwait(false);
+        // Also notify producer side that we are done with reading and have no intention to consume data anymore
+        await Input.CompleteAsync().ConfigureAwait(false);
 
         // Abort underlaying network connection to unblock any pending network operations
         Abort();

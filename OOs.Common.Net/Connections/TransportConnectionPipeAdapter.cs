@@ -2,16 +2,21 @@ using System.IO.Pipelines;
 
 namespace OOs.Net.Connections;
 
-public abstract partial class TransportConnectionPipeAdapter(
-    PipeOptions? inputPipeOptions, PipeOptions? outputPipeOptions) :
-    TransportConnection
+/// <summary>
+/// Provides base abstract implementation block for a transport connection that adapts existing networking APIs 
+/// with asynchronous SendAsync/ReceiveAsync semantic to the "stream-like" PipeReader and PipeWriter interfaces.
+/// </summary>
+/// <param name="inputPipeOptions">The options for the input pipe.</param>
+/// <param name="outputPipeOptions">The options for the output pipe.</param>
+public abstract partial class TransportConnectionPipeAdapter(PipeOptions? inputPipeOptions,
+    PipeOptions? outputPipeOptions) : TransportConnection
 {
-    private static readonly PipeOptions DefaultInputPipeOptions = new(
+    protected static readonly PipeOptions DefaultInputPipeOptions = new(
         readerScheduler: PipeScheduler.ThreadPool,
         writerScheduler: PipeScheduler.Inline,
         useSynchronizationContext: false);
 
-    private static readonly PipeOptions DefaultOutputPipeOptions = new(
+    protected static readonly PipeOptions DefaultOutputPipeOptions = new(
         readerScheduler: PipeScheduler.Inline,
         writerScheduler: PipeScheduler.ThreadPool,
         useSynchronizationContext: false);

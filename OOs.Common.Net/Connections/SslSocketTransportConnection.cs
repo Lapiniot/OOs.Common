@@ -6,7 +6,7 @@ namespace OOs.Net.Connections;
 
 public abstract class SslSocketTransportConnection(Socket socket,
     PipeOptions? inputPipeOptions = null, PipeOptions? outputPipeOptions = null) :
-    SocketTransportConnection(socket, inputPipeOptions, outputPipeOptions)
+    SocketTransportConnectionBase(socket, inputPipeOptions, outputPipeOptions)
 {
     private SslStream? stream;
 
