@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.IO.Pipelines;
 
 namespace OOs.Net.Connections;
@@ -127,7 +128,7 @@ public abstract partial class TransportConnectionPipeAdapter(PipeOptions? inputP
     protected abstract ValueTask OnStartingAsync(CancellationToken cancellationToken);
     protected abstract ValueTask OnStoppingAsync();
     protected abstract ValueTask<int> ReceiveAsync(Memory<byte> buffer);
-    protected abstract ValueTask SendAsync(ReadOnlyMemory<byte> buffer);
+    protected abstract ValueTask SendAsync(ref readonly ReadOnlySequence<byte> buffer);
 
     #region Implementation of IAsyncDisposable
 

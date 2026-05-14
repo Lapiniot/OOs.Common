@@ -19,19 +19,7 @@ public partial class TransportConnectionPipeAdapter
                 }
 
                 var buffer = result.Buffer;
-
-                if (buffer.IsSingleSegment)
-                {
-                    await SendAsync(buffer.First).ConfigureAwait(false);
-                }
-                else
-                {
-                    var position = buffer.Start;
-                    while (buffer.TryGet(ref position, out var segment))
-                    {
-                        await SendAsync(segment).ConfigureAwait(false);
-                    }
-                }
+                await SendAsync(ref buffer).ConfigureAwait(false);
 
                 reader.AdvanceTo(consumed: buffer.End, examined: buffer.End);
 

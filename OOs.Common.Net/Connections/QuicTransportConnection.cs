@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Quic;
@@ -61,9 +62,21 @@ public abstract class QuicTransportConnection : TransportConnectionPipeAdapter
         }
     }
 
-    protected override ValueTask<int> ReceiveAsync(Memory<byte> buffer) => stream!.ReadAsync(buffer);
+    protected sealed override ValueTask<int> ReceiveAsync(Memory<byte> buffer) => stream!.ReadAsync(buffer);
 
-    protected override ValueTask SendAsync(ReadOnlyMemory<byte> buffer) => stream!.WriteAsync(buffer);
+    protected sealed override ValueTask SendAsync(ref readonly ReadOnlySequence<byte> buffer)
+    {
+        return buffer.IsSingleSegment ? stream!.WriteAsync(buffer.First) : SendAsync(buffer);
+    }
+
+    private async ValueTask SendAsync(ReadOnlySequence<byte> buffer)
+    {
+        var position = buffer.Start;
+        while (buffer.TryGet(ref position, out var memory))
+        {
+            await stream!.WriteAsync(memory).ConfigureAwait(false);
+        }
+    }
 
     public override async ValueTask DisposeAsync()
     {

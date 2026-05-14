@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.WebSockets;
@@ -38,7 +39,7 @@ public abstract class WebSocketTransportConnection : TransportConnectionPipeAdap
         _ => ValueTask.CompletedTask
     };
 
-    protected override async ValueTask<int> ReceiveAsync(Memory<byte> buffer)
+    protected sealed override async ValueTask<int> ReceiveAsync(Memory<byte> buffer)
     {
         var result = await webSocket.ReceiveAsync(buffer, CancellationToken.None).ConfigureAwait(false);
 
@@ -55,9 +56,20 @@ public abstract class WebSocketTransportConnection : TransportConnectionPipeAdap
         return 0;
     }
 
-    protected override ValueTask SendAsync(ReadOnlyMemory<byte> buffer)
+    protected sealed override ValueTask SendAsync(ref readonly ReadOnlySequence<byte> buffer)
     {
-        return webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
+        return buffer.IsSingleSegment
+            ? webSocket.SendAsync(buffer.First, WebSocketMessageType.Binary, true, CancellationToken.None)
+            : SendAsync(buffer);
+    }
+
+    private async ValueTask SendAsync(ReadOnlySequence<byte> buffer)
+    {
+        var position = buffer.Start;
+        while (buffer.TryGet(ref position, out var memory))
+        {
+            await webSocket.SendAsync(memory, WebSocketMessageType.Binary, true, CancellationToken.None).ConfigureAwait(false);
+        }
     }
 
     public override void Abort() => webSocket.Abort();
