@@ -7,3 +7,4 @@ _ReSharper.Caches/
 *.user
 artifacts
 BenchmarkDotNet.Artifacts/
+**/*.lscache
