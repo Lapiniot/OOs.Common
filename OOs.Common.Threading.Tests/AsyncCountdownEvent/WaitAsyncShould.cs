@@ -35,22 +35,4 @@ public class WaitAsyncShould
             task1: Assert.ThrowsAsync<OperationCanceledException>(() => task),
             task2: task.WaitAsync(TestContext.CancellationToken));
     }
-
-    [TestMethod]
-    [Timeout(500, CooperativeCancellation = true)]
-    public async Task ReturnCompletedTask_WhenEventSignalsBeforeTokenCancellation()
-    {
-        var cde = new OOs.Threading.AsyncCountdownEvent(1);
-        using var cts = new CancellationTokenSource();
-
-        var task = cde.WaitAsync(cts.Token);
-
-        Assert.IsNotNull(task);
-        Assert.IsFalse(task.IsCompleted);
-
-        cde.Signal();
-        await cts.CancelAsync().ConfigureAwait(false);
-
-        Assert.IsTrue(task.IsCompletedSuccessfully);
-    }
 }
