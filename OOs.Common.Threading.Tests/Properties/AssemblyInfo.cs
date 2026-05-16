@@ -1,2 +1,1 @@
-[assembly: Parallelize(Workers = 4, Scope = ExecutionScope.MethodLevel)]
-[assembly: CLSCompliant(true)]
+[assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]

@@ -170,7 +170,7 @@ public sealed class AsyncCountdownEvent
     public Task WaitAsync(CancellationToken cancellationToken) =>
         cancellationToken.IsCancellationRequested
             ? Task.FromCanceled(cancellationToken)
-            : completionSource.Task;
+            : completionSource.Task.WaitAsync(cancellationToken);
 
     /// <summary>
     /// Resets the <see cref="CurrentCount"/> to a specified <see cref="InitialCount"/> value.
