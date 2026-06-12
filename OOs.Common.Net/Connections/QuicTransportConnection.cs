@@ -48,7 +48,36 @@ public abstract class QuicTransportConnection : TransportConnectionPipeAdapter
 
     protected QuicStream? Stream { get => stream; set => stream = value; }
     protected QuicConnection? Connection { get => connection; set => connection = value; }
-    public override void Abort() => stream?.Abort(QuicAbortDirection.Both, 0x00);
+
+    public override void Abort()
+    {
+        stream?.Abort(QuicAbortDirection.Both, 0x00);
+        base.Abort();
+    }
+
+    protected override ValueTask ShutdownAsync(ShutdownDirection direction)
+    {
+        if (stream is null)
+        {
+            return default;
+        }
+
+        switch (direction)
+        {
+            case ShutdownDirection.Send:
+                stream.CompleteWrites();
+                return new ValueTask(stream.WritesClosed);
+            case ShutdownDirection.Receive:
+                stream.Abort(QuicAbortDirection.Read, 0x00);
+                return default;
+            case ShutdownDirection.Both:
+                stream.Abort(QuicAbortDirection.Both, 0x00);
+                return default;
+            default:
+                ThrowInvalidShutdownDirection<QuicAbortDirection>(direction);
+                return default;
+        }
+    }
 
     protected override async ValueTask OnStoppingAsync()
     {
@@ -57,7 +86,6 @@ public abstract class QuicTransportConnection : TransportConnectionPipeAdapter
         {
             stream!.CompleteWrites();
             await stream.WritesClosed.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
-
             await connection!.CloseAsync(0x00).ConfigureAwait(false);
         }
     }
@@ -85,7 +113,7 @@ public abstract class QuicTransportConnection : TransportConnectionPipeAdapter
         await using (connection)
         await using (stream)
         {
-            await base.DisposeAsync().ConfigureAwait(false);
+            await base.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
     }
 }

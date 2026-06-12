@@ -8,29 +8,22 @@ public abstract class PipeConsumerCore : ActivityObject
 {
     protected async Task RunConsumerAsync([NotNull] PipeReader reader, CancellationToken cancellationToken)
     {
-        try
+        while (true)
         {
-            while (true)
+            var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+            if (result.IsCanceled)
             {
-                var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                if (result.IsCanceled)
-                {
-                    break;
-                }
-
-                var buffer = result.Buffer;
-                Consume(ref buffer);
-                reader.AdvanceTo(buffer.Start, buffer.End);
-
-                if (result.IsCompleted)
-                {
-                    break;
-                }
+                break;
             }
-        }
-        finally
-        {
-            await reader.CompleteAsync().ConfigureAwait(false);
+
+            var buffer = result.Buffer;
+            Consume(ref buffer);
+            reader.AdvanceTo(buffer.Start, buffer.End);
+
+            if (result.IsCompleted)
+            {
+                break;
+            }
         }
     }
 

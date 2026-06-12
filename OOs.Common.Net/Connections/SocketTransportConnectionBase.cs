@@ -28,7 +28,39 @@ public abstract class SocketTransportConnectionBase : TransportConnectionPipeAda
 
     protected Socket Socket => socket;
 
-    public override void Abort() => Shutdown();
+    protected void Shutdown(ShutdownDirection direction)
+    {
+        try
+        {
+            if (socket.Connected)
+            {
+                socket.Shutdown(how: direction switch
+                {
+                    ShutdownDirection.Send => SocketShutdown.Send,
+                    ShutdownDirection.Receive => SocketShutdown.Receive,
+                    ShutdownDirection.Both => SocketShutdown.Both,
+                    _ => ThrowInvalidShutdownDirection<SocketShutdown>(direction)
+                });
+            }
+        }
+        catch (SocketException)
+        {
+            // Highly anticipated on Windows when socket is not connected 
+            // or remote peer closes connection at the moment of Shutdown() is called, etc.
+        }
+    }
+
+    public sealed override void Abort()
+    {
+        Shutdown(ShutdownDirection.Both);
+        base.Abort();
+    }
+
+    protected override ValueTask ShutdownAsync(ShutdownDirection direction)
+    {
+        Shutdown(direction);
+        return default;
+    }
 
     public override async ValueTask DisposeAsync()
     {
@@ -36,23 +68,7 @@ public abstract class SocketTransportConnectionBase : TransportConnectionPipeAda
 
         using (socket)
         {
-            await base.DisposeAsync().ConfigureAwait(false);
-        }
-    }
-
-    protected void Shutdown()
-    {
-        try
-        {
-            if (socket.Connected)
-            {
-                socket.Shutdown(SocketShutdown.Both);
-            }
-        }
-        catch (SocketException)
-        {
-            // Highly anticipated on Windows when socket is not connected 
-            // or remote peer closes connection at the moment of Shutdown() is called, etc.
+            await base.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
     }
 }

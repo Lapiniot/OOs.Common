@@ -17,7 +17,7 @@ public abstract class PipeConsumer : PipeConsumerCore
         abortTokenSource = new();
     }
 
-    protected Task? ConsumerCompletion { get; private set; }
+    protected Task ConsumerCompletion { get; private set; } = Task.CompletedTask;
 
     protected CancellationToken Aborted => abortTokenSource.Token;
 
@@ -30,15 +30,18 @@ public abstract class PipeConsumer : PipeConsumerCore
 
     protected override async Task StoppingAsync()
     {
-        // Try to perform graceful consumer loop cancellation first of all, 
-        // by cancelling current pending reader.ReadAsync() call  
+        // Try to perform graceful consumer loop cancellation first of all, by cancelling current 
+        // pending reader.ReadAsync() call, if it was not completed til this moment for any other reason
         reader.CancelPendingRead();
 
         try
         {
-            await ConsumerCompletion!.ConfigureAwait(false);
+            await ConsumerCompletion.ConfigureAwait(false);
         }
-        catch (OperationCanceledException) { /* expected */ }
+        catch (OperationCanceledException)
+        {
+            /* expected */
+        }
     }
 
     private void ResetAbortTokenSource()
@@ -54,7 +57,7 @@ public abstract class PipeConsumer : PipeConsumerCore
 
     protected void Abort() => abortTokenSource.Cancel();
 
-    protected void AbortAsync() => abortTokenSource.CancelAsync();
+    protected Task AbortAsync() => abortTokenSource.CancelAsync();
 
     public override async ValueTask DisposeAsync()
     {

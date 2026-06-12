@@ -71,6 +71,8 @@ dotnet_diagnostic.CA1001.severity = error
 dotnet_diagnostic.CA1200.severity = warning
 # CA2252: Opt in to preview features before using them
 dotnet_diagnostic.CA2252.severity = warning
+# CA2007: Consider calling ConfigureAwait on the awaited task
+dotnet_diagnostic.CA2007.severity = warning
 
 #### Naming styles ####
 

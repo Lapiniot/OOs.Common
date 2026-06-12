@@ -55,6 +55,13 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
     public abstract void Abort();
 
     /// <summary>
+    /// Completes the output pipe and signals other connection side that no more data will be written.
+    /// Implementors should provide protocol specific logic to initiate graceful connection closure.
+    /// </summary>
+    /// <returns>A <see cref="ValueTask"/> that completes when the output is done.</returns>
+    public abstract ValueTask CloseOutputAsync();
+
+    /// <summary>
     /// Disposes resources for underlaying connection.
     /// </summary>
     /// <returns><see cref="ValueTask"/> that completes when resources are disposed.</returns>
@@ -75,4 +82,6 @@ public abstract class TransportConnection : IDuplexPipe, IAsyncDisposable
             await connectionClosed.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
     }
+
+    public override string ToString() => Id;
 }

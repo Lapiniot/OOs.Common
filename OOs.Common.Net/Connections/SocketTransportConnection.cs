@@ -30,16 +30,11 @@ public abstract class SocketTransportConnection(Socket socket, PipeOptions? inpu
     {
         GC.SuppressFinalize(this);
 
-        try
-        {
-            await base.DisposeAsync().ConfigureAwait(false);
-        }
-        finally
-        {
-            receiveArgs.Dispose();
-            sendArgs.Dispose();
-            multiBufferSendArgs.Dispose();
-        }
+        await base.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+
+        receiveArgs.Dispose();
+        sendArgs.Dispose();
+        multiBufferSendArgs.Dispose();
     }
 
     private class AwaitableSocketAsyncEventArgs(PipeScheduler scheduler) : SocketAsyncEventArgs, IValueTaskSource
@@ -135,7 +130,7 @@ public abstract class SocketTransportConnection(Socket socket, PipeOptions? inpu
 
             // Completed synchronously
             return SocketError is SocketError.Success
-                ? ValueTask.CompletedTask
+                ? default
                 : ValueTask.FromException(new SocketException((int)SocketError));
         }
     }
@@ -168,7 +163,7 @@ public abstract class SocketTransportConnection(Socket socket, PipeOptions? inpu
 
             // Completed synchronously
             return SocketError is SocketError.Success
-                ? ValueTask.CompletedTask
+                ? default
                 : ValueTask.FromException(new SocketException((int)SocketError));
         }
 

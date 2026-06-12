@@ -33,7 +33,6 @@ public sealed class ServerTcpSslSocketTransportConnection : SslSocketTransportCo
         }
         finally
         {
-            Shutdown();
             await Socket.DisconnectAsync(reuseSocket: false).ConfigureAwait(false);
         }
     }

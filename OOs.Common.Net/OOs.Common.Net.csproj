@@ -14,7 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../OOs.Common.IO.Pipelines/OOs.Common.IO.Pipelines.csproj" />
     <ProjectReference Include="../OOs.Common/OOs.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="OOs.IO.Pipelines" />
   </ItemGroup>
 
 </Project>

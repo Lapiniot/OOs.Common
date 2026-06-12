@@ -28,7 +28,7 @@ public abstract class WebSocketTransportConnection : TransportConnectionPipeAdap
     public override EndPoint? RemoteEndPoint { get; }
     protected WebSocket WebSocket => webSocket;
 
-    protected override ValueTask OnStartingAsync(CancellationToken cancellationToken) => ValueTask.CompletedTask;
+    protected override ValueTask OnStartingAsync(CancellationToken cancellationToken) => default;
 
     protected override ValueTask OnStoppingAsync() => webSocket switch
     {
@@ -36,7 +36,7 @@ public abstract class WebSocketTransportConnection : TransportConnectionPipeAdap
             new ValueTask(webSocket.CloseAsync(NormalClosure, "Good bye.", default)),
         { State: CloseReceived, CloseStatus: NormalClosure } =>
             new ValueTask(webSocket.CloseOutputAsync(NormalClosure, "Good bye.", default)),
-        _ => ValueTask.CompletedTask
+        _ => default
     };
 
     protected sealed override async ValueTask<int> ReceiveAsync(Memory<byte> buffer)
@@ -72,7 +72,25 @@ public abstract class WebSocketTransportConnection : TransportConnectionPipeAdap
         }
     }
 
-    public override void Abort() => webSocket.Abort();
+    protected override ValueTask ShutdownAsync(ShutdownDirection direction)
+    {
+        switch (direction)
+        {
+            case ShutdownDirection.Send:
+                return new ValueTask(webSocket.CloseOutputAsync(NormalClosure, "Good bye.", default));
+            case ShutdownDirection.Receive or ShutdownDirection.Both:
+                return new ValueTask(webSocket.CloseAsync(NormalClosure, "Good bye.", default));
+            default:
+                ThrowInvalidShutdownDirection<object>(direction);
+                return default;
+        }
+    }
+
+    public override void Abort()
+    {
+        webSocket.Abort();
+        base.Abort();
+    }
 
     public override async ValueTask DisposeAsync()
     {
@@ -80,7 +98,7 @@ public abstract class WebSocketTransportConnection : TransportConnectionPipeAdap
 
         using (webSocket)
         {
-            await base.DisposeAsync().ConfigureAwait(false);
+            await base.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
     }
 }

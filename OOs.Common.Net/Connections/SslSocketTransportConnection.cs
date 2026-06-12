@@ -13,29 +13,46 @@ public abstract class SslSocketTransportConnection(Socket socket,
 
     protected SslStream? Stream => stream;
 
-    protected override ValueTask OnStartingAsync(CancellationToken cancellationToken)
+    protected override async ValueTask ShutdownAsync(ShutdownDirection direction)
+    {
+        if (stream is null)
+        {
+            return;
+        }
+
+        if (direction is ShutdownDirection.Send or ShutdownDirection.Both)
+        {
+            await stream.ShutdownAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        }
+
+        await base.ShutdownAsync(direction).ConfigureAwait(false);
+    }
+
+    protected override async ValueTask OnStartingAsync(CancellationToken cancellationToken)
     {
         var networkStream = new NetworkStream(Socket, FileAccess.ReadWrite, ownsSocket: false);
         try
         {
-            stream = new SslStream(networkStream, leaveInnerStreamOpen: false);
+            stream = new(networkStream, leaveInnerStreamOpen: false);
         }
         catch
         {
-            using (networkStream) throw;
+            await networkStream.DisposeAsync().ConfigureAwait(false);
+            throw;
         }
-
-        return ValueTask.CompletedTask;
     }
 
     protected override async ValueTask OnStoppingAsync()
     {
-        if (stream is not null)
+        if (stream is null)
         {
-            using (stream)
-            {
-                await stream.ShutdownAsync().ConfigureAwait(false);
-            }
+            return;
+        }
+
+        using (stream)
+        {
+            await stream.ShutdownAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            Socket.Shutdown(SocketShutdown.Both);
         }
     }
 
@@ -61,7 +78,7 @@ public abstract class SslSocketTransportConnection(Socket socket,
 
         await using (stream)
         {
-            await base.DisposeAsync().ConfigureAwait(false);
+            await base.DisposeAsync().AsTask().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
     }
 }
