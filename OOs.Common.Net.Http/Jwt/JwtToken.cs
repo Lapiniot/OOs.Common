@@ -6,7 +6,7 @@ public sealed class JwtToken
 
     public JwtToken() => claims = [];
 
-    public JwtToken(IReadOnlyDictionary<string, object?> claims) => this.claims = new(claims);
+    public JwtToken(IReadOnlyDictionary<string, object?> claims) => this.claims = [with(claims)];
 
     public IReadOnlyDictionary<string, object?> Claims => claims;
 

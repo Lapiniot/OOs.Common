@@ -14,6 +14,9 @@ dotnet_diagnostic.IDE0230.severity = silent
 # CA1515: Consider making public types internal
 dotnet_diagnostic.CA1515.severity = silent
 
+# CA2007: Consider calling ConfigureAwait on the awaited task
+dotnet_diagnostic.CA2007.severity = none
+
 [*.{cs,vb}]
 
 # Naming rules

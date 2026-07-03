@@ -30,7 +30,7 @@ public class WaitAsyncShould
         Assert.IsNotNull(task);
         Assert.IsFalse(task.IsCompleted);
 
-        await cts.CancelAsync().ConfigureAwait(false);
+        await cts.CancelAsync();
         await await Task.WhenAny(
             task1: Assert.ThrowsAsync<OperationCanceledException>(() => task),
             task2: task.WaitAsync(TestContext.CancellationToken));

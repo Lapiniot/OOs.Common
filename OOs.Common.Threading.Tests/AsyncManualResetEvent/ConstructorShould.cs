@@ -9,7 +9,7 @@ public class ConstructorShould
         var mre = new OOs.Threading.AsyncManualResetEvent(true);
 
         var task = mre.WaitAsync(CancellationToken.None);
-        await task.ConfigureAwait(false);
+        await task;
 
         Assert.IsTrue(task.IsCompletedSuccessfully);
     }

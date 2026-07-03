@@ -9,10 +9,6 @@ internal sealed partial class ApplicationInitService(
     IServiceProvider services, ILogger<ApplicationInitService> logger) :
     IHostedService, IHostedLifecycleService
 {
-#pragma warning disable CA1823 // Avoid unused private fields
-    private readonly ILogger logger = logger;
-#pragma warning restore CA1823 // Avoid unused private fields
-
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

@@ -22,7 +22,7 @@ public class WaitAsyncShould
         var actual = mre.WaitAsync(default);
 
         Assert.IsNotNull(actual);
-        await actual.ConfigureAwait(false);
+        await actual;
         Assert.IsTrue(actual.IsCompletedSuccessfully);
     }
 
@@ -37,7 +37,7 @@ public class WaitAsyncShould
         Assert.IsFalse(actual.IsCompleted);
 
         mre.Set();
-        await actual.ConfigureAwait(false);
+        await actual;
 
         Assert.IsTrue(actual.IsCompletedSuccessfully);
     }

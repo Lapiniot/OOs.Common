@@ -11,7 +11,7 @@ public class SetShould
         mre.Set();
 
         var task = mre.WaitAsync(default);
-        await task.ConfigureAwait(false);
+        await task;
         Assert.IsTrue(task.IsCompletedSuccessfully);
     }
 
@@ -22,17 +22,17 @@ public class SetShould
 
         mre.Set();
         var task = mre.WaitAsync(default);
-        await task.ConfigureAwait(false);
+        await task;
         Assert.IsTrue(task.IsCompletedSuccessfully);
 
         mre.Set();
         task = mre.WaitAsync(default);
-        await task.ConfigureAwait(false);
+        await task;
         Assert.IsTrue(task.IsCompletedSuccessfully);
 
         mre.Set();
         task = mre.WaitAsync(default);
-        await task.ConfigureAwait(false);
+        await task;
         Assert.IsTrue(task.IsCompletedSuccessfully);
     }
 }
