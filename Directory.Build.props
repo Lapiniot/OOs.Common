@@ -9,7 +9,7 @@
     <LangVersion>preview</LangVersion>
     <AnalysisLevel>preview-All</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Version>2.0.0</Version>
+    <Version>2.0.3</Version>
     <Authors>Lapiniot</Authors>
     <Company>Lapiniot</Company>
     <Copyright>© $(Authors), $([System.DateTime]::UtcNow.Year)</Copyright>
