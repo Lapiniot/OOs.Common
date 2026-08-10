@@ -10,4 +10,8 @@
     <ProjectReference Include="../OOs.Common.Net.Http/OOs.Common.Net.Http.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" />
+  </ItemGroup>
+
 </Project>

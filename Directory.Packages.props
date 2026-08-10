@@ -9,5 +9,6 @@
     <PackageVersion Include="Microsoft.Extensions.Diagnostics" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="1.0.0-alpha.26377.5" />
   </ItemGroup>
 </Project>

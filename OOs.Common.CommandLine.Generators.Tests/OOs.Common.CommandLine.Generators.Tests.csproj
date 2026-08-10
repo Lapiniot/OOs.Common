@@ -10,4 +10,8 @@
     <ProjectReference Include="../OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" />
+  </ItemGroup>
+
 </Project>

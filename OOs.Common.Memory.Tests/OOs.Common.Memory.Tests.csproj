@@ -9,4 +9,8 @@
     <ProjectReference Include="../OOs.Common.Memory/OOs.Common.Memory.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" />
+  </ItemGroup>
+
 </Project>
