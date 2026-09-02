@@ -89,11 +89,6 @@ public abstract partial class TransportConnectionPipeAdapter(PipeOptions? inputP
 
             if (completed == sender)
             {
-                // Mark Output as complete to prevent further writes to the terminated 
-                // pipe connection, if it was not already complete explicitly by the 
-                // time we reach this point.
-                await Output.CompleteAsync().ConfigureAwait(false);
-
                 // Initiate connection shutdown in the output direction, informing other party 
                 // that we are completely done sending data. Ideally we should expect 
                 // the same favour from other side, also terminating connection politely,
