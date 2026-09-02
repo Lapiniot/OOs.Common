@@ -31,7 +31,7 @@ public partial class TransportConnectionPipeAdapter
         }
         catch (Exception ex)
         {
-            exception = ex;
+            exception = new IOException("Error occurred while sending data.", ex);
             throw;
         }
         finally
