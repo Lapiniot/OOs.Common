@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-    <NoWarn>CA1707</NoWarn>
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
