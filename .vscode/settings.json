@@ -5,7 +5,8 @@
         "**/.vs": true,
         "**/*.DotSettings.*": true,
         "artifacts": true,
-        "**/*.sln": true
+        "**/*.sln": true,
+        "**/*.lscache": true
     },
     "dotnet.defaultSolution": "OOs.Common.slnx"
 }
