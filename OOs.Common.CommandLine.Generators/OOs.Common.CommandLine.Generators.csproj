@@ -2,8 +2,8 @@
   TreatAsLocalProperty="PublishTrimmed;IsTrimmable;IsAotCompatible;TargetFrameworks;TargetFramework">
 
   <PropertyGroup>
+    <TargetFrameworks></TargetFrameworks>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <RootNamespace>OOs.CommandLine.Generators</RootNamespace>
     <IsRoslynComponent>true</IsRoslynComponent>
     <AnalyzerLanguage>cs</AnalyzerLanguage>
