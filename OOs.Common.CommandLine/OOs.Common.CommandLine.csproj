@@ -10,7 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+    <None Include="README.md" Pack="True" PackagePath="" Visible="False" />
+    <None Include="../OOs.Common.CommandLine.Generators/OOs.Common.CommandLine.Generators.props" Pack="True"
+      PackagePath="build/$(PackageId)%(Extension)" Visible="False" />
   </ItemGroup>
 
   <ItemGroup>
