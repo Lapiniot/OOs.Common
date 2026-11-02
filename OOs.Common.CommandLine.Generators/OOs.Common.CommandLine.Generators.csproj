@@ -28,7 +28,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Bcl.HashCode" VersionOverride="6.0.0" />
-    <PackageReference Include="Microsoft.Bcl.Memory" VersionOverride="10.0.13" />
+    <PackageReference Include="Microsoft.Bcl.Memory" VersionOverride="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>
